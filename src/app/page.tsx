@@ -1,4 +1,5 @@
 import { WarmMapGame } from "@/components/WarmMapGame";
+import { Founders } from "@/components/Founders";
 
 export default function Home() {
   return (
@@ -344,6 +345,8 @@ export default function Home() {
           </svg>
         </section>
       </main>
+
+      <Founders />
 
       <footer>
         <span>Bengaluru · Hyderabad · Delhi</span>

@@ -280,25 +280,12 @@ export function WarmMapGame() {
 
   return (
     <div className="game" id="corner">
-      <ShareCard
-        ownerName={ownerName}
-        stats={stats}
-        globe={
-          <Globe
-            homeCity={homeCityName}
-            entries={entries}
-            width={520}
-            height={520}
-          />
-        }
-      />
-
-      <div className="card" aria-live="polite">
+      <div className="mobile-header mobile-only">
         <div className="pair">
           <div className="field">
-            <label htmlFor="owner-name">Your first name</label>
+            <label htmlFor="owner-name-mobile">Your first name</label>
             <input
-              id="owner-name"
+              id="owner-name-mobile"
               type="text"
               autoComplete="off"
               data-lpignore="true"
@@ -310,13 +297,57 @@ export function WarmMapGame() {
             />
           </div>
           <CityAutocomplete
-            id="home-city"
+            id="home-city-mobile"
             label="You live in"
             value={homeCityValue}
             placeholder="Start typing your city"
             onChange={setHomeCityValue}
             onSelectCity={setHomeCity}
           />
+        </div>
+      </div>
+
+      <div className="mapcard-wrapper">
+        <ShareCard
+          ownerName={ownerName}
+          stats={stats}
+          globe={
+            <Globe
+              homeCity={homeCityName}
+              entries={entries}
+              width={520}
+              height={520}
+            />
+          }
+        />
+      </div>
+
+      <div className="question-card-wrapper card" aria-live="polite">
+        <div className="desktop-only">
+          <div className="pair">
+            <div className="field">
+              <label htmlFor="owner-name">Your first name</label>
+              <input
+                id="owner-name"
+                type="text"
+                autoComplete="off"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                placeholder="Arjun"
+                maxLength={24}
+                value={ownerName}
+                onChange={(e) => setOwnerName(e.target.value)}
+              />
+            </div>
+            <CityAutocomplete
+              id="home-city"
+              label="You live in"
+              value={homeCityValue}
+              placeholder="Start typing your city"
+              onChange={setHomeCityValue}
+              onSelectCity={setHomeCity}
+            />
+          </div>
         </div>
 
         <p className="qn">{questionLabel}</p>
