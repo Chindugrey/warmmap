@@ -21,10 +21,15 @@ export async function GET(req: NextRequest) {
     if (map) {
       ownerName = map.ownerName || "Someone";
       homeCity = map.homeCity;
-      try {
-        entries = JSON.parse(map.entries || "[]");
-      } catch {
-        entries = [];
+      const rawEntries = map.entries;
+      if (Array.isArray(rawEntries)) {
+        entries = rawEntries as { city: string; questionIndex: number }[];
+      } else if (typeof rawEntries === "string") {
+        try {
+          entries = JSON.parse(rawEntries || "[]");
+        } catch {
+          entries = [];
+        }
       }
     }
   }
