@@ -1,8 +1,9 @@
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { PublicMap } from "@/components/PublicMap";
 import { mapStats } from "@/lib/geo";
+import { prisma } from "@/lib/prisma";
 
 interface MapData {
   id: string;
@@ -10,7 +11,7 @@ interface MapData {
   shortSlug?: string | null;
   homeCity: string;
   ownerName?: string | null;
-  entries: any; // Prisma JsonValue
+  entries: any;
   vouchCount?: number;
 }
 
@@ -28,16 +29,27 @@ async function getBaseUrl() {
 }
 
 async function fetchMap(id: string): Promise<MapData | null> {
-  try {
-    const base = await getBaseUrl();
-    const res = await fetch(`${base}/api/maps/${id}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as MapData;
-  } catch {
-    return null;
-  }
+  const map = await prisma.map.findFirst({
+    where: {
+      deletedAt: null,
+      OR: [{ shortSlug: id }, { publicId: id }],
+    },
+    include: {
+      _count: { select: { vouches: { where: { status: "verified" } } } },
+    },
+  });
+
+  if (!map) return null;
+
+  return {
+    id: map.id,
+    publicId: map.publicId,
+    shortSlug: map.shortSlug,
+    homeCity: map.homeCity,
+    ownerName: map.ownerName,
+    entries: map.entries,
+    vouchCount: map._count.vouches,
+  };
 }
 
 export async function generateMetadata({
