@@ -2,17 +2,17 @@ import Image from "next/image";
 
 const founders = [
   {
-    name: "Aadarsh K S",
+    name: "Aadarsh",
     linkedin: "https://www.linkedin.com/in/aadarsh-k-s/",
     photo: "/aadarsh.png",
   },
   {
-    name: "Abhijith Harikumar",
+    name: "Abhijith",
     linkedin: "https://www.linkedin.com/in/abhijithharikumar-gtm/",
     photo: "/abhijith.png",
   },
   {
-    name: "Arjun Aravind",
+    name: "Arjun",
     linkedin: "https://www.linkedin.com/in/arjun-aravind-708647125/",
     photo: "/arjun.png",
   },
@@ -20,35 +20,33 @@ const founders = [
 
 export function Founders() {
   return (
-    <section className="page chapter founders">
-      <p className="kicker">Why we built this</p>
-      <blockquote className="founders-quote">
+    <section className="page chapter founders-compact">
+      <blockquote className="founders-quote-compact">
         We are living in the world of campaigns, MQLs, meetings, cold emails,
-        GTM, and somewhere along the way we missed the freshness of warm
+        and GTM. Somewhere along the way we missed the freshness of warm
         meetings, warm intros and humane interactions. We are trying to bring
-        it back. This is our story.
+        it back.
       </blockquote>
 
-      <div className="founders-grid">
+      <div className="founders-row">
         {founders.map((f) => (
           <a
             key={f.name}
             href={f.linkedin}
             target="_blank"
             rel="noopener noreferrer"
-            className="founder-card"
+            className="founder-chip"
           >
-            <div className="founder-photo">
+            <div className="founder-photo-sm">
               <Image
                 src={f.photo}
                 alt={f.name}
-                width={120}
-                height={120}
+                width={64}
+                height={64}
                 style={{ objectFit: "cover", width: "100%", height: "100%" }}
               />
             </div>
-            <p className="founder-name">{f.name}</p>
-            <span className="founder-link">LinkedIn</span>
+            <span className="founder-name-sm">{f.name}</span>
           </a>
         ))}
       </div>

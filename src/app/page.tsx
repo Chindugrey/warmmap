@@ -1,5 +1,8 @@
 import { WarmMapGame } from "@/components/WarmMapGame";
 import { Founders } from "@/components/Founders";
+import { ShareCTA } from "@/components/ShareCTA";
+import { Marquee } from "@/components/Marquee";
+import { FinalCTA } from "@/components/FinalCTA";
 
 export default function Home() {
   return (
@@ -14,9 +17,6 @@ export default function Home() {
         <div className="row" style={{ justifyContent: "center" }}>
           <a className="btn" href="#corner">
             Make my Warm Map
-          </a>
-          <a className="btn ghost" href="#story">
-            Read the story
           </a>
         </div>
 
@@ -59,111 +59,37 @@ export default function Home() {
             />
           </g>
         </svg>
-
-        <svg
-          className="flourish"
-          viewBox="0 0 220 24"
-          aria-hidden="true"
-        >
-          <path
-            d="M2 12 H86 M134 12 H218 M110 4 q-14 8 0 16 q14 -8 0 -16 z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.4}
-          />
-        </svg>
       </header>
 
       <main>
-        <section id="story" className="page chapter">
-          <p className="kicker">Chapter one</p>
-          <h2>It always came through someone</h2>
-          <p className="dropcap">
-            Think back for a moment. Your first job. The flat you live in. The
-            doctor you trust. The co-founder, the first customer, the person who
-            said yes when nobody else would. Almost none of it began with a
-            stranger&apos;s message. It began with someone who said, quietly,
-            &quot;I know someone.&quot;
-          </p>
-          <ul className="moments" aria-label="Things that usually come through someone">
-            <li>a first job</li>
-            <li>a home</li>
-            <li>a co-founder</li>
-            <li>a first customer</li>
-            <li>a mentor</li>
-            <li>a second chance</li>
-          </ul>
-        </section>
+        <Founders />
 
-        <div className="night">
-          <section className="page chapter">
-            <p className="kicker">Chapter two</p>
-            <h2>Now everyone can reach everyone</h2>
-            <p>
-              Inboxes overflow. Feeds never sleep. Every message seems to be
-              selling something, and every one of us has become someone&apos;s
-              target. We have never had more ways to talk, or fewer people who&apos;ll
-              pick up.
-            </p>
-          </section>
-          <div className="plate noise" aria-hidden="true">
-            <span style={{ left: "4%", top: "10%", transform: "rotate(-6deg)" }}>
-              Quick question for you
-            </span>
-            <span style={{ left: "46%", top: "4%", transform: "rotate(3deg)" }}>
-              Offer ends tonight
-            </span>
-            <span style={{ left: "70%", top: "34%", transform: "rotate(-4deg)" }}>
-              Just bumping this up
-            </span>
-            <span style={{ left: "14%", top: "44%", transform: "rotate(5deg)" }}>
-              Hi {"{first_name}"}, loved your post
-            </span>
-            <span style={{ left: "44%", top: "62%", transform: "rotate(-2deg)" }}>
-              Can I get 15 minutes?
-            </span>
-            <span style={{ left: "4%", top: "80%", transform: "rotate(-5deg)" }}>
-              Sponsored
-            </span>
-            <span style={{ left: "68%", top: "78%", transform: "rotate(6deg)" }}>
-              Following up again
-            </span>
-          </div>
-        </div>
-
-        <section className="page chapter">
-          <p className="kicker">Chapter three</p>
-          <h2>But warmth still travels by hand</h2>
-          <p className="dropcap">
-            A few people would answer your call at two in the morning. They live
-            in different cities, sometimes different countries. Together they&apos;re
-            your corner. Light them up one lantern at a time, then send the map
-            to them. When a friend finds their own lantern on it, they&apos;ll smile,
-            vouch for you in one tap, and make a map of their own.
-          </p>
-        </section>
-
-        <section className="plate">
+        <section className="plate" id="corner">
           <WarmMapGame />
         </section>
 
-        <section className="page chapter">
-          <p className="kicker">Chapter four</p>
-          <h2>The table</h2>
+        <section className="page chapter table-pitch">
+          <p className="kicker">Where the map leads</p>
+          <h2>The Warm Table</h2>
           <p className="dropcap">
-            Once a month, in Bengaluru, Hyderabad and Delhi, fourteen people sit
-            down to one long dinner. You can&apos;t buy a seat, and you can&apos;t apply.
-            The friends who vouch for you bring you in.
+            Once a map has enough warmth, it becomes a table. Fourteen people,
+            one long dinner, no pitches, no performances. Just the kind of
+            conversations that used to happen over a shared meal and a second
+            cup of tea.
           </p>
-        </section>
+          <p>
+            We are starting in a handful of cities. The vision is simple: bring
+            back warm meetings, warm intros and humane interactions everywhere.
+            City by city. Table by table. Until the old feeling of trust is
+            normal again.
+          </p>
 
-        <section className="plate">
-          <div className="tableplate">
+          <div className="tableplate compact">
             <svg
               viewBox="0 0 480 360"
               role="img"
-              aria-label="A long table seen from above with fourteen seats: six gold for super connectors, six ink for the most vouched, two open for newcomers"
-              style={{ width: "100%", height: "auto" }}
+              aria-label="A long table seen from above with fourteen seats"
+              style={{ width: "100%", height: "auto", maxWidth: 360 }}
             >
               <defs>
                 <radialGradient id="lamp2">
@@ -201,161 +127,34 @@ export default function Home() {
                 <circle cx={420} cy={238} r={15} fill="#F1E6CF" />
               </g>
             </svg>
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div className="legend">
-                <div>
-                  <span style={{ background: "#B9741F" }} />
-                  6 super connectors, invited by hand
-                </div>
-                <div>
-                  <span style={{ background: "#2E2219" }} />
-                  6 people their friends vouched for most
-                </div>
-                <div>
-                  <span style={{ background: "#F1E6CF" }} />
-                  2 newcomers
-                </div>
+            <div className="legend compact-legend">
+              <div>
+                <span style={{ background: "#B9741F" }} />
+                Super connectors
               </div>
-              <p className="quiet">
-                No pitching. Pitch, and you buy dessert. Phones sleep in a basket
-                until the end.
-              </p>
+              <div>
+                <span style={{ background: "#2E2219" }} />
+                Most vouched
+              </div>
+              <div>
+                <span style={{ background: "#F1E6CF" }} />
+                Newcomers
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="page chapter" style={{ paddingTop: 40 }}>
-          <h3 style={{ fontSize: 30 }}>How the evening goes</h3>
-          <ol className="games">
-            <li>
-              <time>7:00</time>
-              <span>
-                <b>Hello bingo.</b> Find the person who was someone&apos;s 2 a.m.
-                call.
-              </span>
-            </li>
-            <li>
-              <time>7:30</time>
-              <span>
-                <b>Introduce your neighbour.</b> You speak for them; they speak
-                for you.
-              </span>
-            </li>
-            <li>
-              <time>7:50</time>
-              <span>
-                <b>Two truths and an ask.</b> Said out loud, kept small.
-              </span>
-            </li>
-            <li>
-              <time>8:10</time>
-              <span>
-                <b>Pass the door.</b> Your ask travels round the table on a card.
-                Whoever can open it stamps it, and a little printer prints the
-                slip.
-              </span>
-            </li>
-            <li>
-              <time>8:40</time>
-              <span>
-                <b>Who&apos;s your hello?</b> A city is called. The first real name
-                wins.
-              </span>
-            </li>
-            <li>
-              <time>8:55</time>
-              <span>
-                <b>The mystery seat.</b> One guest was a surprise all along.
-              </span>
-            </li>
-            <li>
-              <time>9:10</time>
-              <span>
-                <b>The receipt.</b> Everyone in the photo, holding one long strip
-                of paper.
-              </span>
-            </li>
-          </ol>
-        </section>
+        <ShareCTA />
 
-        <section className="page chapter">
-          <p className="kicker">Chapter five</p>
-          <h2>And it was written down</h2>
-          <p className="dropcap">
-            Every door that opens at the table is printed that night. Thirty days
-            later we print a second slip: the coffees, the interviews, the
-            meetings that actually happened. We count doors, never likes.
-          </p>
-          <div className="slip" role="img" aria-label="A sample receipt from a table">
-            <div className="c">
-              <b>WARM TABLE</b>
-            </div>
-            <div className="c">Bengaluru · Table No. 1</div>
-            <hr />
-            <div className="l">
-              <span>Guests</span>
-              <span>14</span>
-            </div>
-            <div className="l">
-              <span>Doors stamped</span>
-              <span>[N]</span>
-            </div>
-            <div className="l">
-              <span>Coffees</span>
-              <span>[N]</span>
-            </div>
-            <div className="l">
-              <span>Interviews</span>
-              <span>[N]</span>
-            </div>
-            <hr />
-            <div className="l">
-              <b>Held in 30 days</b>
-              <b>[N]</b>
-            </div>
-            <hr />
-            <div className="c">No pitching. Only warmth.</div>
-          </div>
-          <p className="note" style={{ textAlign: "center" }}>
-            A template. Real tables print real numbers.
-          </p>
-        </section>
+        <Marquee />
 
-        <section className="page chapter epilogue">
-          <p className="kicker">The end, or the beginning</p>
-          <h2>Your people are waiting to hear it</h2>
-          <p>
-            Two minutes. Twelve small questions. One map worth sharing, and maybe
-            a seat at the table.
-          </p>
-          <a className="btn" href="#corner">
-            Make my Warm Map
-          </a>
-          <svg
-            className="flourish"
-            viewBox="0 0 220 24"
-            aria-hidden="true"
-          >
-            <path
-              d="M2 12 H86 M134 12 H218 M110 4 q-14 8 0 16 q14 -8 0 -16 z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.4}
-            />
-          </svg>
-        </section>
+        <FinalCTA />
       </main>
 
-      <Founders />
-
       <footer>
-        <span>Bengaluru · Hyderabad · Delhi</span>
+        <span>Names stay with you until that person says yes.</span>
         <span>
-          Names stay with you until that person says yes. Nothing is ever sent
-          for you.
-        </span>
-        <span>
-          <a href="/privacy">Privacy</a> · Made with care by the Zeyhi team.
+          <a href="/privacy">Privacy</a> · Made with care by the Warm Map team.
         </span>
       </footer>
     </>
