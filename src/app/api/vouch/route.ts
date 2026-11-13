@@ -50,10 +50,14 @@ export async function POST(req: NextRequest) {
     }
 
     let entries: { city: string; questionIndex: number }[] = [];
-    try {
-      entries = JSON.parse(map.entries || "[]");
-    } catch {
-      return NextResponse.json({ error: "Invalid map data" }, { status: 500 });
+    if (Array.isArray(map.entries)) {
+      entries = map.entries as { city: string; questionIndex: number }[];
+    } else if (typeof map.entries === "string") {
+      try {
+        entries = JSON.parse(map.entries || "[]");
+      } catch {
+        return NextResponse.json({ error: "Invalid map data" }, { status: 500 });
+      }
     }
     if (!entries[entryIndex]) {
       return NextResponse.json({ error: "Invalid entry" }, { status: 400 });

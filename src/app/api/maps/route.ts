@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     data: {
       homeCity,
       ownerName: ownerName || null,
-      entries: JSON.stringify(entries),
+      entries: entries as any,
       shortSlug,
       userId: session?.user?.id,
       // We don't store invitedBy mapId in DB to avoid association chains; tracking only.

@@ -19,7 +19,7 @@ interface MapData {
   shortSlug: string;
   homeCity: string;
   ownerName?: string | null;
-  entries: string;
+  entries: any;
   vouchCount?: number;
 }
 
@@ -50,7 +50,9 @@ export default function VouchPage() {
         if (!res.ok) throw new Error("Map not found");
         const data = (await res.json()) as MapData;
         setMap(data);
-        const parsed: Entry[] = JSON.parse(data.entries || "[]");
+        const parsed: Entry[] = Array.isArray(data.entries)
+          ? data.entries
+          : JSON.parse(data.entries || "[]");
         setEntries(parsed);
         if (selectedCity) {
           const idx = parsed.findIndex((e) => e.city === selectedCity);

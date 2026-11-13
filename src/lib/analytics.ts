@@ -19,7 +19,7 @@ export async function trackEvent(
       data: {
         event,
         mapId,
-        metadata: metadata ? JSON.stringify(metadata) : undefined,
+        metadata: metadata || {},
       },
     });
   } catch (e) {

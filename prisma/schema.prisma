@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -13,12 +13,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -61,7 +61,7 @@ model Map {
   homeCity      String
   ownerName     String?
   ownerEmail    String?
-  entries       String   // JSON: [{ city: string, questionIndex: number }]
+  entries       Json // [{ city: string, questionIndex: number }]
   shareImageUrl String?
   consent       Boolean  @default(false)
   deletedAt     DateTime?
@@ -83,7 +83,7 @@ model Vouch {
   entryIndex       Int
   voucherEmailHash String?
   voucherName      String?
-  note             String?
+  note             String?   @db.VarChar(280)
   status           String    @default("pending")
   verifiedAt       DateTime?
   createdAt        DateTime  @default(now())
@@ -111,7 +111,7 @@ model AnalyticsEvent {
   mapId     String?
   map       Map?     @relation(fields: [mapId], references: [id], onDelete: SetNull)
   event     String
-  metadata  String?  // JSON
+  metadata  Json?
   createdAt DateTime @default(now())
 
   @@index([mapId, event])

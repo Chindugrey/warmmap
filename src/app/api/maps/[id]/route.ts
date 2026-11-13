@@ -30,7 +30,7 @@ export async function GET(
     shortSlug: map.shortSlug,
     homeCity: map.homeCity,
     ownerName: map.ownerName,
-    entries: map.entries,
+    entries: map.entries as any,
     vouchCount: map._count.vouches,
     createdAt: map.createdAt,
   });

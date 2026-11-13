@@ -10,7 +10,7 @@ interface MapData {
   shortSlug?: string | null;
   homeCity: string;
   ownerName?: string | null;
-  entries: string; // JSON: [{ city, questionIndex }]
+  entries: any; // Prisma JsonValue
   vouchCount?: number;
 }
 
@@ -82,10 +82,14 @@ export default async function MapPage({
   if (!map) notFound();
 
   let entries: { city: string; questionIndex: number }[] = [];
-  try {
-    entries = JSON.parse(map.entries || "[]");
-  } catch {
-    entries = [];
+  if (Array.isArray(map.entries)) {
+    entries = map.entries as { city: string; questionIndex: number }[];
+  } else if (typeof map.entries === "string") {
+    try {
+      entries = JSON.parse(map.entries || "[]");
+    } catch {
+      entries = [];
+    }
   }
 
   const stats = mapStats(entries, map.homeCity);
