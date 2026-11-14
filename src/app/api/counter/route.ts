@@ -1,4 +1,4 @@
-// GET /api/counter: the live lantern count (landing page and after the reveal).
+// GET /api/counter: the live lantern count (landing page and after the reveal), from the first lantern; cached 30 s.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { counterPayload } from "@/lib/counter";

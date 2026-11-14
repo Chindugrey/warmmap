@@ -1,6 +1,5 @@
-// Live lantern count: shown only once it passes the floor; never rounded up.
-export const COUNTER_FLOOR = 15;
-
+// Live lantern count, on the landing page and after the reveal. Shown from the
+// first lantern (Aadarsh, 14 Nov): a real count, never rounded up.
 export function counterPayload(total: number): { show: boolean; lanterns: number | null } {
-  return total >= COUNTER_FLOOR ? { show: true, lanterns: total } : { show: false, lanterns: null };
+  return total >= 1 ? { show: true, lanterns: total } : { show: false, lanterns: null };
 }

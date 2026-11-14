@@ -190,11 +190,11 @@ test("admin connector score: token required; score and CSV", async () => {
   assert.ok(csv.text.includes("'=HYPERLINK(1)"), "formula cells are neutralised");
 });
 
-test("live counter: exact lantern total once past the floor", async () => {
+test("live counter: exact lantern total from the first lantern", async () => {
   const r = await api("/api/counter");
   const rows = await db.$queryRaw<{ t: bigint }[]>`SELECT COALESCE(SUM(jsonb_array_length(entries)),0)::bigint t FROM "Map"`;
   const total = Number(rows[0].t);
-  assert.deepEqual(r.json, total >= 15 ? { show: true, lanterns: total } : { show: false, lanterns: null });
+  assert.deepEqual(r.json, total >= 1 ? { show: true, lanterns: total } : { show: false, lanterns: null });
 });
 
 test("analytics: allow-listed events; free text dropped", async () => {

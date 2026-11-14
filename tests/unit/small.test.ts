@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { windowStart } from "@/lib/rate-limit-window";
 import { connectorScore } from "@/lib/connector";
-import { counterPayload, COUNTER_FLOOR } from "@/lib/counter";
+import { counterPayload } from "@/lib/counter";
 import { questionFor, QUESTIONS, LEGACY_QUESTIONS } from "@/lib/questions";
 
 test("rate-limit windows are fixed buckets", () => {
@@ -14,10 +14,9 @@ test("connector score = distinct vouchers + maps brought in + cities", () => {
   assert.equal(connectorScore({ distinctVouchers: 3, mapsBroughtIn: 2, cities: 5 }), 10);
 });
 
-test("live counter: exact count, hidden below the floor of 15 (never rounded up)", () => {
-  assert.equal(COUNTER_FLOOR, 15);
-  assert.deepEqual(counterPayload(14), { show: false, lanterns: null });
-  assert.deepEqual(counterPayload(15), { show: true, lanterns: 15 });
+test("live counter: exact count from the first lantern (never rounded up)", () => {
+  assert.deepEqual(counterPayload(0), { show: false, lanterns: null });
+  assert.deepEqual(counterPayload(1), { show: true, lanterns: 1 });
   assert.deepEqual(counterPayload(1234), { show: true, lanterns: 1234 });
 });
 
