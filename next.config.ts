@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  // The share-card route reads its fonts from disk at runtime.
+  outputFileTracingIncludes: {
+    "/api/og": ["./assets/fonts/**"],
+  },
   async headers() {
     return [
       { source: "/t/:path*", headers: privatePageHeaders },

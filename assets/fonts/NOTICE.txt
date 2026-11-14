@@ -1,0 +1,6 @@
+Fonts used to draw the share cards (src/app/api/og/route.tsx).
+
+IM Fell English, IM Fell English SC (Igino Marini), EB Garamond (Georg Duffner,
+Octavio Pardo) and Courier Prime (Alan Dague-Greene), all from Google Fonts,
+licensed under the SIL Open Font License 1.1: https://openfontlicense.org
+Downloaded 14 Nov 2026 as static WOFF from fonts.gstatic.com.
