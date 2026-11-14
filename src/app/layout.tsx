@@ -7,6 +7,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import "./storybook.css";
+import { cardUrl, CARD_SIZES } from "@/lib/card";
 
 const imFellEnglish = IM_Fell_English({
   subsets: ["latin"],
@@ -44,6 +45,7 @@ export const metadata: Metadata = {
     "Almost everything good in your life came through someone. Put those people on one warm globe, and share it with them.",
   openGraph: {
     type: "website",
+    images: [{ url: cardUrl(null), ...CARD_SIZES.link, alt: "Warm Map: a globe of lanterns, one for each person in your corner" }],
     url: "/",
     siteName: "Warm Map",
     locale: "en_IN",
@@ -53,6 +55,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    images: [cardUrl(null)],
   },
 };
 

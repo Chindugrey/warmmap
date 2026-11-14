@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { PublicMap } from "@/components/PublicMap";
 import { findMap } from "@/lib/owner";
 import { toPublicMap } from "@/lib/public-map";
-import { SITE_URL, mapUrl } from "@/lib/site";
+import { mapUrl } from "@/lib/site";
+import { cardUrl, CARD_SIZES } from "@/lib/card";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!row) return { title: "Map not found", robots: { index: false, follow: false } };
   const map = toPublicMap(row);
   const owner = map.ownerName || "Someone";
-  const ogUrl = `${SITE_URL}/api/og?id=${map.id}`;
+  const ogUrl = cardUrl(map.id);
   const description = `The people who've had ${owner}'s back, across ${map.stats.cities} ${map.stats.cities === 1 ? "city" : "cities"}. Names hidden.`;
   return {
     title: `${owner}'s Warm Map`,
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${owner}'s Warm Map`,
       description,
       url: mapUrl(map.id),
-      images: [{ url: ogUrl, width: 1200, height: 630, alt: `${owner}'s Warm Map` }],
+      images: [{ url: ogUrl, ...CARD_SIZES.link, alt: `${owner}'s Warm Map: cities only, names hidden` }],
     },
     twitter: { card: "summary_large_image", images: [ogUrl] },
   };

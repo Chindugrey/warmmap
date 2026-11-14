@@ -107,6 +107,8 @@ test("make a map: hero → home → 5 questions → reveal (tap to skip) → nam
   const li = await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Share on LinkedIn').href`);
   assert.match(li, /^https:\/\/www\.linkedin\.com\/sharing\/share-offsite\/\?url=.*%2Fm%2F[a-z0-9]{8}$/);
   S.slug = decodeURIComponent(li).match(/\/m\/([a-z0-9]{8})$/)[1];
+  const story = await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Save the picture for Status and Story')?.getAttribute('href')`);
+  assert.equal(story, `/api/og?id=${S.slug}&f=story&dl=1`);
   await b.shot(`${SHOTS}/walk-4-glowing.png`);
   assertNoNames(b, FRIENDS);
 });
@@ -198,6 +200,32 @@ test("owner returns: Kochi answered. [Share your gratitude map]; visitors see no
   assert.ok(!vt.includes("answered"), "no gold moment for visitors");
   assert.equal(await v.eval(`document.querySelectorAll('circle[stroke="#F2C230"]').length`), 0, "no gold ring for visitors");
   for (const n of FRIENDS) assert.ok(!(await v.eval("document.documentElement.outerHTML")).includes(n));
+});
+
+const OG_RE = /^https?:\/\/[^/]+\/api\/og(\?id=[a-z0-9]{6,32})?$/;
+async function metaImages(url) {
+  const html = await (await fetch(url)).text();
+  const metas = [...html.matchAll(/<meta[^>]+(?:property|name)="(og:[^"]+|twitter:[^"]+)"[^>]+content="([^"]*)"/g)].map((m) => [m[1], m[2].replace(/&amp;/g, "&")]);
+  return { html, metas, images: metas.filter(([k]) => /image$/.test(k)).map(([, v]) => v) };
+}
+
+test("share cards in link previews: card URLs carry the map id only; no names anywhere, even URL-encoded", { skip }, async () => {
+  for (const [page, url] of [["home", `${BASE}/`], ["map", `${BASE}/m/${S.slug}`], ["thanks", S.thank.split("#")[0]]]) {
+    const { html, metas, images } = await metaImages(url);
+    assert.ok(images.length >= 1, `${page}: no og:image`);
+    for (const img of images) assert.match(img, OG_RE, `${page}: unexpected card URL ${img}`);
+    if (page !== "home") for (const img of images) assert.ok(img.endsWith(`?id=${S.slug}`), `${page}: card is not the map's`);
+    const all = decodeURIComponent(metas.map(([, v]) => v).join(" ")) + " " + html;
+    for (const n of FRIENDS) {
+      assert.ok(!all.includes(n) && !all.includes(encodeURIComponent(n)), `${page}: friend name ${n} in the page or its previews`);
+    }
+    const ogUrl = metas.find(([k]) => k === "og:url")?.[1];
+    if (page === "map") assert.ok(ogUrl?.endsWith(`/m/${S.slug}`), `map og:url is ${ogUrl}`);
+  }
+  const res = await fetch(`${BASE}/api/og?id=${S.slug}&f=story`);
+  assert.equal(res.headers.get("content-type"), "image/png");
+  const buf = Buffer.from(await res.arrayBuffer());
+  assert.deepEqual([buf.readUInt32BE(16), buf.readUInt32BE(20)], [1080, 1920]);
 });
 
 test("reduced motion: the reveal is already still; halos do not breathe", { skip }, async () => {

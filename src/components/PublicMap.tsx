@@ -12,6 +12,7 @@ import { Globe, type GlobeLantern } from "@/components/Globe";
 import { ThankSheet, type Named } from "@/components/ThankSheet";
 import { ShareRow } from "@/components/ShareRow";
 import { LiveCounter } from "@/components/LiveCounter";
+import { StoryPictureLink, sharePicture, useStoryFile } from "@/components/StoryPicture";
 import type { PublicMap as PublicMapData } from "@/lib/public-map";
 import { KIND_LINES } from "@/lib/kinds";
 import { absorbKeeperHash, apiFetch, forgetOwnerKey, ownerKeyFor, rememberOwnerKey } from "@/lib/device";
@@ -36,6 +37,7 @@ export function PublicMap({ map }: { map: PublicMapData }) {
   const [newKeeper, setNewKeeper] = useState<string | null>(null);
   const [names, setNames] = useState<Named[]>([]);
   const [url, setUrl] = useState(`/m/${map.id}`);
+  const storyFile = useStoryFile(view ? map.id : null);
 
   useEffect(() => {
     // Move #k=… into storage and out of the address bar before anything else.
@@ -85,8 +87,11 @@ export function PublicMap({ map }: { map: PublicMapData }) {
     setNewKeeper(`${window.location.origin}/m/${map.id}#k=${d.ownerKey}`);
   }
 
+  // "Share your gratitude map": the Status/Story picture with the map link where
+  // the phone can share files; else the link alone; else WhatsApp.
   async function shareGratitude() {
     const text = mapShareText(map.stats.cities, url);
+    if (await sharePicture(storyFile.current, text.replace(` ${url}`, ""), url)) return;
     if (navigator.share) {
       try {
         await navigator.share({ title: `${owner}'s Warm Map`, text: text.replace(` ${url}`, ""), url });
@@ -161,6 +166,8 @@ export function PublicMap({ map }: { map: PublicMapData }) {
             <button className="wm-btn" type="button" onClick={shareGratitude}>
               Share your gratitude map
             </button>
+            <ShareRow url={url} />
+            <StoryPictureLink slug={map.id} />
             <p className="wm-note" style={{ textAlign: "center" }}>
               Only you can see which lanterns are gold. On the map you share, every lantern looks the same.
             </p>
@@ -212,6 +219,7 @@ export function PublicMap({ map }: { map: PublicMapData }) {
                 </button>
               )}
               <ShareRow url={url} />
+              <StoryPictureLink slug={map.id} />
               <LiveCounter />
               {newKeeper && (
                 <p className="wm-keeper">

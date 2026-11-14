@@ -12,6 +12,7 @@ import { Globe, LanternGlyph, type GlobeLantern } from "@/components/Globe";
 import { LiveCounter } from "@/components/LiveCounter";
 import { ThankSheet } from "@/components/ThankSheet";
 import { ShareRow } from "@/components/ShareRow";
+import { StoryPictureLink } from "@/components/StoryPicture";
 import { CHAPTERS, QUESTIONS, QUESTION_COUNT, UNLOCK_AT } from "@/lib/questions";
 import { citiesByName, findCity, matchCities } from "@/lib/cities";
 import { mapStats } from "@/lib/geo";
@@ -655,6 +656,7 @@ function RevealScreen({ d, setD, onKeepGoing }: { d: Draft; setD: (f: (x: Draft)
                 Tell them on WhatsApp
               </button>
               <ShareRow url={url} />
+              <StoryPictureLink slug={saved.slug} />
               <LiveCounter />
               {keeper && (
                 <p className="wm-keeper">

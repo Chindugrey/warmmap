@@ -227,6 +227,32 @@ test("key re-issue: new key works, the old one stops working", async () => {
   assert.equal((await api(`/api/maps/${made.json.id}/owner`, { key: oldKey })).status, 403);
 });
 
+const pngSize = (buf: Buffer) => ({ width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) });
+
+test("share cards: PNG, 1200x627 link preview and 1080x1920 Status/Story; extra params ignored", async () => {
+  const get = async (q: string) => {
+    const res = await fetch(`${BASE}/api/og${q}`, { headers: { "x-wm-device": DEV } });
+    const buf = Buffer.from(await res.arrayBuffer());
+    return { res, buf };
+  };
+  const link = await get(`?id=${S.slug}`);
+  assert.equal(link.res.status, 200);
+  assert.equal(link.res.headers.get("content-type"), "image/png");
+  assert.deepEqual(pngSize(link.buf), { width: 1200, height: 627 });
+  assert.ok(link.buf.length < 400_000, `link card is ${link.buf.length} bytes`);
+  const story = await get(`?id=${S.slug}&f=story`);
+  assert.deepEqual(pngSize(story.buf), { width: 1080, height: 1920 });
+  const dl = await get(`?id=${S.slug}&f=story&dl=1`);
+  assert.match(dl.res.headers.get("content-disposition") ?? "", /attachment; filename="warm-map-story.png"/);
+  const home = await get("");
+  assert.deepEqual(pngSize(home.buf), { width: 1200, height: 627 });
+  // A name in the query changes nothing: same bytes as without it.
+  const withName = await get(`?id=${S.slug}&name=${encodeURIComponent(FRIEND)}&n=${FRIEND}`);
+  assert.ok(withName.buf.equals(link.buf), "extra parameters must not change the picture");
+  const bogus = await get(`?id=nosuchmap`);
+  assert.deepEqual(pngSize(bogus.buf), { width: 1200, height: 627 });
+});
+
 test("delete via keeper key: real delete, cascades, brought-in maps keep living", async () => {
   const parent = await db.map.findFirst({ where: { shortSlug: S.slug } });
   assert.equal((await api(`/api/maps/${S.slug}`, { method: "DELETE", key: "wrong" })).status, 403);
