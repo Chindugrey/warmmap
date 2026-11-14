@@ -9,7 +9,7 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "test": "node --import ./tests/register.mjs --test \"tests/unit/*.test.ts\"",
-    "test:api": "node --test tests/api/api-check.test.mjs"
+    "test:api": "node --import ./tests/register.mjs --test --test-concurrency=1 tests/api/api-check.test.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
