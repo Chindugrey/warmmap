@@ -1,0 +1,222 @@
+// Real-browser walk-through of the launch loop against a LOCAL server, using an
+// already-installed headless Chromium over the DevTools protocol (no packages).
+//   BASE=http://localhost:3100 npm run test:browser
+// Screenshots go to $SHOTS (default /tmp/wm-shots).
+import test, { after } from "node:test";
+import assert from "node:assert/strict";
+import { mkdirSync } from "node:fs";
+import { launch, findChrome } from "./cdp.mjs";
+
+const BASE = process.env.BASE ?? "http://localhost:3100";
+if (!/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(BASE)) throw new Error(`refusing non-local BASE ${BASE}`);
+const SHOTS = process.env.SHOTS ?? "/tmp/wm-shots";
+mkdirSync(SHOTS, { recursive: true });
+const skip = !findChrome() && "no Chromium installed";
+
+// Friend names used in the walk: none of them may ever reach our server.
+const FRIENDS = ["Meeraqx", "Kabirqx", "Farahqx", "Devqx", "Taraqx"];
+const CITIES = ["Kochi", "Delhi", "Mumbai", "London", "Chennai"];
+const open = [];
+after(async () => {
+  for (const b of open) await b.close();
+});
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function browser(opts) {
+  const b = await launch(opts);
+  open.push(b);
+  return b;
+}
+const text = (b) => b.eval("document.body.innerText");
+async function clickText(b, label, sel = "button,a") {
+  const ok = await b.eval(`(()=>{const el=[...document.querySelectorAll(${JSON.stringify(sel)})].find(e=>e.textContent.trim()===${JSON.stringify(label)});if(!el)return false;el.click();return true})()`);
+  assert.ok(ok, `no "${label}" to click`);
+  await sleep(250);
+}
+async function waitFor(b, fn, ms = 8000) {
+  const t = Date.now();
+  while (Date.now() - t < ms) {
+    if (await b.eval(fn)) return true;
+    await sleep(150);
+  }
+  throw new Error(`timed out waiting for ${fn}`);
+}
+async function type(b, selector, value) {
+  await b.eval(`document.querySelector(${JSON.stringify(selector)}).focus()`);
+  await b.send("Input.insertText", { text: value });
+  await sleep(60);
+}
+async function answer(b, name, city) {
+  await type(b, ".wm-flds label:nth-child(1) input", name);
+  await type(b, ".wm-flds label:nth-child(2) input", city);
+  await clickText(b, "Light it");
+  await sleep(150);
+}
+const ours = (b) => b.requests.filter((r) => r.url.startsWith(BASE));
+function assertNoNames(b, names) {
+  for (const r of ours(b)) {
+    const blob = r.url + " " + r.body + " " + JSON.stringify(r.headers);
+    for (const n of names) assert.ok(!blob.includes(n), `friend name ${n} reached the server: ${r.method} ${r.url} ${r.body}`);
+    assert.ok(!r.url.includes("#"), `a # part was sent: ${r.url}`);
+  }
+}
+function captureOpens(b) {
+  return b.eval(`window.__opened=[];window.open=()=>({location:{set href(v){window.__opened.push(v)}},close(){}});true`);
+}
+
+const S = {};
+
+test("make a map: hero → home → 5 questions → reveal (tap to skip) → name at Show me → CTAs", { skip }, async () => {
+  const b = await browser({ width: 390, height: 844 });
+  S.owner = b;
+  await b.goto(BASE + "/");
+  const t0 = await text(b);
+  assert.match(t0, /Who.s in your corner\?/);
+  assert.match(t0, /Light my first lantern/);
+  await b.shot(`${SHOTS}/walk-1-landing.png`);
+  await clickText(b, "Light my first lantern");
+  assert.match(await text(b), /Where.s home\?/);
+  await clickText(b, "Bengaluru");
+  assert.match(await text(b), /Chapter I · The ones who were there/);
+  assert.match(await text(b), /Who would you call at 2am\?/);
+  assert.match(await text(b), /5 more lanterns unlock your map/);
+  await answer(b, FRIENDS[0], CITIES[0]);
+  assert.match(await text(b), /There\. That.s your first light\./);
+  await b.shot(`${SHOTS}/walk-2-question.png`);
+  for (let i = 1; i < 5; i++) await answer(b, FRIENDS[i], CITIES[i]);
+  assert.match(await text(b), /See my map/);
+  const lit = await b.eval(`document.querySelector('.wm-prog').getAttribute('aria-label')`);
+  assert.equal(lit, "5 of 12 lanterns lit");
+  await clickText(b, "See my map");
+  await waitFor(b, `!!document.querySelector('.wm-reveal.wm-play')`);
+  await b.shot(`${SHOTS}/walk-3-reveal-dusk.png`);
+  await b.eval(`document.querySelector('.wm-reveal').click()`); // tap to skip
+  await waitFor(b, `!!document.querySelector('.wm-reveal.wm-done')`, 1000);
+  const rv = await text(b);
+  assert.match(rv, /Here.s who.s in your corner\./);
+  assert.match(rv, /people/);
+  assert.match(rv, /km of thread/);
+  assert.match(rv, /Whose map is this\?/);
+  assert.equal(await b.eval(`document.querySelectorAll('.wm-fc').length`), 3);
+  await type(b, "#wm-owner", "Ananya");
+  await clickText(b, "Show me");
+  await waitFor(b, `document.body.innerText.includes("Your corner is glowing.")`);
+  const done = await text(b);
+  for (const c of ["Tell them on WhatsApp", "Share on LinkedIn", "Copy link"]) assert.ok(done.includes(c), `missing CTA ${c}`);
+  assert.match(done, /lanterns? lit so far/, "live counter after the reveal");
+  const li = await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Share on LinkedIn').href`);
+  assert.match(li, /^https:\/\/www\.linkedin\.com\/sharing\/share-offsite\/\?url=.*%2Fm%2F[a-z0-9]{8}$/);
+  S.slug = decodeURIComponent(li).match(/\/m\/([a-z0-9]{8})$/)[1];
+  await b.shot(`${SHOTS}/walk-4-glowing.png`);
+  assertNoNames(b, FRIENDS);
+});
+
+test("Tell them on WhatsApp: one lantern, one person; the link carries the name after # only", { skip }, async () => {
+  const b = S.owner;
+  await captureOpens(b);
+  await clickText(b, "Tell them on WhatsApp");
+  assert.match(await text(b), /Five people\. Two minutes\./);
+  // First suggested row is question 12 if answered, else question 1 (Meera, Kochi).
+  await clickText(b, "Send on WhatsApp");
+  await waitFor(b, `window.__opened.length > 0`);
+  const wa = await b.eval(`window.__opened[0]`);
+  const msg = decodeURIComponent(wa.replace("https://wa.me/?text=", ""));
+  const m = msg.match(/(http:\/\/[^ ]+\/t\/([A-Za-z0-9_-]{32}))#(\S+)$/);
+  assert.ok(m, `no thank link in ${msg}`);
+  assert.equal(decodeURIComponent(m[3]), FRIENDS[0]);
+  assert.ok(!/2am/.test(msg), "the message does not spoil the question");
+  S.thank = m[1] + "#" + m[3];
+  await b.shot(`${SHOTS}/walk-5-thank-sheet.png`);
+  assertNoNames(b, FRIENDS);
+});
+
+test("friend: The answer was you. → Tie it back → Tied at both ends.", { skip }, async () => {
+  const b = await browser({ width: 390, height: 844 });
+  S.friend = b;
+  await b.goto(S.thank);
+  const t = await text(b);
+  assert.match(t, /Ananya was asked:/);
+  assert.match(t, /Who would you call at 2am\?/);
+  assert.match(t, /The answer was you\./);
+  assert.match(t, new RegExp(`${FRIENDS[0]}, in Kochi`));
+  await b.shot(`${SHOTS}/walk-6-friend.png`);
+  await clickText(b, "Tie it back");
+  await waitFor(b, `document.body.innerText.includes("Tied at both ends.")`);
+  const t2 = await text(b);
+  assert.match(t2, /Ananya will see a gold lantern in Kochi\./);
+  assert.match(t2, /Tell Ananya yourself/);
+  assert.match(t2, /Make yours/);
+  await sleep(1600);
+  await b.shot(`${SHOTS}/walk-7-tied.png`);
+  assertNoNames(b, FRIENDS);
+});
+
+test("Make yours: starts with the carried lantern, still needs 5 questions", { skip }, async () => {
+  const b = S.friend;
+  await clickText(b, "Make yours");
+  await waitFor(b, `location.search.includes("via=thanks")`);
+  await sleep(800);
+  assert.match(await text(b), /Ananya lit a lantern for you/);
+  await clickText(b, "Light my first lantern");
+  await clickText(b, "Kochi");
+  const t = await text(b);
+  assert.match(t, /Your first lantern is already lit\./);
+  assert.match(t, /Ananya, in Bengaluru/);
+  assert.match(t, /5 more lanterns unlock your map/);
+  await b.shot(`${SHOTS}/walk-8-carried.png`);
+  for (let i = 0; i < 4; i++) await answer(b, `F${i}qx`, CITIES[i + 1]);
+  assert.ok(!(await text(b)).includes("See my map"), "4 answers + carried does not unlock");
+  await answer(b, "F4qx", "Pune");
+  await clickText(b, "See my map");
+  await b.eval(`document.querySelector('.wm-reveal').click()`);
+  await type(b, "#wm-owner", "Meera");
+  await clickText(b, "Show me");
+  await waitFor(b, `document.body.innerText.includes("Your corner is glowing.")`);
+  const slug = decodeURIComponent(await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Share on LinkedIn').href`)).match(/\/m\/([a-z0-9]{8})$/)[1];
+  const pub = await (await fetch(`${BASE}/api/maps/${slug}`)).json();
+  assert.equal(pub.stats.lanterns, 6);
+  assert.ok(pub.lanterns.includes("Bengaluru"), "the carried lantern points at the inviter's home");
+  assert.ok(!JSON.stringify(pub).includes(S.slug), "the inviter is never public");
+  assertNoNames(b, ["F0qx", "F1qx", "F2qx", "F3qx", "F4qx", ...FRIENDS]);
+});
+
+test("owner returns: Kochi answered. [Share your gratitude map]; visitors see no gold", { skip }, async () => {
+  const b = S.owner;
+  await b.goto(`${BASE}/m/${S.slug}`, 2000);
+  const t = await text(b);
+  assert.match(t, /Kochi answered\./);
+  assert.match(t, /The thread to Kochi is tied at both ends now\./);
+  assert.match(t, /Share your gratitude map/);
+  assert.equal(await b.eval(`document.querySelectorAll('.wm-turn').length`), 1);
+  await sleep(1500);
+  await b.shot(`${SHOTS}/walk-9-return.png`);
+  const v = await browser({ width: 390, height: 844 });
+  await v.goto(`${BASE}/m/${S.slug}`);
+  const vt = await text(v);
+  assert.match(vt, /Ananya.s Warm Map/);
+  assert.match(vt, /Make yours/);
+  assert.ok(!vt.includes("answered"), "no gold moment for visitors");
+  assert.equal(await v.eval(`document.querySelectorAll('circle[stroke="#F2C230"]').length`), 0, "no gold ring for visitors");
+  for (const n of FRIENDS) assert.ok(!(await v.eval("document.documentElement.outerHTML")).includes(n));
+});
+
+test("reduced motion: the reveal is already still; halos do not breathe", { skip }, async () => {
+  const b = await browser({ width: 390, height: 844, reducedMotion: true });
+  await b.goto(BASE + "/");
+  const anim = await b.eval(`getComputedStyle(document.querySelector('.wm-halo')).animationName`);
+  assert.equal(anim, "none");
+  await clickText(b, "Light my first lantern");
+  await clickText(b, "Pune");
+  for (let i = 0; i < 5; i++) await answer(b, `R${i}qx`, CITIES[i]);
+  await clickText(b, "See my map");
+  await waitFor(b, `!!document.querySelector('.wm-reveal.wm-done')`, 400);
+});
+
+test("small phone 360×640: primary buttons reachable", { skip }, async () => {
+  const b = await browser({ width: 360, height: 640 });
+  await b.goto(BASE + "/");
+  const r = await b.eval(`(()=>{const el=[...document.querySelectorAll('button')].find(e=>e.textContent.includes('Light my first lantern'));const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom}})()`);
+  await b.shot(`${SHOTS}/walk-10-small-landing.png`);
+  console.log(`# 360x640 landing: "Light my first lantern" at ${Math.round(r.top)}–${Math.round(r.bottom)}px (fold at 640)`);
+  assert.ok(r.bottom <= 640, `Light my first lantern is below the fold at 360x640 (${r.bottom}px)`);
+});
