@@ -17,6 +17,8 @@ INSERT INTO "Vouch" (id, "mapId", "entryIndex", "voucherEmailHash", "voucherName
  ('v_gone', 'legacy_gone', 0, 'hmno', NULL, NULL, 'verified', now(), now());
 INSERT INTO "EmailVerification" (id, email, code, purpose, "mapId", "expiresAt") VALUES
  ('ev1', 'meera@example.com', '123456', 'vouch', 'legacy_live', now() + interval '10 minutes');
+INSERT INTO "User" (id, email) VALUES ('u1', 'owner@example.com');
+UPDATE "Map" SET "userId" = 'u1' WHERE id = 'legacy_live';
 INSERT INTO "AnalyticsEvent" (id, "mapId", event, metadata) VALUES
  ('ae1', 'legacy_live', 'create', '{"entries":6}'),
  ('ae2', 'legacy_gone', 'play', '{}'),

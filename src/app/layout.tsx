@@ -6,8 +6,7 @@ import {
   Courier_Prime,
 } from "next/font/google";
 import "./globals.css";
-import { ConsentBanner } from "@/components/ConsentBanner";
-import { Providers } from "@/components/Providers";
+import "./storybook.css";
 
 const imFellEnglish = IM_Fell_English({
   subsets: ["latin"],
@@ -74,10 +73,7 @@ export default function RootLayout({
       }}
     >
       <body className="min-h-full">
-        <Providers>
-          {children}
-          <ConsentBanner />
-        </Providers>
+        {children}
       </body>
     </html>
   );
