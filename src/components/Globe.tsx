@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import { CENTER, SPHERE_R, layoutGlobe, threadPath } from "@/lib/globe-layout";
+import { CENTER, SPHERE_R, layoutGlobe, placeLabels, threadPath } from "@/lib/globe-layout";
 
 export const GOLD = "#F2C230";
 const AMBER = "#E8A84A";
@@ -66,9 +66,6 @@ export function GlyphDefs() {
 
 const GRAT = "M300 40V560M40 300H560M60 190Q300 160 540 190M60 410Q300 440 540 410M110 110Q300 90 490 110M110 490Q300 510 490 490";
 
-interface Box { x: number; y: number; w: number; h: number }
-const overlaps = (a: Box, b: Box) => !(a.x + a.w < b.x || b.x + b.w < a.x || a.y + a.h < b.y || b.y + b.h < a.y);
-
 export function Globe({
   homeCity,
   lanterns,
@@ -84,43 +81,15 @@ export function Globe({
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const { points } = useMemo(() => layoutGlobe(homeCity, lanterns.map((l) => l.city)), [homeCity, lanterns]);
 
-  // City labels with collision handling: try the outer side, then the inner, above, below.
   const placedLabels = useMemo(() => {
-    const want = (c: string) => labels === "all" || (Array.isArray(labels) && labels.includes(c));
-    const fs0 = 19 * Math.max(1, scale * 0.95);
-    const boxes: Box[] = [{ x: 282, y: 282, w: 36, h: 36 }];
-    if (homeLabel) {
-      const w = homeLabel.length * fs0 * 0.52 + 4;
-      boxes.push({ x: CENTER - w / 2, y: CENTER + 36 - fs0 * 0.8, w, h: fs0 });
-    }
-    points.forEach((p, i) => {
-      const g = (lanterns[i]?.gold ? 1.5 : 1) * scale;
-      boxes.push({ x: p.x - 9 * g, y: p.y - 15 * g, w: 18 * g, h: 23 * g });
+    const r = placeLabels({
+      points,
+      gold: lanterns.map((l) => !!l.gold),
+      want: (c) => labels === "all" || (Array.isArray(labels) && labels.includes(c)),
+      scale,
+      homeLabel,
     });
-    const out: { text: string; x: number; y: number; anchor: "start" | "end" | "middle" }[] = [];
-    const fs = fs0;
-    const done = new Set<string>();
-    points.forEach((p, i) => {
-      if (labels === "none" || !want(p.city) || done.has(p.city)) return;
-      const g = (lanterns[i]?.gold ? 1.5 : 1) * scale;
-      const w = p.city.length * fs * 0.52 + 4, h = fs, left = p.x < CENTER, gx = 13 * g;
-      const cands: ["r" | "l" | "t" | "b", Box][] = (left ? ["l", "r", "t", "b"] : ["r", "l", "t", "b"]).map((k) => [
-        k as "r" | "l" | "t" | "b",
-        k === "r" ? { x: p.x + gx, y: p.y - h * 0.62, w, h }
-          : k === "l" ? { x: p.x - gx - w, y: p.y - h * 0.62, w, h }
-          : k === "t" ? { x: p.x - w / 2, y: p.y - 17 * g - h, w, h }
-          : { x: p.x - w / 2, y: p.y + 12 * g, w, h },
-      ]);
-      for (const [k, b] of cands) {
-        if (b.x < -2 || b.x + b.w > 602) continue;
-        if (boxes.some((o) => overlaps(o, b))) continue;
-        boxes.push(b);
-        done.add(p.city);
-        out.push({ text: p.city, x: k === "r" ? b.x : k === "l" ? b.x + b.w : b.x + b.w / 2, y: b.y + b.h * 0.8, anchor: k === "r" ? "start" : k === "l" ? "end" : "middle" });
-        break;
-      }
-    });
-    return { out, fs };
+    return { out: labels === "none" ? [] : r.labels, fs: r.fontSize };
   }, [points, lanterns, labels, scale, homeLabel]);
 
   let viewBox = "-6 -6 612 612";

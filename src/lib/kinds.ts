@@ -38,6 +38,8 @@ export interface KindInput {
 export interface KindResult {
   kind: MapKind | null;
   because: string | null;
+  /** A short, name-free line for the share cards. */
+  short: string | null;
 }
 
 const fmt = (n: number) => Math.round(n).toLocaleString("en-IN");
@@ -46,10 +48,12 @@ export function computeKind(input: KindInput): KindResult {
   const home = citiesByName[input.homeCity];
   const pts = input.lanterns.map((l) => citiesByName[l.city]).filter((c): c is City => !!c);
   const total = pts.length;
-  const checks: Record<MapKind, () => string | null> = {
+  const checks: Record<MapKind, () => [string, string] | null> = {
     hearth: () => {
       const n = pts.filter((c) => c.name === input.homeCity).length;
-      return total > 0 && n / total >= HEARTH_SHARE ? `Because ${n} of your ${total} lanterns are in ${input.homeCity}.` : null;
+      return total > 0 && n / total >= HEARTH_SHARE
+        ? [`Because ${n} of your ${total} lanterns are in ${input.homeCity}.`, `${n} of ${total} lanterns in ${input.homeCity}.`]
+        : null;
     },
     bridge: () => {
       const groups = clusters(pts).filter((g) => g.length >= BRIDGE_GROUP_MIN);
@@ -59,7 +63,10 @@ export function computeKind(input: KindInput): KindResult {
           const b = anchor(groups[j]);
           const d = haversineKm(a.lat, a.lon, b.lat, b.lon);
           if (d >= BRIDGE_APART_KM) {
-            return `Because ${groups[i].length} lanterns sit around ${a.name} and ${groups[j].length} around ${b.name}, ${fmt(d)} km apart.`;
+            return [
+              `Because ${groups[i].length} lanterns sit around ${a.name} and ${groups[j].length} around ${b.name}, ${fmt(d)} km apart.`,
+              `Two places held together, ${a.name} and ${b.name}.`,
+            ];
           }
         }
       }
@@ -68,7 +75,7 @@ export function computeKind(input: KindInput): KindResult {
     voyager: () => {
       const countries = new Set(pts.map((c) => c.country));
       if (home) countries.add(home.country);
-      if (countries.size >= VOYAGER_COUNTRIES) return `Because your lanterns reach ${countries.size} countries.`;
+      if (countries.size >= VOYAGER_COUNTRIES) return [`Because your lanterns reach ${countries.size} countries.`, `A thread across ${countries.size} countries.`];
       if (!home) return null;
       let far: City | null = null;
       let farKm = 0;
@@ -79,25 +86,27 @@ export function computeKind(input: KindInput): KindResult {
           far = c;
         }
       }
-      return far && farKm > VOYAGER_KM ? `Because your furthest lantern is in ${far.name}, ${fmt(farKm)} km away.` : null;
+      return far && farKm > VOYAGER_KM
+        ? [`Because your furthest lantern is in ${far.name}, ${fmt(farKm)} km away.`, `The furthest light is in ${far.name}.`]
+        : null;
     },
     constellation: () => {
       const counts = countBy(pts.map((c) => c.name));
       const max = Math.max(0, ...counts.values());
       return counts.size >= CONSTELLATION_CITIES && max / total <= CONSTELLATION_MAX_SHARE
-        ? `Because your lanterns are spread across ${counts.size} cities.`
+        ? [`Because your lanterns are spread across ${counts.size} cities.`, max === 1 ? `${counts.size} cities, one light in each.` : `${counts.size} cities, scattered like stars.`]
         : null;
     },
     "lantern-keeper": () => {
       const r = input.repeatMax ?? 1;
-      return r >= KEEPER_REPEAT ? `Because one person answered ${r} of your questions.` : null;
+      return r >= KEEPER_REPEAT ? [`Because one person answered ${r} of your questions.`, "One person holds a lot of this sky."] : null;
     },
   };
   for (const kind of ORDER) {
-    const because = checks[kind]();
-    if (because) return { kind, because };
+    const hit = checks[kind]();
+    if (hit) return { kind, because: hit[0], short: hit[1] };
   }
-  return { kind: null, because: null };
+  return { kind: null, because: null, short: null };
 }
 
 function countBy(xs: string[]): Map<string, number> {
