@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   if (id) {
     const map = await prisma.map.findFirst({
-      where: { OR: [{ shortSlug: id }, { publicId: id }], deletedAt: null },
+      where: { OR: [{ shortSlug: id }, { publicId: id }] },
     });
     if (map) {
       ownerName = map.ownerName || "Someone";

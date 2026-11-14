@@ -7,7 +7,11 @@ import { placeOnGlobe, CX, CY } from "@/lib/geo";
 export interface GlobeEntry {
   name?: string;
   city: string;
+  /** Tied back: one gold (#F2C230), 1.5x larger, with a ring, so it never relies on colour alone. */
+  gold?: boolean;
 }
+
+export const GOLD = "#F2C230";
 
 interface GlobeProps {
   homeCity: string;
@@ -57,6 +61,8 @@ export function Globe({
           )} ${q.y.toFixed(1)}`}
           className={fresh ? "thread" : undefined}
           opacity="0.85"
+          stroke={entry.gold ? GOLD : undefined}
+          strokeWidth={entry.gold ? 3 : undefined}
         />
       );
 
@@ -85,11 +91,14 @@ export function Globe({
           <circle
             cx={q.x}
             cy={q.y}
-            r={5}
-            fill="#B9741F"
+            r={entry.gold ? 7.5 : 5}
+            fill={entry.gold ? GOLD : "#B9741F"}
             stroke="#2E2219"
             strokeWidth={1.2}
           />
+          {entry.gold && (
+            <circle cx={q.x} cy={q.y} r={13} fill="none" stroke="#2E2219" strokeWidth={1.4} />
+          )}
           <text
             x={lx}
             y={ly}
