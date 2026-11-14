@@ -41,7 +41,6 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   maps          Map[]
-  vouches       Vouch[]
   accounts      Account[]
   sessions      Session[]
 }
@@ -54,66 +53,87 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// A saved map. Created at "Show me". Holds the owner's first name, home city
+// and lanterns as { city, questionIndex } (or { city, carried: true } for the
+// lantern pointing back to whoever brought them). Never a friend's name.
 model Map {
-  id            String   @id @default(cuid())
-  publicId      String   @unique @default(cuid())
-  shortSlug     String?  @unique
-  homeCity      String
-  ownerName     String?
-  ownerEmail    String?
-  entries       Json // [{ city: string, questionIndex: number }]
-  shareImageUrl String?
-  consent       Boolean  @default(false)
-  deletedAt     DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  userId        String?
-  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  vouches       Vouch[]
-  events        AnalyticsEvent[]
+  id             String           @id @default(cuid())
+  publicId       String           @unique @default(cuid())
+  shortSlug      String?          @unique
+  homeCity       String
+  ownerName      String?
+  entries        Json
+  questionSet    Int              @default(2) // 1 = pre-v2 (legacy wording), 2 = launch questions
+  ownerKeyHash   String? // SHA-256 of the keeper key; the key itself only lives in /m/[id]#k=
+  kind           String? // hearth | bridge | voyager | constellation | lantern-keeper
+  km             Int?
+  invitedByMapId String?
+  invitedBy      Map?             @relation("InvitedBy", fields: [invitedByMapId], references: [id], onDelete: SetNull)
+  invited        Map[]            @relation("InvitedBy")
+  arrivedVia     String           @default("cold") // cold | map | thanks | seed
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  userId         String?
+  user           User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  thankLinks     ThankLink[]
+  vouches        Vouch[]
+  events         AnalyticsEvent[]
 
-  @@index([shortSlug])
-  @@index([publicId])
+  @@index([invitedByMapId])
 }
 
+// A private thank-you link, /t/[token]. The token is made on the owner's phone;
+// we store only its SHA-256. It points at one lantern (entryIndex = question index).
+model ThankLink {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  mapId      String
+  map        Map       @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  entryIndex Int
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  usedAt     DateTime?
+  vouch      Vouch?
+
+  @@index([mapId, createdAt])
+}
+
+// "Tie it back": one tap turns a lantern gold. Nothing is counted publicly.
 model Vouch {
-  id               String    @id @default(cuid())
-  mapId            String
-  map              Map       @relation(fields: [mapId], references: [id], onDelete: Cascade)
-  entryIndex       Int
-  voucherEmailHash String?
-  voucherName      String?
-  note             String?   @db.VarChar(280)
-  status           String    @default("pending")
-  verifiedAt       DateTime?
-  createdAt        DateTime  @default(now())
-  userId           String?
-  user             User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id            String     @id @default(cuid())
+  mapId         String
+  map           Map        @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  entryIndex    Int
+  thankLinkId   String?    @unique
+  thankLink     ThankLink? @relation(fields: [thankLinkId], references: [id], onDelete: SetNull)
+  tier          String     @default("tap")
+  deviceHash    String? // HMAC of the device mark, salted per map (cannot link one friend across maps)
+  ipHash        String? // HMAC of the IP, salted per day
+  seenByOwnerAt DateTime?
+  createdAt     DateTime   @default(now())
 
-  @@index([mapId, status])
+  @@unique([mapId, entryIndex])
 }
 
-model EmailVerification {
-  id        String   @id @default(cuid())
-  email     String
-  code      String
-  purpose   String   @default("vouch")
-  mapId     String?
-  usedAt    DateTime?
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+// Fixed-window counters for per-device and per-IP limits. Keys are hashes.
+model RateLimit {
+  key         String
+  windowStart DateTime
+  count       Int      @default(0)
 
-  @@index([email, purpose])
+  @@id([key, windowStart])
+  @@index([windowStart])
 }
 
 model AnalyticsEvent {
   id        String   @id @default(cuid())
   mapId     String?
-  map       Map?     @relation(fields: [mapId], references: [id], onDelete: SetNull)
+  map       Map?     @relation(fields: [mapId], references: [id], onDelete: Cascade)
   event     String
   metadata  Json?
   createdAt DateTime @default(now())
 
   @@index([mapId, event])
+  @@index([event, createdAt])
   @@index([createdAt])
 }
