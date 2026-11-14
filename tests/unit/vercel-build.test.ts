@@ -19,7 +19,8 @@ function run(shell: string, env: Record<string, string>, fail: { prisma?: boolea
     writeFileSync(f, `#!/bin/sh\necho "${bin} $*" >> "${log}"\nexit ${bad ? 3 : 0}\n`);
     chmodSync(f, 0o755);
   }
-  const r = spawnSync(shell, ["-c", cmd], { env: { PATH: `${dir}:/usr/bin:/bin`, ...env }, encoding: "utf8" });
+  const childEnv = { PATH: `${dir}:/usr/bin:/bin`, ...env } as unknown as NodeJS.ProcessEnv;
+  const r = spawnSync(shell, ["-c", cmd], { env: childEnv, encoding: "utf8" });
   const ran = existsSync(log) ? readFileSync(log, "utf8").trim().split("\n") : [];
   rmSync(dir, { recursive: true, force: true });
   return { code: r.status, ran };
