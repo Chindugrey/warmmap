@@ -10,11 +10,8 @@ export async function GET() {
   }
 
   const maps = await prisma.map.findMany({
-    where: { userId: session.user.id, deletedAt: null },
+    where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
-    include: {
-      _count: { select: { vouches: { where: { status: "verified" } } } },
-    },
   });
 
   return NextResponse.json(
@@ -24,8 +21,6 @@ export async function GET() {
       shortSlug: m.shortSlug,
       homeCity: m.homeCity,
       ownerName: m.ownerName,
-      entries: m.entries,
-      vouchCount: m._count.vouches,
       createdAt: m.createdAt,
       url: `/m/${m.shortSlug}`,
     }))
