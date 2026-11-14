@@ -6,6 +6,7 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
 import { launch, findChrome } from "./cdp.mjs";
+import { createHash, randomBytes } from "node:crypto";
 
 const BASE = process.env.BASE ?? "http://localhost:3100";
 if (!/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(BASE)) throw new Error(`refusing non-local BASE ${BASE}`);
@@ -238,6 +239,83 @@ test("reduced motion: the reveal is already still; halos do not breathe", { skip
   for (let i = 0; i < 5; i++) await answer(b, `R${i}qx`, CITIES[i]);
   await clickText(b, "See my map");
   await waitFor(b, `!!document.querySelector('.wm-reveal.wm-done')`, 400);
+});
+
+async function bottomOf(b, label, sel = "button,a") {
+  return b.eval(`(()=>{scrollTo(0,0);const el=[...document.querySelectorAll(${JSON.stringify(sel)})].find(e=>e.textContent.trim()===${JSON.stringify(label)});if(!el)return null;return Math.round(el.getBoundingClientRect().bottom)})()`);
+}
+
+/** A map and an unused thank-you link made over HTTP, as the owner's phone would. */
+async function freshMapAndLink() {
+  const dev = randomBytes(18).toString("base64url");
+  const h = { "Content-Type": "application/json", "x-wm-device": dev };
+  const entries = ["Kochi", "Mysuru", "Chennai", "Hyderabad", "Pune"].map((city, questionIndex) => ({ city, questionIndex }));
+  const m = await (await fetch(`${BASE}/api/maps`, { method: "POST", headers: h, body: JSON.stringify({ homeCity: "Bengaluru", ownerName: "Ananya", entries }) })).json();
+  const token = randomBytes(24).toString("base64url");
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const r = await fetch(`${BASE}/api/thanks`, { method: "POST", headers: { ...h, "x-owner-key": m.ownerKey }, body: JSON.stringify({ mapId: m.id, entryIndex: 0, tokenHash }) });
+  assert.equal(r.status, 201);
+  return { slug: m.id, key: m.ownerKey, token };
+}
+
+test("360×640: every screen's primary button is above the fold", { skip }, async () => {
+  const b = await browser({ width: 360, height: 640 });
+  await b.goto(BASE + "/");
+  const rows = [];
+  rows.push(["landing: Light my first lantern", await bottomOf(b, "Light my first lantern")]);
+  await clickText(b, "Light my first lantern");
+  rows.push(["home: Kochi chip", await bottomOf(b, "Kochi")]);
+  rows.push(["home: Other chip", await bottomOf(b, "Other")]);
+  await clickText(b, "Bengaluru");
+  rows.push(["question: Light it", await bottomOf(b, "Light it")]);
+  for (let i = 0; i < 5; i++) await answer(b, `S${i}qx`, CITIES[i]);
+  rows.push(["question 6: Light it", await bottomOf(b, "Light it")]);
+  await clickText(b, "See my map");
+  await b.eval(`document.querySelector('.wm-reveal').click()`);
+  await sleep(200);
+  rows.push(["reveal: Show me", await bottomOf(b, "Show me")]);
+  await type(b, "#wm-owner", "Ananya");
+  await clickText(b, "Show me");
+  await waitFor(b, `document.body.innerText.includes("Your corner is glowing.")`);
+  rows.push(["glowing: Tell them on WhatsApp", await bottomOf(b, "Tell them on WhatsApp")]);
+  const f = await freshMapAndLink();
+  const fb = await browser({ width: 360, height: 640 });
+  await fb.goto(`${BASE}/t/${f.token}#Meera`);
+  rows.push(["friend: Tie it back", await bottomOf(fb, "Tie it back")]);
+  await clickText(fb, "Tie it back");
+  await waitFor(fb, `document.body.innerText.includes("Tied at both ends.")`);
+  rows.push(["tied: Tell Ananya yourself", await bottomOf(fb, "Tell Ananya yourself")]);
+  rows.push(["tied: Make yours", await bottomOf(fb, "Make yours")]);
+  const ob = await browser({ width: 360, height: 640 });
+  await ob.goto(`${BASE}/m/${f.slug}#k=${f.key}`, 2200);
+  rows.push(["return: Share your gratitude map", await bottomOf(ob, "Share your gratitude map")]);
+  await ob.shot(`${SHOTS}/small-return.png`);
+  const vb = await browser({ width: 360, height: 640 });
+  await vb.goto(`${BASE}/m/${f.slug}`);
+  rows.push(["public: Make yours", await bottomOf(vb, "Make yours")]);
+  await vb.shot(`${SHOTS}/small-public.png`);
+  await fb.shot(`${SHOTS}/small-tied.png`);
+  for (const [k, v] of rows) console.log(`# 360x640 ${k}: bottom ${v}px`);
+  const below = rows.filter(([, v]) => v === null || v > 640);
+  assert.deepEqual(below, [], `below the fold: ${JSON.stringify(below)}`);
+});
+
+test("keyboard open: the globe shrinks and Light it stays above the keyboard", { skip }, async () => {
+  const b = await browser({ width: 390, height: 844 });
+  await b.goto(BASE + "/");
+  await clickText(b, "Light my first lantern");
+  await clickText(b, "Bengaluru");
+  await b.eval(`document.querySelector('.wm-flds input').focus()`);
+  // The soft keyboard leaves about 400px of a 844px phone.
+  await b.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 400, deviceScaleFactor: 1, mobile: true });
+  await waitFor(b, `!!document.querySelector('.wm-ask.wm-kbd')`, 3000);
+  await sleep(300);
+  const r = await b.eval(`(()=>{const btn=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='Light it').getBoundingClientRect();const g=document.querySelector('.wm-mapw svg').getBoundingClientRect();const c=document.querySelector('.wm-card').getBoundingClientRect();return {btnTop:btn.top,btnBottom:btn.bottom,vh:visualViewport.height,globe:g.height,globeBottom:g.bottom,cardTop:c.top}})()`);
+  await b.shot(`${SHOTS}/keyboard-open.png`);
+  console.log(`# keyboard: Light it ${Math.round(r.btnTop)}-${Math.round(r.btnBottom)} of ${r.vh}px; globe ${Math.round(r.globe)}px`);
+  assert.ok(r.btnBottom <= r.vh && r.btnTop >= 0, "Light it is hidden by the keyboard");
+  assert.ok(r.globe <= r.vh * 0.32 + 2 && r.globe >= 60, `globe is about a third of what is left (${r.globe}px)`);
+  assert.ok(r.globeBottom <= r.cardTop + 1, "the globe does not cover the card");
 });
 
 test("small phone 360×640: primary buttons reachable", { skip }, async () => {

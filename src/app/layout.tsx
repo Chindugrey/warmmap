@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   IM_Fell_English,
   IM_Fell_English_SC,
@@ -34,6 +34,13 @@ const courierPrime = Courier_Prime({
   weight: ["400", "700"],
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#F1E6CF",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://warmmap.world"),

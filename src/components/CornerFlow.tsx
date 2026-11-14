@@ -109,6 +109,16 @@ export function CornerFlow({ below }: { below?: ReactNode }) {
     } catch {}
   }, [d, stage, loaded]);
 
+  // Each new page moves focus to its heading (not on the first paint of the hero).
+  useEffect(() => {
+    if (stage === "hero" || stage === "ask") return;
+    const h = document.querySelector<HTMLElement>(".wm main h1, .wm main h2");
+    if (h) {
+      h.tabIndex = -1;
+      h.focus({ preventScroll: true });
+    }
+  }, [stage]);
+
   const start = () => {
     track("start", { via: d.via });
     setStage(d.home ? "ask" : "home");
@@ -279,6 +289,38 @@ function HomeScreen({ onPick }: { onPick: (city: string) => void }) {
 
 /* ───────── a question ───────── */
 
+/**
+ * The on-screen keyboard: when the visual viewport shrinks, the globe drops to
+ * about a third of what is left and the card (with Light it) is scrolled to
+ * sit just above the keyboard.
+ */
+function useKeyboard(ref: React.RefObject<HTMLElement | null>, target: React.RefObject<HTMLElement | null>) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    // Compare with the tallest height seen: some browsers shrink innerHeight
+    // with the keyboard too, others only the visual viewport.
+    let tallest = Math.max(window.innerHeight, vv.height);
+    const onRotate = () => (tallest = Math.max(window.innerHeight, vv.height));
+    const onResize = () => {
+      tallest = Math.max(tallest, vv.height);
+      const isOpen = vv.height < tallest * 0.78;
+      ref.current?.style.setProperty("--vvh", `${Math.round(vv.height)}px`);
+      setOpen(isOpen);
+      if (isOpen) requestAnimationFrame(() => target.current?.scrollIntoView({ block: "end", behavior: "auto" }));
+    };
+    onResize();
+    vv.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onRotate);
+    return () => {
+      vv.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onRotate);
+    };
+  }, [ref, target]);
+  return open;
+}
+
 function ProgressLanterns({ answered }: { answered: Set<number> }) {
   return (
     <div className="wm-prog" role="img" aria-label={`${answered.size} of ${QUESTION_COUNT} lanterns lit`}>
@@ -309,6 +351,9 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
   const [animKey, setAnimKey] = useState(0);
   const nameRef = useRef<HTMLInputElement>(null);
   const cityRef = useRef<HTMLInputElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const lightRef = useRef<HTMLButtonElement>(null);
+  const kbd = useKeyboard(mainRef, lightRef);
   const current = answered.has(d.current) ? nextQuestion(answered, new Set(d.skipped), d.current) ?? d.current : d.current;
   const q = QUESTIONS[current];
   const unlocked = d.answers.length >= UNLOCK_AT;
@@ -396,7 +441,7 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
 
   return (
     <div className="wm">
-      <main className="wm-scr wm-ask">
+      <main className={`wm-scr wm-ask${kbd ? " wm-kbd" : ""}`} ref={mainRef}>
         <ProgressLanterns answered={answered} />
         <div className="wm-mapw">
           <Globe key={animKey} homeCity={home} lanterns={lanterns} labels={newest ? [newest] : "none"} motion="last" scale={1.4} />
@@ -494,7 +539,7 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
               {hint}
             </p>
           )}
-          <button className="wm-btn" type="submit">
+          <button className="wm-btn" type="submit" ref={lightRef}>
             Light it
           </button>
           <p className="wm-note">This name stays on your device.</p>
