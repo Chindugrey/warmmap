@@ -11,6 +11,7 @@ export const SERVER_EVENTS = [
   "thank_link_created",
   "vouch_tap",
   "gold_seen",
+  "link_report",
 ] as const;
 
 export const CLIENT_EVENTS = ["page_view", "start", "lantern", "reveal", "share", "t_open", "make_yours"] as const;
