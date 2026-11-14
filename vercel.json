@@ -1,4 +1,4 @@
 {
-  "buildCommand": "prisma migrate deploy && next build",
+  "buildCommand": "if [ \"$VERCEL_ENV\" != \"production\" ]; then prisma migrate deploy || exit 1; fi; next build",
   "framework": "nextjs"
 }

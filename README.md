@@ -1,77 +1,68 @@
 # Warm Map
 
-Who's in your corner? A small story about the people who'd pick up — and a way to tell them.
+Who's in your corner? A small, shareable map of the people who have your back, and a way to tell them.
 
 Live at **https://warmmap.world**
 
 ## What's inside
 
-- A login-free 12-question globe game.
-- A shareable Warm Map with a short link (`/m/xxxx`).
-- Automatic preview pictures for WhatsApp, LinkedIn and Twitter.
-- A friend's page where someone can vouch back with email verification.
-- Light sign-in with email magic links (only when saving).
-- A `/me` dashboard to see and delete your maps.
-- Privacy-first: names stay on your device until someone vouches. The server stores cities and counts only.
-
-## Stack
-
-- Next.js 16 (App Router)
-- Prisma + SQLite for local dev (switch to PostgreSQL for production)
-- NextAuth with email magic links
-- Resend for transactional email
-- @vercel/og for OpenGraph images
-- Deployed on Vercel
+- A one-card creation flow: home city, then the 12 questions in 3 chapters. Five lanterns unlock the reveal; twelve complete the map.
+- The map is saved at **Show me**, with the owner's first name and the cities. Friends' names never reach the server.
+- Private thank-you links `/t/[token]`: the token is made on the phone; the server keeps only its hash. **Tie it back** turns the lantern gold.
+- The owner's map `/m/[id]` with gold (by keeper key, `/m/[id]#k=…`), delete and a new key. Visitors see cities only.
+- Share cards in Storybook dusk: `/api/og?id=…` (1200×627) and `&f=story` (1080×1920).
+- A live lantern counter, per-device rate limits, and a founder's connector score at `/api/admin/connectors`.
+- No e-mail anywhere, no accounts, no third-party analytics.
 
 ## Local development
 
+PostgreSQL only. Use a throwaway local cluster (or `docker compose up db`), never a shared database.
+
 ```bash
-npm install
-# The SQLite database file is created automatically:
-npx prisma migrate dev
-npm run dev
+npm ci
+# put the variables below in .env.local (local values)
+export DATABASE_URL="postgresql://warmmap@127.0.0.1:55432/warmmap"
+npx prisma migrate deploy
+node --import ./tests/register.mjs scripts/seed-local.ts http://localhost:3100   # prints URLs to open
+npm run dev -- -H 127.0.0.1 -p 3100
 ```
 
-Copy `.env.example` to `.env.local` and fill in your values.
-
-## Production database
-
-The committed schema uses **SQLite**, which is fine for local development but not persistent on Vercel serverless functions. For a live product:
-
-1. Create a PostgreSQL database (Neon, Supabase or Vercel Postgres).
-2. Change `provider = "sqlite"` to `provider = "postgresql"` in `prisma/schema.prisma`.
-3. Update `DATABASE_URL` in Vercel to your PostgreSQL connection string.
-4. Run `npx prisma migrate deploy` against that database (or use Vercel's build command: `prisma migrate deploy && next build`).
-5. For local dev with PostgreSQL, use `docker compose up db` (see `docker-compose.yml`).
+Tests: `npm test` (unit), `npm run test:api` and `npm run test:browser` (against the local server), `scripts/check-migration.sh` (replays the migrations on v1 rows in a scratch database). `scripts/walkthrough.sh` is a curl walk-through for a screen-share (see `docs/WALKTHROUGH.md`).
 
 ## Environment variables
 
-| Variable | Purpose |
-|---|---|
-| `DATABASE_URL` | SQLite file locally, PostgreSQL URL in production |
-| `NEXTAUTH_SECRET` | Random string for JWT/session signing |
-| `NEXTAUTH_URL` | e.g. `https://warmmap.world` |
-| `RESEND_API_KEY` | Required to send magic links and vouch codes |
-| `RESEND_FROM_EMAIL` | e.g. `noreply@warmmap.world` |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional OAuth |
-| `NEXT_PUBLIC_BASE_URL` | `https://warmmap.world` |
-| `NEXT_PUBLIC_DOMAIN` | `warmmap.world` |
+The app reads exactly these:
 
-## Deploy
+| Variable | Required? | Production | Preview | Notes |
+|---|---|---|---|---|
+| `DATABASE_URL` | Required | The production Neon database | **Its own Neon branch, never production** | Previews run `prisma migrate deploy` against it on every build. Use the direct (non-pooled) connection string so migrations work. |
+| `WM_SECRET` | Required wherever `NODE_ENV=production` (both Vercel Production and Preview) | 32+ random characters | 32+ random characters, **different from production** | Salts the IP and device fingerprints. Missing or short: every route that hashes returns 500. |
+| `ADMIN_TOKEN` | Optional | 32+ random characters | Its own value, or unset | Bearer token for `/api/admin/connectors`. Unset (or under 16 characters): the admin API answers 404. |
+| `NEXT_PUBLIC_SITE_URL` | Optional | Leave unset (defaults to `https://warmmap.world`) | The preview's own URL | Inlined at **build** time. Every share link and card URL is built from it, never from the request. Unset on a preview means its links and cards point at production. |
 
-Pushes to `main` deploy automatically via Vercel.
+Set by Vercel, not by us: `NODE_ENV`, `VERCEL_ENV` (read by the build command). No longer read and safe to delete from Vercel: `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXT_PUBLIC_BASE_URL`, `NEXT_PUBLIC_DOMAIN`. Test-only: `BASE`, `CHROME`, `SHOTS`.
 
-```bash
-vercel --prod
+## Deploying and migrations
+
+`vercel.json` builds with:
+
+```sh
+if [ "$VERCEL_ENV" != "production" ]; then prisma migrate deploy || exit 1; fi; next build
 ```
+
+- **Production never migrates on build.** Jai migrates production **by hand**, after taking a private backup. Migration `20261114180000_no_email_sign_in` drops the `User`, `Account`, `Session` and `VerificationToken` tables (they hold e-mail addresses) and `Map.userId`; back those up first.
+- **Previews migrate their own database** on every build. A failed preview migration fails the build. A failed `next build` fails every build.
+- `tests/unit/vercel-build.test.ts` runs this exact command under sh, bash and dash with stub binaries to prove all of the above.
+
+Production order of operations: back up, then `DATABASE_URL=<prod direct URL> npx prisma migrate deploy` from a trusted machine, then deploy.
 
 ## Privacy and trust
 
-- Names are never stored until that person vouches back themselves.
-- The shared map stores only cities and counts.
-- Users can delete their map from `/me`.
-- Rate limits protect against spam (maps per hour, vouch codes per email).
+- Friends' names never reach the server: they stay on the phone and travel only after the `#` of a thank-you link.
+- Public maps show the owner's first name, home city and cities sorted by name. Never which question a city answered, never gold, never counts.
+- A map is deleted for good from its keeper link.
+- Rate limits are per device and per IP, stored as hashes.
 
 ## License
 
-Private — built by the Zeyhi team.
+Private, built by the Zeyhi team.
