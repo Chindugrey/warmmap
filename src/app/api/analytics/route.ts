@@ -1,35 +1,22 @@
+// POST /api/analytics: allow-listed client events only, small payloads.
 import { NextRequest, NextResponse } from "next/server";
-import { trackEvent } from "@/lib/analytics";
-import { z } from "zod";
-
-const eventSchema = z.object({
-  event: z.union([
-    z.literal("page_view"),
-    z.literal("play"),
-    z.literal("share"),
-    z.literal("invite_click"),
-    z.literal("login"),
-  ]),
-  mapId: z.string().optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
+import { CLIENT_EVENTS, trackEvent } from "@/lib/analytics";
+import { limitRequest, HOUR } from "@/lib/limits";
 
 export async function POST(req: NextRequest) {
-  let body: unknown;
+  const raw = await req.text();
+  if (raw.length > 512) return NextResponse.json({ error: "Too large" }, { status: 413 });
+  const limited = await limitRequest(req, "analytics", { device: [300, HOUR], ip: [3000, HOUR] });
+  if (limited) return limited;
+  let body: { event?: unknown; metadata?: unknown };
   try {
-    body = await req.json();
+    body = JSON.parse(raw);
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-
-  const parsed = eventSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid input", issues: parsed.error.issues },
-      { status: 400 }
-    );
+  if (typeof body.event !== "string" || !(CLIENT_EVENTS as readonly string[]).includes(body.event)) {
+    return NextResponse.json({ error: "Unknown event" }, { status: 400 });
   }
-
-  await trackEvent(parsed.data.event, parsed.data.mapId, parsed.data.metadata);
+  await trackEvent(body.event as (typeof CLIENT_EVENTS)[number], null, body.metadata);
   return NextResponse.json({ ok: true });
 }
