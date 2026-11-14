@@ -40,10 +40,21 @@ test("Lantern-keeper: one person answers three or more questions", () => {
   assert.equal(r.because, "Because one person answered 3 of your questions.");
 });
 
-test("no kind fits: plain fallback, never a forced label", () => {
+test("no rule fires: default to Constellation, never no label (Aadarsh, 14 Nov)", () => {
   const r = computeKind({ homeCity: "Bengaluru", lanterns: L("Pune", "Pune", "Kochi", "Kochi", "Mumbai"), repeatMax: 1 });
-  assert.equal(r.kind, null);
-  assert.equal(r.because, null);
+  assert.equal(r.kind, "constellation");
+  assert.equal(r.because, "Because your lanterns are spread across 3 cities.");
+  assert.equal(r.short, "3 cities, scattered like stars.");
+});
+
+test("default Constellation reads right with one city, and with no known city", () => {
+  const one = computeKind({ homeCity: "Bengaluru", lanterns: L("Kochi", "Kochi", "Kochi", "Kochi", "Kochi"), repeatMax: 1 });
+  assert.equal(one.kind, "constellation");
+  assert.equal(one.because, "Because all your lanterns glow in Kochi.");
+  assert.equal(one.short, "Every light in Kochi.");
+  const none = computeKind({ homeCity: "Bengaluru", lanterns: L("Atlantis"), repeatMax: 1 });
+  assert.equal(none.kind, "constellation");
+  assert.equal(none.because, null);
 });
 
 test("kind is never based on how many people (a 12-lantern Hearth is still a Hearth)", () => {

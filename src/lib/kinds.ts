@@ -1,6 +1,6 @@
 // The five kinds of map (design-doc.md "The kinds of map"). Every kind comes
 // from the visible shape of the map and carries a "because" line. A map that
-// fits none gets no kind (a plain line in the UI), never a forced label.
+// fits none is a Constellation (Aadarsh, 14 Nov: never no label).
 import { citiesByName, type City } from "./cities";
 import { haversineKm } from "./geo";
 
@@ -36,6 +36,7 @@ export interface KindInput {
 }
 
 export interface KindResult {
+  /** Always set by computeKind; null only for callers that have no map yet. */
   kind: MapKind | null;
   because: string | null;
   /** A short, name-free line for the share cards. */
@@ -106,7 +107,19 @@ export function computeKind(input: KindInput): KindResult {
     const hit = checks[kind]();
     if (hit) return { kind, because: hit[0], short: hit[1] };
   }
-  return { kind: null, because: null, short: null };
+  // No rule fired: the default is Constellation, with a line that stays true.
+  const counts = countBy(pts.map((c) => c.name));
+  if (counts.size === 0) return { kind: "constellation", because: null, short: null };
+  if (counts.size === 1) {
+    const city = [...counts.keys()][0];
+    return { kind: "constellation", because: `Because all your lanterns glow in ${city}.`, short: `Every light in ${city}.` };
+  }
+  const max = Math.max(...counts.values());
+  return {
+    kind: "constellation",
+    because: `Because your lanterns are spread across ${counts.size} cities.`,
+    short: max === 1 ? `${counts.size} cities, one light in each.` : `${counts.size} cities, scattered like stars.`,
+  };
 }
 
 function countBy(xs: string[]): Map<string, number> {
