@@ -196,6 +196,9 @@ test("live counter: exact lantern total from the first lantern", async () => {
   const rows = await db.$queryRaw<{ t: bigint }[]>`SELECT COALESCE(SUM(jsonb_array_length(entries)),0)::bigint t FROM "Map"`;
   const total = Number(rows[0].t);
   assert.deepEqual(r.json, total >= 1 ? { show: true, lanterns: total } : { show: false, lanterns: null });
+  // Served by the API itself (not only the UI), counted from the first lantern.
+  assert.ok(total >= 1 && r.json.show === true);
+  assert.equal(r.headers.get("cache-control"), "public, s-maxage=30, stale-while-revalidate=60");
 });
 
 test("analytics: allow-listed events; free text dropped", async () => {

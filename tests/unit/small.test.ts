@@ -17,6 +17,8 @@ test("connector score = distinct vouchers + maps brought in + cities", () => {
 test("live counter: exact count from the first lantern (never rounded up)", () => {
   assert.deepEqual(counterPayload(0), { show: false, lanterns: null });
   assert.deepEqual(counterPayload(1), { show: true, lanterns: 1 });
+  // The old rule hid everything below 15; it is gone from the server.
+  for (let n = 1; n < 15; n++) assert.deepEqual(counterPayload(n), { show: true, lanterns: n });
   assert.deepEqual(counterPayload(1234), { show: true, lanterns: 1234 });
 });
 
