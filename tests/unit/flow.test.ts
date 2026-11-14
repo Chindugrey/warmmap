@@ -73,3 +73,22 @@ test("thank-yous: question 12 first, then 1, 5, 3, 2; message does not spoil the
     "Made my Warm Map: the people who've had my back, across 5 cities. Who's in your corner? https://warmmap.world/m/k7q2x9ab"
   );
 });
+
+test("India clusters: no two lanterns closer than the minimum, all inside the rim, none on the home light", async () => {
+  const { MIN_SEPARATION } = await import("@/lib/globe-layout");
+  const maps: [string, string[]][] = [
+    ["Bengaluru", ["Kochi", "Bengaluru", "Pune", "Bengaluru", "Delhi", "Delhi", "Hyderabad", "Kolkata", "Bengaluru", "Delhi", "London", "Singapore"]],
+    ["Mumbai", ["Pune", "Pune", "Nashik", "Surat", "Mumbai", "Mumbai", "Ahmedabad", "Pune"]],
+    ["Delhi", ["Delhi", "Gurugram", "Noida", "Delhi", "Delhi", "Jaipur", "Chandigarh", "Agra", "Lucknow"]],
+  ];
+  for (const [home, cities] of maps) {
+    const { points } = layoutGlobe(home, cities);
+    for (let i = 0; i < points.length; i++) {
+      assert.ok(dist(points[i]) <= GLOBE_R + 0.2 && dist(points[i]) >= 21.5, `${home}: ${points[i].city} at ${dist(points[i])}`);
+      for (let j = i + 1; j < points.length; j++) {
+        const d = Math.hypot(points[i].x - points[j].x, points[i].y - points[j].y);
+        assert.ok(d >= MIN_SEPARATION - 1, `${home}: ${points[i].city}/${points[j].city} only ${d.toFixed(1)} apart`);
+      }
+    }
+  }
+});

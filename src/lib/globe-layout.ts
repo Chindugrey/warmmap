@@ -59,9 +59,54 @@ export function layoutGlobe(homeCity: string, cities: string[]): { points: Globe
         }
       }
     }
-    return { city: r.city, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, km: Math.round(r.km) };
+    return { city: r.city, x, y, km: Math.round(r.km) };
   });
-  return { points, kmMax };
+  separate(points);
+  return { points: points.map((p) => ({ ...p, x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10 })), kmMax };
+}
+
+export const MIN_SEPARATION = 26;
+
+/**
+ * Nudges lanterns apart until no two sit closer than MIN_SEPARATION, keeping
+ * them inside the rim and off the home light. India-only maps cluster
+ * (three in Delhi, two in Pune), so this is what keeps each lantern readable.
+ */
+function separate(points: { x: number; y: number }[]) {
+  for (let pass = 0; pass < 60; pass++) {
+    let moved = false;
+    for (let i = 0; i < points.length; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const a = points[i], b = points[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let d = Math.hypot(dx, dy);
+        if (d >= MIN_SEPARATION) continue;
+        if (d < 0.01) {
+          dx = Math.cos(i + j);
+          dy = Math.sin(i + j);
+          d = 1;
+        }
+        const push = (MIN_SEPARATION - d) / 2 + 0.01;
+        a.x -= (dx / d) * push;
+        a.y -= (dy / d) * push;
+        b.x += (dx / d) * push;
+        b.y += (dy / d) * push;
+        moved = true;
+      }
+    }
+    for (const p of points) {
+      const r = Math.hypot(p.x - CENTER, p.y - CENTER);
+      if (r > GLOBE_R) {
+        p.x = CENTER + ((p.x - CENTER) * GLOBE_R) / r;
+        p.y = CENTER + ((p.y - CENTER) * GLOBE_R) / r;
+      } else if (r < 22) {
+        const k = r < 0.01 ? 0 : 22 / r;
+        p.x = r < 0.01 ? CENTER + 22 : CENTER + (p.x - CENTER) * k;
+        p.y = r < 0.01 ? CENTER : CENTER + (p.y - CENTER) * k;
+      }
+    }
+    if (!moved) break;
+  }
 }
 
 /** Curved thread from home to a point, like a pen line. */
