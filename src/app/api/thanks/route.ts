@@ -8,7 +8,7 @@ import { limitRequest, HOUR } from "@/lib/limits";
 import { parseEntries } from "@/lib/entries";
 
 const THANK_LINK_DAYS = 30;
-const THANK_LINKS_PER_30_DAYS = 10; // design-doc.md "Keeping it safe"
+const THANK_LINKS_PER_30_DAYS = 12; // one per question (Aadarsh, 14 Nov)
 const DAY = 24 * HOUR;
 
 export async function POST(req: NextRequest) {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     where: { mapId: map.id, createdAt: { gt: new Date(Date.now() - 30 * DAY) } },
   });
   if (recent >= THANK_LINKS_PER_30_DAYS) {
-    return NextResponse.json({ error: "That's ten thank-yous this month. More next month." }, { status: 429 });
+    return NextResponse.json({ error: "That's twelve thank-yous this month. More next month." }, { status: 429 });
   }
 
   const expiresAt = new Date(Date.now() + THANK_LINK_DAYS * DAY);

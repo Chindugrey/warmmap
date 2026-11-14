@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { noStore, requireOwner } from "@/lib/owner";
 import { trackEvent } from "@/lib/analytics";
+import { DISPLAYABLE_VOUCH } from "@/lib/vouches";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const owned = await requireOwner(req, id);
   if (owned.error) return owned.error;
   const r = await prisma.vouch.updateMany({
-    where: { mapId: owned.map.id, seenByOwnerAt: null },
+    where: { mapId: owned.map.id, seenByOwnerAt: null, ...DISPLAYABLE_VOUCH },
     data: { seenByOwnerAt: new Date() },
   });
   if (r.count > 0) await trackEvent("gold_seen", owned.map.id, { n: r.count });

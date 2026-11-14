@@ -9,6 +9,7 @@ import { parseEntries } from "@/lib/entries";
 import { mapStats } from "@/lib/geo";
 import { computeKind } from "@/lib/kinds";
 import { noStore } from "@/lib/owner";
+import { DISPLAYABLE_VOUCH } from "@/lib/vouches";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +22,8 @@ export async function GET(req: NextRequest) {
     select: {
       id: true, shortSlug: true, publicId: true, ownerName: true, homeCity: true, entries: true,
       questionSet: true, kind: true, km: true, arrivedVia: true, createdAt: true,
-      _count: { select: { thankLinks: true, vouches: true, invited: true } },
-      vouches: { select: { id: true, deviceHash: true } },
+      _count: { select: { thankLinks: true, invited: true } },
+      vouches: { where: DISPLAYABLE_VOUCH, select: { id: true, deviceHash: true } },
     },
   });
 
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
       km: m.km ?? s.km,
       kind,
       thankYousSent: m._count.thankLinks,
-      vouchesReceived: m._count.vouches,
+      vouchesReceived: m.vouches.length,
       distinctVouchers,
       mapsBroughtIn: m._count.invited,
       score: connectorScore({ distinctVouchers, mapsBroughtIn: m._count.invited, cities: s.cities }),

@@ -27,6 +27,7 @@ check "one gold vouch kept per lantern"         "$(q "select string_agg(id, ',')
 check "new maps default to question set 2"      "$(q "select column_default from information_schema.columns where table_name='Map' and column_name='questionSet'")" 2
 check "EmailVerification dropped"               "$(q "select to_regclass('\"EmailVerification\"') is null")" t
 check "no e-mail sign-in tables left"           "$(q "select count(*) from information_schema.tables where table_name in ('User','Account','Session','VerificationToken')")" 0
+check "legacy maps stay ownerless (no key)"     "$(q "select count(*) from \"Map\" where \"ownerKeyHash\" is not null")" 0
 check "no voucher names left"                   "$(q "select count(*) from information_schema.columns where table_name='Vouch' and column_name in ('voucherName','note','voucherEmailHash')")" 0
 DATABASE_URL="$URL" npx prisma migrate diff --from-url "$URL" --to-schema-datamodel prisma/schema.prisma --exit-code >/dev/null 2>&1 && echo "ok   schema matches prisma/schema.prisma" || { echo "FAIL schema drift"; fail=1; }
 "$PGBIN/dropdb" -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" "$DB"

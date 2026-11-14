@@ -7,6 +7,7 @@ import { limitRequest, HOUR } from "@/lib/limits";
 import { parseEntries } from "@/lib/entries";
 import { questionFor } from "@/lib/questions";
 import { toPublicMap } from "@/lib/public-map";
+import { DISPLAYABLE_VOUCH } from "@/lib/vouches";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const map = owned.map;
   const entries = parseEntries(map.entries);
   const vouches = await prisma.vouch.findMany({
-    where: { mapId: map.id },
+    where: { mapId: map.id, ...DISPLAYABLE_VOUCH },
     select: { entryIndex: true, seenByOwnerAt: true },
     orderBy: { createdAt: "asc" },
   });

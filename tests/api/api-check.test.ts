@@ -7,6 +7,7 @@ import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
+import { createHash } from "node:crypto";
 import { prepareThank } from "@/lib/lantern-token";
 
 const BASE = process.env.BASE ?? "http://localhost:3100";
@@ -251,6 +252,48 @@ test("share cards: PNG, 1200x627 link preview and 1080x1920 Status/Story; extra 
   assert.ok(withName.buf.equals(link.buf), "extra parameters must not change the picture");
   const bogus = await get(`?id=nosuchmap`);
   assert.deepEqual(pngSize(bogus.buf), { width: 1200, height: 627 });
+});
+
+test("thank-link cap: 12 per map per 30 days, the 13th is refused", async () => {
+  const twelve = Array.from({ length: 12 }, (_, q) => ({ city: ["Kochi", "Pune", "Delhi", "Mumbai"][q % 4], questionIndex: q }));
+  const m = await api("/api/maps", { method: "POST", dev: device(), body: { homeCity: "Bengaluru", ownerName: "Cap", entries: twelve } });
+  assert.equal(m.status, 201);
+  const codes: number[] = [];
+  for (let q = 0; q < 13; q++) {
+    const t = await prepareThank({ base: BASE, mapId: m.json.id, entryIndex: q % 12 });
+    codes.push((await api("/api/thanks", { method: "POST", key: m.json.ownerKey, dev: device(), body: t.body })).status);
+  }
+  assert.deepEqual(codes, [...Array(12).fill(201), 429]);
+});
+
+test("pre-v2 verified vouches stay in the DB but are shown nowhere (owner, public, admin)", async () => {
+  // A legacy map as the migration leaves it, plus (to probe the owner view)
+  // a key fingerprint it would never have in real life.
+  const key = "legacy-probe-key-" + DEV;
+  const map = await db.map.create({
+    data: {
+      shortSlug: "lg" + DEV.slice(0, 6).toLowerCase().replace(/[^a-z0-9]/g, "x"),
+      homeCity: "Bengaluru", ownerName: "Ravi", questionSet: 1,
+      entries: [{ city: "Kochi", questionIndex: 0 }, { city: "Pune", questionIndex: 1 }, { city: "Delhi", questionIndex: 2 }, { city: "Mumbai", questionIndex: 3 }, { city: "Chennai", questionIndex: 4 }],
+      ownerKeyHash: createHash("sha256").update(key).digest("hex"),
+    },
+  });
+  await db.vouch.create({ data: { mapId: map.id, entryIndex: 0, tier: "tap", thankLinkId: null } });
+  assert.equal(await db.vouch.count({ where: { mapId: map.id } }), 1, "kept in the database");
+  const owner = await api(`/api/maps/${map.shortSlug}/owner`, { key });
+  assert.equal(owner.status, 200);
+  assert.deepEqual(owner.json.gold, []);
+  const pub = await api(`/api/maps/${map.shortSlug}`);
+  assert.ok(!/gold|vouch/.test(pub.text));
+  const admin = await api("/api/admin/connectors", { headers: { Authorization: `Bearer ${ADMIN}` } });
+  const row = admin.json.rows.find((r: any) => r.map === map.shortSlug);
+  assert.equal(row.vouchesReceived, 0);
+  assert.equal(row.distinctVouchers, 0);
+  // Still read-only: no edits, no thank-yous.
+  assert.equal((await api(`/api/maps/${map.shortSlug}`, { method: "PATCH", key, body: { ownerName: "X" } })).status, 409);
+  const t = await prepareThank({ base: BASE, mapId: map.shortSlug!, entryIndex: 1 });
+  assert.equal((await api("/api/thanks", { method: "POST", key, body: t.body })).status, 409);
+  await db.map.delete({ where: { id: map.id } });
 });
 
 test("delete via keeper key: real delete, cascades, brought-in maps keep living", async () => {
