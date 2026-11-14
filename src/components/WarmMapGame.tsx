@@ -8,6 +8,9 @@ import { Globe } from "@/components/Globe";
 import { ShareCard } from "@/components/ShareCard";
 import { generateSharePicture } from "@/components/SharePicture";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
+import { apiFetch, ownerKeyFor, rememberOwnerKey } from "@/lib/device";
+import { prepareThank } from "@/lib/lantern-token";
+import { UNLOCK_AT } from "@/lib/questions";
 
 interface Entry {
   name: string;
@@ -64,6 +67,10 @@ export function WarmMapGame() {
   const [shareBlob, setShareBlob] = useState<Blob | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedLink, setSavedLink] = useState<string | null>(null);
+  const [savedSlug, setSavedSlug] = useState<string | null>(null);
+  const [keeperLink, setKeeperLink] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [thanked, setThanked] = useState<Record<number, string>>({});
   const [copyLabel, setCopyLabel] = useState("Copy text");
   const [copyImgLabel, setCopyImgLabel] = useState("Copy picture");
   const [canNativeShare] = useState(() =>
@@ -111,10 +118,13 @@ export function WarmMapGame() {
       return;
     }
 
+    if (editingIndex === null && currentQuestionIndex >= questions.length) return;
     const entry: Entry = {
       name: name.trim(),
       city: city.name,
-      questionIndex: Math.min(currentQuestionIndex, questions.length - 1),
+      // Editing keeps the lantern's own question; a new lantern takes the current one.
+      questionIndex:
+        editingIndex !== null ? entries[editingIndex].questionIndex : currentQuestionIndex,
     };
 
     if (editingIndex !== null) {
@@ -171,7 +181,7 @@ export function WarmMapGame() {
       )} km of threads.\n` +
       "If you're on it, you know why. Thank you." +
       (ownerName.trim() ? `\n— ${ownerName.trim()}` : "") +
-      "\n\nWho's in your corner? https://warmmap.world"
+      `\n\nWho's in your corner? ${savedLink ?? "https://warmmap.world"}`
     );
   }
 
@@ -242,31 +252,83 @@ export function WarmMapGame() {
     }
   }
 
+  // "Show me": saves the map (cities + question numbers + own first name;
+  // never a friend's name) and keeps the keeper key on this device.
   async function saveAndGetLink() {
     setSaving(true);
+    setSaveError(null);
+    const counts = new Map<string, number>();
+    entries.forEach((e) => {
+      const k = e.name.trim().toLowerCase();
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    });
+    const payload = {
+      ownerName: ownerName.trim(),
+      entries: entries.map((e) => ({ city: e.city, questionIndex: e.questionIndex })),
+      repeatMax: Math.max(1, ...counts.values()),
+    };
     try {
-      const res = await fetch("/api/maps", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          homeCity: homeCityName,
-          ownerName: ownerName.trim() || undefined,
-          entries: entries.map((e) => ({
-            city: e.city,
-            questionIndex: e.questionIndex,
-          })),
-        }),
-      });
-      if (!res.ok) throw new Error("Save failed");
-      const data = await res.json();
-      const slug = data.shortSlug || data.publicId;
-      const link = `${window.location.origin}/m/${slug}`;
-      setSavedLink(link);
+      let res: Response;
+      if (savedSlug) {
+        res = await apiFetch(`/api/maps/${savedSlug}`, {
+          method: "PATCH",
+          ownerKey: ownerKeyFor(savedSlug),
+          body: JSON.stringify(payload),
+        });
+      } else {
+        const q = new URLSearchParams(window.location.search);
+        const invitedBy = q.get("invitedBy") || undefined;
+        const via = q.get("via");
+        res = await apiFetch("/api/maps", {
+          method: "POST",
+          body: JSON.stringify({
+            ...payload,
+            homeCity: homeCityName,
+            invitedBy,
+            via: invitedBy && (via === "thanks" || via === "map") ? via : "cold",
+          }),
+        });
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not save your map.");
+      if (!savedSlug) {
+        rememberOwnerKey(data.id, data.ownerKey);
+        setSavedSlug(data.id);
+        setSavedLink(`${window.location.origin}/m/${data.id}`);
+        setKeeperLink(`${window.location.origin}/m/${data.id}#k=${data.ownerKey}`);
+      }
     } catch (err) {
-      console.error(err);
-      alert("Could not save your Warm Map. The server may be unavailable.");
+      setSaveError((err as Error).message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  // "Tell them on WhatsApp": the token is made here; only its hash goes to us.
+  async function tellThem(entry: Entry) {
+    if (!savedSlug) return;
+    const win = window.open("", "_blank"); // same tap, so the browser allows it
+    try {
+      const t = await prepareThank({
+        base: window.location.origin,
+        mapId: savedSlug,
+        entryIndex: entry.questionIndex,
+        friendName: entry.name,
+      });
+      const res = await apiFetch("/api/thanks", {
+        method: "POST",
+        ownerKey: ownerKeyFor(savedSlug),
+        body: JSON.stringify(t.body),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Try again");
+      const text = `${entry.name}, one of the questions on my little map: it was you. Thank you. ${t.url}`;
+      const wa = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      if (win) win.location.href = wa;
+      else window.location.assign(wa);
+      setThanked((m) => ({ ...m, [entry.questionIndex]: t.url }));
+    } catch (err) {
+      win?.close();
+      setSaveError((err as Error).message);
     }
   }
 
@@ -497,8 +559,8 @@ export function WarmMapGame() {
                 </a>
                 <a
                   className="btn ghost"
-                  href={`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(
-                    shareMessage()
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+                    savedLink ?? "https://warmmap.world"
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -535,25 +597,52 @@ export function WarmMapGame() {
         </div>
 
         <button
-          className="btn ghost"
+          className="btn"
           type="button"
-          disabled={entries.length === 0 || saving}
+          disabled={entries.length < UNLOCK_AT || !ownerName.trim() || saving}
           onClick={saveAndGetLink}
           style={{ alignSelf: "flex-start" }}
         >
-          {saving ? "Saving…" : "Save & get link"}
+          {saving ? "Saving…" : savedSlug ? "Save changes" : "Show me"}
         </button>
+        {entries.length < UNLOCK_AT && (
+          <p className="note">{UNLOCK_AT - entries.length} more lanterns unlock your map.</p>
+        )}
+        {saveError && <p className="note" role="alert">{saveError}</p>}
 
         {savedLink && (
-          <p className="note" role="status">
-            Your link:{" "}
-            <a href={savedLink} target="_blank" rel="noopener noreferrer">
-              {savedLink}
-            </a>
-          </p>
+          <div role="status">
+            <p className="note">
+              Your corner is glowing. Your map:{" "}
+              <a href={savedLink} target="_blank" rel="noopener noreferrer">{savedLink}</a>
+            </p>
+            {keeperLink && (
+              <p className="note">
+                Keep your key. It&apos;s how you change or delete this map from another phone.{" "}
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`My Warm Map key. Don't share it: ${keeperLink}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Send it to myself on WhatsApp
+                </a>
+              </p>
+            )}
+            <ul className="games">
+              {entries.map((entry) => (
+                <li key={entry.questionIndex}>
+                  <time>{entry.city}</time>
+                  <span><b>{entry.name}</b></span>
+                  <button className="btn ghost" type="button" onClick={() => tellThem(entry)} style={{ marginLeft: "auto" }}>
+                    {thanked[entry.questionIndex] ? "Sent. Send again" : "Tell them on WhatsApp"}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
-        <p className="note">Names stay on this page. Nothing is saved until you choose to share.</p>
+        <p className="note">Your friends&apos; names stay on this device. Showing your map saves it: cities and your first name, never your friends&apos; names.</p>
       </div>
     </div>
   );
