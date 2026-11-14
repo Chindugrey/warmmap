@@ -1,84 +1,73 @@
+// POST /api/maps: "Show me". Saves the map and returns the keeper key once.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateShortSlug } from "@/lib/ids";
 import { trackEvent } from "@/lib/analytics";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import { z } from "zod";
-
-const saveSchema = z.object({
-  homeCity: z.string().min(1).max(100),
-  ownerName: z.string().max(24).optional(),
-  entries: z.array(
-    z.object({
-      city: z.string().min(1).max(100),
-      questionIndex: z.number().int().min(0).max(50),
-    })
-  ),
-  invitedBy: z.string().max(32).optional(),
-});
+import { parseSaveInput } from "@/lib/map-input";
+import { mapShape, pinCarried } from "@/lib/map-shape";
+import { limitRequest, HOUR } from "@/lib/limits";
+import { findMap, noStore } from "@/lib/owner";
+import { newOwnerKey, sha256Hex } from "@/lib/server-crypto";
+import { mapUrl } from "@/lib/site";
 
 export async function POST(req: NextRequest) {
+  const limited = await limitRequest(req, "map_create", { device: [5, HOUR], ip: [40, HOUR] });
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  const parsed = parseSaveInput(body);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  const input = parsed.value;
 
-  const parsed = saveSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid input", issues: parsed.error.issues },
-      { status: 400 }
-    );
-  }
-
-  const { homeCity, ownerName, entries, invitedBy } = parsed.data;
-
-  // Rate limit: max 20 maps per hour per IP (simple).
-  const ip = req.headers.get("x-forwarded-for") || "unknown";
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  const recent = await prisma.map.count({
-    where: {
-      createdAt: { gt: oneHourAgo },
-      // We don't store IP; this is a placeholder for a real rate-limit store.
-    },
-  });
-  if (recent > 200) {
-    return NextResponse.json(
-      { error: "Too many maps created recently. Try again later." },
-      { status: 429 }
-    );
-  }
-
-  const session = await getServerSession(authOptions);
+  const inviter = input.invitedBy ? await findMap(input.invitedBy) : null;
+  const entries = pinCarried(input.entries, inviter?.homeCity ?? null);
+  const shape = mapShape(input.homeCity, entries, input.repeatMax);
 
   let shortSlug = generateShortSlug();
-  // Ensure uniqueness.
-  for (let i = 0; i < 5; i++) {
-    const existing = await prisma.map.findUnique({ where: { shortSlug } });
-    if (!existing) break;
+  for (let i = 0; i < 5 && (await prisma.map.findUnique({ where: { shortSlug } })); i++) {
     shortSlug = generateShortSlug();
   }
 
+  // A map started from a thank-you keeps only the date, not the time, so it
+  // cannot be lined up with the moment a lantern was tied.
+  const now = new Date();
+  const stamp = input.via === "thanks" ? new Date(now.toISOString().slice(0, 10) + "T00:00:00.000Z") : now;
+
+  const ownerKey = newOwnerKey();
   const map = await prisma.map.create({
     data: {
-      homeCity,
-      ownerName: ownerName || null,
-      entries: entries as any,
       shortSlug,
-      userId: session?.user?.id,
-      // We don't store invitedBy mapId in DB to avoid association chains; tracking only.
+      homeCity: input.homeCity,
+      ownerName: input.ownerName,
+      entries,
+      questionSet: 2,
+      ownerKeyHash: sha256Hex(ownerKey),
+      kind: shape.kind,
+      km: shape.km,
+      invitedByMapId: inviter?.id ?? null,
+      arrivedVia: input.via,
+      createdAt: stamp,
+      updatedAt: stamp,
     },
   });
 
-  await trackEvent("create", map.id, { invitedBy, entries: entries.length });
+  await trackEvent("map_saved", null, { via: input.via, n: entries.length });
 
-  return NextResponse.json({
-    id: map.id,
-    publicId: map.publicId,
-    shortSlug: map.shortSlug,
-    url: `/m/${map.shortSlug}`,
-  });
+  return NextResponse.json(
+    {
+      id: map.shortSlug,
+      url: mapUrl(map.shortSlug!),
+      ownerKey,
+      keeperUrl: `${mapUrl(map.shortSlug!)}#k=${ownerKey}`,
+      kind: shape.kind,
+      because: shape.because,
+      km: shape.km,
+    },
+    { status: 201, headers: noStore }
+  );
 }
