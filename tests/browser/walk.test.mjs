@@ -74,6 +74,8 @@ test("make a map: hero → home → 5 questions → reveal (tap to skip) → nam
   const t0 = await text(b);
   assert.match(t0, /Who.s in your corner\?/);
   assert.match(t0, /Light my first lantern/);
+  assert.match(await b.eval("document.querySelector('.wm-foot').innerText.replace(/\\s+/g, ' ')"), /City data © GeoNames ?, CC BY 4\.0/);
+  assert.equal(await b.eval(`[...document.querySelectorAll('.wm-foot a')].filter(a=>/geonames\\.org/.test(a.href)).length`), 1);
   await b.shot(`${SHOTS}/walk-1-landing.png`);
   await clickText(b, "Light my first lantern");
   assert.match(await text(b), /Where.s home\?/);
@@ -351,4 +353,37 @@ test("small phone 360×640: primary buttons reachable", { skip }, async () => {
   await b.shot(`${SHOTS}/walk-10-small-landing.png`);
   console.log(`# 360x640 landing: "Light my first lantern" at ${Math.round(r.top)}–${Math.round(r.bottom)}px (fold at 640)`);
   assert.ok(r.bottom <= 640, `Light my first lantern is below the fold at 360x640 (${r.bottom}px)`);
+});
+
+test("cities beyond the curated list: suggested with their state, pickable as home and as a lantern, and drawn", { skip }, async () => {
+  const b = await browser({ width: 390, height: 844 });
+  await b.goto(BASE + "/");
+  await clickText(b, "Light my first lantern");
+  await clickText(b, "Other");
+  await type(b, ".wm-fld input", "Tirunelveli");
+  await waitFor(b, `[...document.querySelectorAll('.wm-chips.small .wm-chip')].some(e=>e.textContent==='Tirunelveli')`);
+  await clickText(b, "Tirunelveli");
+  assert.match(await text(b), /Chapter I/);
+  await type(b, ".wm-flds label:nth-child(1) input", "Meeraqx");
+  await type(b, ".wm-flds label:nth-child(2) input", "Springfield");
+  await waitFor(b, `[...document.querySelectorAll('.wm-chips.small .wm-chip')].some(e=>e.textContent==='Springfield, IL')`);
+  const chips = await b.eval(`[...document.querySelectorAll('.wm-chips.small .wm-chip')].map(e=>e.textContent)`);
+  assert.ok(chips.includes("Springfield, MO"), chips.join());
+  await clickText(b, "Springfield, IL");
+  await clickText(b, "Light it");
+  await sleep(1200);
+  assert.match(await b.eval(`document.querySelector('.wm-prog').getAttribute('aria-label')`), /^1 of 8/);
+  // typed in full, not tapped: a city only the full list knows still lights
+  await type(b, ".wm-flds label:nth-child(1) input", "Devqx");
+  await type(b, ".wm-flds label:nth-child(2) input", "Winnipeg");
+  await clickText(b, "Light it");
+  await sleep(1200);
+  assert.match(await b.eval(`document.querySelector('.wm-prog').getAttribute('aria-label')`), /^2 of 8/);
+  const stored = await b.eval(`localStorage.getItem('wm:draft')`);
+  assert.ok(stored.includes("Springfield, IL") && stored.includes("Winnipeg"));
+  // a reload resumes the draft and can still draw those cities
+  await b.goto(BASE + "/");
+  await clickText(b, "Keep going", "button,a").catch(() => {});
+  await b.shot(`${SHOTS}/walk-cities-full.png`);
+  assert.deepEqual(b.errors.filter((e) => !/favicon/.test(e)), []);
 });

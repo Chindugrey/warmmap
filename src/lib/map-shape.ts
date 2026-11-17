@@ -1,3 +1,4 @@
+import "./cities-full"; // registers the full city list (server only)
 import { mapStats } from "./geo";
 import { computeKind } from "./kinds";
 import type { StoredEntry } from "./entries";

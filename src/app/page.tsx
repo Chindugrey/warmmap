@@ -46,6 +46,9 @@ export default function Home() {
           <footer className="wm-foot">
             Made with care in Bengaluru · <a href="/privacy">Privacy</a> · <a href="/privacy#delete">Delete my map</a>
             <br />A small project from the people at Zeyhi
+            <br />
+            City data © <a href="https://www.geonames.org/" target="_blank" rel="noopener noreferrer">GeoNames</a>,{" "}
+            <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>
           </footer>
         </>
       }

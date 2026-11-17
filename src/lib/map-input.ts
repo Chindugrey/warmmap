@@ -1,6 +1,7 @@
 // Validation for "Show me" (POST /api/maps) and owner edits (PATCH).
 // Strict on purpose: an unexpected field (for example a friend's name) is a
 // 400, so a client bug can never put names on the server.
+import "./cities-full"; // registers the full city list (server only)
 import { citiesByName } from "./cities";
 import { QUESTION_COUNT, UNLOCK_AT } from "./questions";
 import type { StoredEntry } from "./entries";

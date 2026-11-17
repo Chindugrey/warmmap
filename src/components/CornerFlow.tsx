@@ -14,13 +14,14 @@ import { ThankSheet } from "@/components/ThankSheet";
 import { ShareRow } from "@/components/ShareRow";
 import { StoryPictureLink } from "@/components/StoryPicture";
 import { CHAPTERS, CURRENT_SET, QUESTIONS, QUESTION_COUNT, UNLOCK_AT } from "@/lib/questions";
-import { citiesByName, countryOf, findCity, matchCities } from "@/lib/cities";
+import { citiesByName, countryOf, findCity, matchCities, type City } from "@/lib/cities";
 import { mapStats } from "@/lib/geo";
 import { computeKind, KIND_LINES } from "@/lib/kinds";
 import { compareKm } from "@/lib/compare";
 import { chapterGaps, nextQuestion, whatsAppUrl } from "@/lib/flow";
 import { rewardLine } from "@/lib/reward";
 import { apiFetch, ownerKeyFor, rememberOwnerKey } from "@/lib/device";
+import { fetchCities, rememberPlaces, restorePlaces, useCitySearch, type CityItem } from "@/lib/city-search";
 
 type Stage = "hero" | "home" | "ask" | "reveal";
 
@@ -85,6 +86,7 @@ export function CornerFlow({ below }: { below?: ReactNode }) {
     const q = new URLSearchParams(window.location.search);
     const invitedBy = q.get("invitedBy");
     const via = q.get("via") === "thanks" ? "thanks" : q.get("via") === "map" ? "map" : "cold";
+    restorePlaces();
     const saved = readDraft();
     queueMicrotask(() => {
       if (invitedBy && /^[a-z0-9]{6,32}$/i.test(invitedBy) && (!saved || saved.invitedBy !== invitedBy)) {
@@ -93,6 +95,10 @@ export function CornerFlow({ below }: { below?: ReactNode }) {
         if (via === "thanks") {
           fetch(`/api/maps/${invitedBy}`)
             .then((r) => (r.ok ? r.json() : null))
+            .then((m) => {
+              if (m?.places) rememberPlaces(m.places);
+              return m;
+            })
             .then((m) => m && setD((x) => ({ ...x, carried: { slug: invitedBy, ownerName: m.ownerName || "Someone", city: m.homeCity, kept: true } })))
             .catch(() => {});
         }
@@ -236,7 +242,12 @@ function HomeScreen({ onPick }: { onPick: (city: string) => void }) {
   const [other, setOther] = useState(false);
   const [text, setText] = useState("");
   const [preview, setPreview] = useState<string>("Bengaluru");
-  const matches = text.trim() ? matchCities(text, 6) : [];
+  const search = useCitySearch(text, undefined, 6);
+  const matches = search.items;
+  const pick = (c: CityItem) => {
+    if (c.place) rememberPlaces([c.place]);
+    onPick(c.name);
+  };
   return (
     <div className="wm">
       <main className="wm-scr wm-ask">
@@ -266,8 +277,8 @@ function HomeScreen({ onPick }: { onPick: (city: string) => void }) {
                   onChange={(e) => setText(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      const c = findCity(text);
-                      if (c) onPick(c.name);
+                      const c = findCity(text) ?? search.matchPlace;
+                      if (c) pick({ name: c.name, label: c.name, place: citiesByName[c.name] ? undefined : c });
                     }
                   }}
                   placeholder="Start typing"
@@ -275,13 +286,13 @@ function HomeScreen({ onPick }: { onPick: (city: string) => void }) {
               </label>
               <div className="wm-chips small">
                 {matches.map((c) => (
-                  <button key={c} className="wm-chip" type="button" onClick={() => onPick(c)}>
-                    {c}
+                  <button key={c.name} className="wm-chip" type="button" onClick={() => pick(c)}>
+                    {c.label}
                   </button>
                 ))}
               </div>
-              {countryOf(text) && <p className="wm-hint">{`Which city in ${withThe(countryOf(text)!)}?`}</p>}
-              {text.trim().length > 2 && matches.length === 0 && (
+              {search.country && <p className="wm-hint">{`Which city in ${withThe(search.country)}?`}</p>}
+              {text.trim().length > 2 && search.settled && matches.length === 0 && (
                 <p className="wm-hint">We couldn&apos;t place that. Pick the nearest big city above.</p>
               )}
             </>
@@ -372,7 +383,8 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
   const q = QUESTIONS[current];
   const unlocked = d.answers.length >= UNLOCK_AT;
   const recent = [...new Set(d.answers.map((a) => a.city).reverse())].slice(0, 3);
-  const suggestions = cityText.trim() && !cityPick ? matchCities(cityText, 4, home) : [];
+  const search = useCitySearch(cityPick ? "" : cityText, home, 4);
+  const suggestions = search.items;
 
   useEffect(() => {
     if (window.matchMedia?.("(pointer: fine)").matches) nameRef.current?.focus();
@@ -418,18 +430,31 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
       nameRef.current?.focus();
       return;
     }
-    const city = cityPick ? citiesByName[cityPick] : findCity(cityText);
-    if (!city) {
-      const country = countryOf(cityText);
-      const near = matchCities(cityText, 3, home);
-      setHint(
-        country ? `Which city in ${withThe(country)}? Tap one.`
-        : near.length ? `Not sure of that one. Did you mean ${near.join(", ")}?`
-        : "We couldn't place that. Pick the nearest big city."
-      );
-      cityRef.current?.focus();
+    const city = cityPick ? citiesByName[cityPick] : findCity(cityText) ?? search.matchPlace;
+    if (city) return commit(n, city);
+    // Typed a city only the full list knows, before its suggestions arrived: ask once, now.
+    if (!cityPick && cityText.trim() && !search.settled) {
+      fetchCities(cityText.trim(), home, 3).then((r) => {
+        const hit = r?.match ? r.results.find((c) => c.name === r.match) : undefined;
+        if (hit) commit(n, hit);
+        else refuse(r?.country ?? countryOf(cityText), r?.results.map((c) => c.label) ?? matchCities(cityText, 3, home));
+      });
       return;
     }
+    refuse(countryOf(cityText), matchCities(cityText, 3, home));
+  }
+
+  function refuse(country: string | null, near: string[]) {
+    setHint(
+      country ? `Which city in ${withThe(country)}? Tap one.`
+      : near.length ? `Not sure of that one. Did you mean ${near.join(", ")}?`
+      : "We couldn't place that. Pick the nearest big city."
+    );
+    cityRef.current?.focus();
+  }
+
+  function commit(n: string, city: City) {
+    rememberPlaces([city]);
     const prev = d.answers;
     const ans: Answer = { q: current, name: n.slice(0, 24), city: city.name };
     const next: Draft = { ...d, answers: [...prev, ans], skipped: d.skipped.filter((s) => s !== current) };
@@ -538,18 +563,19 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
             </label>
           </div>
           <div className="wm-chips small" aria-label="Cities">
-            {(suggestions.length ? suggestions : cityPick ? [] : [home, ...recent.filter((c) => c !== home)].slice(0, 4)).map((c, i) => (
+            {(suggestions.length ? suggestions : cityPick ? [] : [home, ...recent.filter((c) => c !== home)].slice(0, 4).map((c) => ({ name: c, label: c }))).map((c: CityItem, i) => (
               <button
-                key={c}
+                key={c.name}
                 type="button"
                 className="wm-chip"
                 onClick={() => {
-                  setCityPick(c);
-                  setCityText(c);
+                  if (c.place) rememberPlaces([c.place]);
+                  setCityPick(c.name);
+                  setCityText(c.name);
                   setHint(null);
                 }}
               >
-                {!suggestions.length && i === 0 && c === home ? "Same as me" : c}
+                {!suggestions.length && i === 0 && c.name === home ? "Same as me" : c.label}
               </button>
             ))}
           </div>

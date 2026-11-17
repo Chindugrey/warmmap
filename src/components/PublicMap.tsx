@@ -15,6 +15,7 @@ import { ShareRow } from "@/components/ShareRow";
 import { LiveCounter } from "@/components/LiveCounter";
 import { StoryPictureLink, sharePicture, useStoryFile } from "@/components/StoryPicture";
 import type { PublicMap as PublicMapData } from "@/lib/public-map";
+import { registerCities } from "@/lib/cities";
 import { KIND_LINES } from "@/lib/kinds";
 import { absorbKeeperHash, apiFetch, forgetOwnerKey, ownerKeyFor, rememberOwnerKey } from "@/lib/device";
 import { makeYoursHref, mapShareText, whatsAppUrl } from "@/lib/flow";
@@ -28,6 +29,7 @@ interface OwnerView {
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString("en-IN")} ${n === 1 ? one : many}`;
 
 export function PublicMap({ map }: { map: PublicMapData }) {
+  registerCities(map.places); // cities outside the browser's own list; before any globe is laid out
   const owner = map.ownerName || "Someone";
   const [view, setView] = useState<OwnerView | null>(null);
   const [key, setKey] = useState<string | null>(null);

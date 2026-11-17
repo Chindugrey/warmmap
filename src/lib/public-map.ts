@@ -2,7 +2,8 @@
 // home city, lantern cities sorted by name, stats and kind. No question
 // numbers, no answer order, no carried flag, no inviter, no gold, no ids
 // other than the public slug.
-import { citiesByName } from "./cities";
+import "./cities-full"; // registers the full city list (server only)
+import { citiesByName, type City } from "./cities";
 import { mapStats } from "./geo";
 import { parseEntries } from "./entries";
 import { computeKind, KIND_LINES, type MapKind } from "./kinds";
@@ -14,6 +15,8 @@ export interface PublicMap {
   ownerName: string | null;
   homeCity: string;
   lanterns: string[];
+  /** Where those cities and home are, so the browser can draw cities it does not carry itself. */
+  places: City[];
   stats: { lanterns: number; cities: number; countries: number; km: number };
   kind: MapKind | null;
   because: string | null;
@@ -51,6 +54,7 @@ export function toPublicMap(row: MapRowLike): PublicMap {
     ownerName: row.ownerName,
     homeCity: row.homeCity,
     lanterns,
+    places: [...new Set([row.homeCity, ...lanterns])].flatMap((n) => (citiesByName[n] ? [citiesByName[n]] : [])),
     stats: { lanterns: lanterns.length, cities: s.cities, countries: s.countries, km: s.km },
     kind,
     because,

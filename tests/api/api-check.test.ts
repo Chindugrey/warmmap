@@ -63,7 +63,7 @@ test("save at Show me: strict input", async () => {
 test("public API: cities only, sorted, nothing else", async () => {
   const r = await api(`/api/maps/${S.slug}`);
   assert.equal(r.status, 200);
-  assert.deepEqual(Object.keys(r.json).sort(), ["because", "homeCity", "id", "kind", "lanterns", "ownerName", "stats"]);
+  assert.deepEqual(Object.keys(r.json).sort(), ["because", "homeCity", "id", "kind", "lanterns", "ownerName", "places", "stats"]);
   assert.deepEqual(r.json.lanterns, ["Chennai", "Delhi", "Kochi", "Mumbai", "Pune"]);
   for (const banned of ["questionIndex", "question", "gold", "vouch", "ownerKey", "entryIndex", "invited"]) {
     assert.ok(!r.text.includes(banned), `public API leaks ${banned}`);
@@ -153,7 +153,7 @@ test("Tie it back: one tap = gold; own lantern refused; one use; GET cannot vouc
 test("PRIVACY: gold is invisible publicly (public payload byte-identical after the vouch)", async () => {
   const r = await api(`/api/maps/${S.slug}`);
   assert.equal(r.text, S.publicBefore);
-  assert.deepEqual(Object.keys(r.json).sort(), ["because", "homeCity", "id", "kind", "lanterns", "ownerName", "stats"]);
+  assert.deepEqual(Object.keys(r.json).sort(), ["because", "homeCity", "id", "kind", "lanterns", "ownerName", "places", "stats"]);
   for (const banned of ["gold", "isNew", "entryIndex", "vouch", "tied"]) assert.ok(!r.text.includes(banned), `public payload leaks ${banned}`);
   // A wrong key, or none, gets nothing extra from the public route or the seen endpoint.
   const withBadKey = await api(`/api/maps/${S.slug}`, { key: "not-the-key" });
@@ -384,4 +384,34 @@ test("PRIVACY sweep: the friend's name and raw tokens appear in no table", async
   assert.ok(all.length > 1000);
   assert.ok(!all.includes(FRIEND), "friend name found in the database");
   assert.ok(!all.includes(S.token), "raw token found in the database");
+});
+
+test("GET /api/cities: ranked, qualified suggestions from the full list; small and quick", async () => {
+  const t = Date.now();
+  const r = await api("/api/cities?q=springfield&home=Seattle");
+  const ms = Date.now() - t;
+  assert.equal(r.status, 200);
+  assert.ok(r.text.length < 2000, `${r.text.length} bytes`);
+  assert.ok(ms < 1000, `${ms} ms`);
+  const labels = r.json.results.map((x: { label: string }) => x.label);
+  assert.ok(labels.includes("Springfield, IL") && labels.includes("Springfield, MO"), labels.join());
+  assert.equal(r.json.match, null);
+  const h = await api("/api/cities?q=hyderabad");
+  assert.deepEqual(h.json.results.slice(0, 2).map((x: { label: string }) => x.label), ["Hyderabad, India", "Hyderabad, Pakistan"]);
+  assert.equal((await api("/api/cities?q=Tirunelveli")).json.match, "Tirunelveli");
+  assert.equal((await api("/api/cities?q=US&limit=3")).json.country, "USA");
+  assert.deepEqual((await api("/api/cities")).json.results, []);
+  assert.equal((await api(`/api/cities?q=${"x".repeat(5000)}`)).status, 200);
+  assert.ok(!(await api("/api/cities?q=kannur")).text.includes("Kanpur"));
+});
+
+test("a map with GeoNames cities (a Canadian city, an Indian town, a collision) saves and reads back with its places", async () => {
+  const entries = ["Tirunelveli", "Winnipeg", "Springfield, IL", "Leeds", "Kochi"].map((city, questionIndex) => ({ city, questionIndex }));
+  const r = await api("/api/maps", { method: "POST", dev: device(), body: { homeCity: "Bengaluru", ownerName: "Ananya", entries } });
+  assert.equal(r.status, 201, r.text);
+  const pub = await api(`/api/maps/${r.json.id}`);
+  assert.deepEqual(pub.json.lanterns, ["Kochi", "Leeds", "Springfield, IL", "Tirunelveli", "Winnipeg"]);
+  assert.ok(pub.json.places.some((p: { name: string; lat: number }) => p.name === "Winnipeg" && p.lat > 49));
+  const bad = await api("/api/maps", { method: "POST", dev: device(), body: { homeCity: "Bengaluru", ownerName: "Ananya", entries: entries.map((e, i) => (i ? e : { ...e, city: "Atlantis" })) } });
+  assert.equal(bad.status, 400);
 });

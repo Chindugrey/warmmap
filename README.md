@@ -14,6 +14,10 @@ Live at **https://warmmap.world**
 - A live lantern counter, per-device rate limits, and a founder's connector score at `/api/admin/connectors`.
 - No e-mail anywhere, no accounts, no third-party analytics.
 
+## City data
+
+Home and lantern cities come from a curated list of ~290 (`src/lib/cities.ts`, the names saved maps store) plus ~6,000 more from [GeoNames](https://www.geonames.org) (CC BY 4.0, attributed in the home page footer): every city of 100,000+ worldwide, all national capitals, US and Canadian state and province capitals, and India at 50,000+. The GeoNames part lives in `src/lib/cities-data.ts` (generated, ~280 KB) and is **server-only**: the browser asks `GET /api/cities?q=…&home=…` and the API reads it through `src/lib/cities-full.ts`. Same-named cities are told apart ("Springfield, IL", "Hyderabad, Pakistan"). To regenerate, see the header of `scripts/build-cities.ts` (the GeoNames dumps are downloaded outside the repo, never committed).
+
 ## Local development
 
 PostgreSQL only. Use a throwaway local cluster (or `docker compose up db`), never a shared database.

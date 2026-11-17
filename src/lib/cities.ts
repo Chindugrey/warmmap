@@ -384,7 +384,7 @@ raw.forEach((city) => {
 });
 for (const [region, names] of Object.entries(REGIONS)) for (const n of names) if (citiesByName[n]) citiesByName[n].region = region;
 
-const aliases: Record<string, string> = {
+export const aliases: Record<string, string> = {
   bangalore: "Bengaluru",
   bombay: "Mumbai",
   calcutta: "Kolkata",
@@ -419,7 +419,7 @@ const aliases: Record<string, string> = {
 
 // Country names and the few codes people actually type, to the dataset's country name.
 // Two-letter codes that are also common word starts (in, it, no, is, be) are left out on purpose.
-const countryAliases: Record<string, string> = {
+export const countryAliases: Record<string, string> = {
   us: "USA", usa: "USA", america: "USA", "united states": "USA", "united states of america": "USA", "the us": "USA", "the usa": "USA",
   uk: "UK", gb: "UK", gbr: "UK", "united kingdom": "UK", britain: "UK", "great britain": "UK", england: "UK",
   uae: "UAE", ae: "UAE", "united arab emirates": "UAE", emirates: "UAE",
@@ -427,10 +427,28 @@ const countryAliases: Record<string, string> = {
   fr: "France", de: "Germany", deu: "Germany", ie: "Ireland", cn: "China", bharat: "India", ind: "India", turkey: "Türkiye", korea: "South Korea",
   holland: "Netherlands", ksa: "Saudi Arabia", pk: "Pakistan", bd: "Bangladesh", lk: "Sri Lanka", np: "Nepal",
 };
-const countryNames = new Map<string, string>();
-raw.forEach((c) => countryNames.set(norm(c.country), c.country));
 
-function norm(t: string): string {
+/** Cities the client learns about at run time (a pick from /api/cities, a saved map's places) join citiesByName here. */
+export function registerCities(list: City[]) {
+  for (const c of list) if (!citiesByName[c.name]) citiesByName[c.name] = c;
+}
+
+/** What the ranking searches over: names in match order, lower-cased and accent-free, with optional alternate spellings. */
+export interface CityIndex {
+  rows: { name: string; base: string; alts: string[] }[];
+  countries: Map<string, string>;
+}
+export function buildIndex(entries: { city: City; base?: string; alts?: string[] }[]): CityIndex {
+  const countries = new Map<string, string>();
+  const rows = entries.map(({ city, base, alts }) => {
+    countries.set(norm(city.country), city.country);
+    return { name: city.name, base: norm(base ?? city.name), alts: (alts ?? []).map(norm) };
+  });
+  return { rows, countries };
+}
+const curatedIndex = buildIndex(raw.map((city) => ({ city })));
+
+export function norm(t: string): string {
   return t
     .toLowerCase()
     .normalize("NFD")
@@ -444,10 +462,11 @@ function norm(t: string): string {
 const head = (t: string) => norm(t.split(",")[0]);
 
 /** The dataset country a query names exactly ("US", "United Kingdom", "India"), or null. */
-export function countryOf(text: string): string | null {
+export function countryOf(text: string, ix: CityIndex = curatedIndex): string | null {
   const q = norm(text);
   if (!q) return null;
-  return countryAliases[q] ?? countryNames.get(q) ?? null;
+  const c = countryAliases[q] ?? ix.countries.get(q) ?? null;
+  return c && ix.countries.has(norm(c)) ? c : null;
 }
 
 // Distance from the query to the same-length start of a name, one slip allowed
@@ -481,7 +500,7 @@ type Tier = "exact" | "prefix" | "loose";
  * none of those exist, near misses. Ties go to the home state, then the home
  * country, then dataset order.
  */
-function rank(text: string, home?: string): { names: string[]; tier: Tier | "country" } {
+export function rank(text: string, home?: string, ix: CityIndex = curatedIndex): { names: string[]; tier: Tier | "country" } {
   const q = head(text);
   if (!q) return { names: [], tier: "loose" };
   const h = home ? citiesByName[home] : undefined;
@@ -490,18 +509,19 @@ function rank(text: string, home?: string): { names: string[]; tier: Tier | "cou
     return h && c.country === h.country ? (h.region && c.region === h.region ? 0 : 1) : 2;
   };
   const stable = (names: string[]) => names.map((n, i) => [n, i] as const).sort((a, b) => boost(a[0]) - boost(b[0]) || a[1] - b[1]).map((x) => x[0]);
-  const country = countryOf(text);
+  const country = countryOf(text, ix);
   const out = new Set<string>();
   const alias = aliases[q];
   if (alias) out.add(alias);
   if (country) {
-    stable(allCityNames.filter((n) => citiesByName[n].country === country)).forEach((n) => out.add(n));
+    stable(ix.rows.filter((r) => citiesByName[r.name].country === country).map((r) => r.name)).forEach((n) => out.add(n));
     return { names: [...out], tier: "country" };
   }
-  const normed = allCityNames.map((n) => [n, norm(n)] as const);
-  for (const [n, l] of normed) if (l === q) out.add(n);
+  // A row's own name and its alternate spellings all count; the ranking is the same for each.
+  const forms = (r: CityIndex["rows"][number]) => [r.base, ...r.alts];
+  for (const r of ix.rows) if (forms(r).includes(q)) out.add(r.name);
   const exact = out.size > 0;
-  const add = (pred: (l: string) => boolean) => stable(normed.filter(([n, l]) => !out.has(n) && pred(l)).map(([n]) => n)).forEach((n) => out.add(n));
+  const add = (pred: (l: string) => boolean) => stable(ix.rows.filter((r) => !out.has(r.name) && forms(r).some(pred)).map((r) => r.name)).forEach((n) => out.add(n));
   add((l) => l.startsWith(q));
   const prefixEnd = out.size;
   add((l) => l.split(/[\s-]/).some((w) => w.startsWith(q)));
@@ -510,19 +530,19 @@ function rank(text: string, home?: string): { names: string[]; tier: Tier | "cou
   return { names: [...out], tier: exact || prefixEnd > 0 ? (exact ? "exact" : "prefix") : "loose" };
 }
 
-export function findCity(text: string): City | null {
+export function findCity(text: string, ix: CityIndex = curatedIndex, labels: Record<string, string> = citiesByLabel): City | null {
   const t = text.trim();
   if (!t) return null;
-  const label = citiesByLabel[t];
+  const label = labels[t];
   if (label) return citiesByName[label];
-  const r = rank(t);
+  const r = rank(t, undefined, ix);
   // A half-typed name of 3 letters or fewer is never guessed for the user.
   if (r.tier === "exact" || (r.tier === "prefix" && head(t).length >= 4)) return citiesByName[r.names[0]] ?? null;
   return null;
 }
 
-export function matchCities(text: string, limit = 8, home?: string): string[] {
-  return rank(text, home).names.slice(0, limit);
+export function matchCities(text: string, limit = 8, home?: string, ix: CityIndex = curatedIndex): string[] {
+  return rank(text, home, ix).names.slice(0, limit);
 }
 
 export function nearestBigCity(lat: number, lon: number): City | null {

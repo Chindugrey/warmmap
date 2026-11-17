@@ -63,7 +63,7 @@ test("stored Lantern-keeper kind is kept publicly, with a name-free because line
 
 test("PRIVACY: the public payload has exactly the public keys; no gold, tied-back, new or vouch signal", () => {
   const p = toPublicMap({ ...row, vouches: [{ entryIndex: 1, seenByOwnerAt: null }], gold: [1] } as typeof row);
-  assert.deepEqual(Object.keys(p).sort(), ["because", "homeCity", "id", "kind", "lanterns", "ownerName", "stats"]);
+  assert.deepEqual(Object.keys(p).sort(), ["because", "homeCity", "id", "kind", "lanterns", "ownerName", "places", "stats"]);
   assert.ok(p.lanterns.every((l) => typeof l === "string"), "lanterns are plain city names");
   const json = JSON.stringify(p).toLowerCase();
   for (const banned of ["gold", "isnew", "entryindex", "vouch", "tied", "seen", "answered"]) assert.ok(!json.includes(banned), `public payload leaks ${banned}`);
