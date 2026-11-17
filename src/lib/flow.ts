@@ -39,3 +39,12 @@ export const linkedInShareUrl = (url: string) =>
   `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
 
 export const whatsAppUrl = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+/** How a share link reached a visitor (?s=): WhatsApp, LinkedIn, copied link, Story. The only values ever passed on. */
+export const CHANNEL_TAGS = ["wa", "li", "cp", "st"] as const;
+
+/** "Make yours" from a map: carries the inviter and, when the visitor arrived with an allowed ?s=, that tag. Anything else is dropped. */
+export function makeYoursHref(mapId: string, s: string | null | undefined): string {
+  const tag = (CHANNEL_TAGS as readonly string[]).includes(s ?? "") ? `&s=${s}` : "";
+  return `/?invitedBy=${mapId}&via=map${tag}`;
+}

@@ -216,6 +216,13 @@ test("owner returns: Kochi answered. [Share your gratitude map]; visitors see no
   assert.ok(!vt.includes("answered"), "no gold moment for visitors");
   assert.equal(await v.eval(`document.querySelectorAll('circle[stroke="#F2C230"]').length`), 0, "no gold ring for visitors");
   await assertNoGold(v, "390x844");
+  for (const [q, want] of [["?s=wa", "&s=wa"], ["?s=bogus", null]]) {
+    const m = await browser({ width: 390, height: 844 });
+    await m.goto(`${BASE}/m/${S.slug}${q}`);
+    const href = await m.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Make yours').getAttribute('href')`);
+    if (want) assert.ok(href.endsWith(want), `Make yours href ${href}`);
+    else assert.ok(!href.includes("s="), `invalid tag kept: ${href}`);
+  }
   const wide = await browser({ width: 1440, height: 900, mobile: false });
   await wide.goto(`${BASE}/m/${S.slug}`);
   await assertNoGold(wide, "1440x900");

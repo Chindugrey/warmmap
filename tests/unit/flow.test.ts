@@ -142,3 +142,10 @@ test("progress gaps follow the chapter sizes (3/3/2 -> after lanterns 3 and 6), 
   assert.deepEqual(chapterGaps([1, 1, 1]), []);
   assert.deepEqual(chapterGaps([]), []);
 });
+
+test("Make yours carries an allowed share channel (?s=) and drops anything else", async () => {
+  const { makeYoursHref } = await import("@/lib/flow");
+  assert.equal(makeYoursHref("k7q2x9ab", "wa"), "/?invitedBy=k7q2x9ab&via=map&s=wa");
+  for (const s of ["li", "cp", "st"]) assert.ok(makeYoursHref("k7q2x9ab", s).endsWith(`&s=${s}`));
+  for (const bad of ["evil", "WA", "wa&x=1", "", null, undefined]) assert.equal(makeYoursHref("k7q2x9ab", bad), "/?invitedBy=k7q2x9ab&via=map");
+});

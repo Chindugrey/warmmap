@@ -17,7 +17,7 @@ import { StoryPictureLink, sharePicture, useStoryFile } from "@/components/Story
 import type { PublicMap as PublicMapData } from "@/lib/public-map";
 import { KIND_LINES } from "@/lib/kinds";
 import { absorbKeeperHash, apiFetch, forgetOwnerKey, ownerKeyFor, rememberOwnerKey } from "@/lib/device";
-import { mapShareText, whatsAppUrl } from "@/lib/flow";
+import { makeYoursHref, mapShareText, whatsAppUrl } from "@/lib/flow";
 
 interface OwnerView {
   questionSet: number;
@@ -38,6 +38,7 @@ export function PublicMap({ map }: { map: PublicMapData }) {
   const [newKeeper, setNewKeeper] = useState<string | null>(null);
   const [names, setNames] = useState<Named[]>([]);
   const [url, setUrl] = useState(`/m/${map.id}`);
+  const [channel, setChannel] = useState<string | null>(null);
   const storyFile = useStoryFile(view ? map.id : null);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function PublicMap({ map }: { map: PublicMapData }) {
     queueMicrotask(() => {
       setUrl(`${window.location.origin}/m/${map.id}`);
       setNames(stored);
+      setChannel(new URLSearchParams(window.location.search).get("s"));
     });
     if (!k) {
       // A visitor (not the owner) opened the map: count one view, with the share channel if the link had one.
@@ -257,7 +259,7 @@ export function PublicMap({ map }: { map: PublicMapData }) {
             </>
           ) : (
             <>
-              <a className="wm-btn" href={`/?invitedBy=${map.id}&via=map`}>
+              <a className="wm-btn" href={makeYoursHref(map.id, channel)}>
                 Make yours
               </a>
               <p className="wm-note" style={{ textAlign: "center" }}>

@@ -2,6 +2,7 @@
 // metadata keys are allow-listed; values are enums or small numbers. No event
 // ever carries a name, e-mail, token, owner key or the # part of an address.
 import { prisma } from "./prisma";
+import { CHANNEL_TAGS } from "./flow";
 
 export const SERVER_EVENTS = [
   "map_saved",
@@ -23,7 +24,7 @@ const ENUMS: Record<string, readonly string[]> = {
   inApp: ["whatsapp", "linkedin", "instagram", "none"],
   channel: ["whatsapp", "linkedin", "copy", "native", "story"],
   // How the link reached the visitor: ?s= on a share link (WhatsApp, LinkedIn, copied, Story).
-  s: ["wa", "li", "cp", "st"],
+  s: CHANNEL_TAGS,
 };
 
 /** The ?s= value if it is one of the allowed tags, else undefined. Never anything the sender typed. */
