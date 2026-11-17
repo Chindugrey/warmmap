@@ -89,6 +89,8 @@ export function CornerFlow({ below }: { below?: ReactNode }) {
     queueMicrotask(() => {
       if (invitedBy && /^[a-z0-9]{6,32}$/i.test(invitedBy) && (!saved || saved.invitedBy !== invitedBy)) {
         const fresh = { ...emptyDraft(), invitedBy, via: via as Draft["via"] };
+        // Arrived by tapping "Make yours" on a map or a thank-you page (the ?s= tag rides along when the link has one).
+        if (via !== "cold") track("make_yours", { via, s: q.get("s") });
         setD(fresh);
         if (via === "thanks") {
           fetch(`/api/maps/${invitedBy}`)
