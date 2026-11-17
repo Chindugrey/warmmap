@@ -29,6 +29,9 @@ export function cardUrl(id: string | null, format: CardFormat = "link", download
   return `${SITE_URL}/api/og?id=${encodeURIComponent(id)}${format === "story" ? "&f=story" : ""}${download ? "&dl=1" : ""}`;
 }
 
+/** Thread colour on the card: the same amber for every lantern. Gold is the owner's alone, so it never appears here. */
+export const CARD_THREAD = "#F3B75E";
+
 const SAMPLE = ["Kochi", "Mysuru", "Chennai", "Hyderabad", "Pune", "Delhi", "London", "Singapore"];
 
 export interface CardModel {

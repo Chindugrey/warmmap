@@ -10,7 +10,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { findMap } from "@/lib/owner";
 import { toPublicMap } from "@/lib/public-map";
-import { cardModel, parseCardParams, CARD_SIZES, type CardModel } from "@/lib/card";
+import { cardModel, parseCardParams, CARD_SIZES, CARD_THREAD, type CardModel } from "@/lib/card";
 import { threadPath, CENTER, SPHERE_R } from "@/lib/globe-layout";
 import { limitRequest, HOUR } from "@/lib/limits";
 
@@ -18,7 +18,6 @@ export const runtime = "nodejs";
 
 const INK = "#2E2219";
 const SOFT = "#4E3B2A";
-const GOLD = "#F2C230";
 const HAND = "M-5-8h10l1.6 3v7.6L5 5.6H-5l-1.6-3V-5z";
 
 type FontStyle = "normal" | "italic";
@@ -100,7 +99,7 @@ function DuskGlobe({ m, size }: { m: CardModel; size: number }) {
       <circle cx={CENTER} cy={CENTER} r={270} fill="none" stroke={INK} strokeWidth={5} strokeDasharray="1 8.42" opacity={0.4} />
       <circle cx={CENTER} cy={CENTER} r={277} fill="none" stroke={INK} strokeWidth={1} opacity={0.55} />
       {points.map((p, i) => (
-        <path key={`t${i}`} d={threadPath(p)} fill="none" stroke={GOLD} strokeWidth={1.9} opacity={0.95} />
+        <path key={`t${i}`} d={threadPath(p)} fill="none" stroke={CARD_THREAD} strokeWidth={1.9} opacity={0.95} />
       ))}
       <circle cx={CENTER} cy={CENTER} r={22} fill="url(#gAK)" opacity={0.75} />
       <circle cx={CENTER} cy={CENTER} r={4.6} fill="#FFF3D6" />

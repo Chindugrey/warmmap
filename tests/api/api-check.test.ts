@@ -153,6 +153,14 @@ test("Tie it back: one tap = gold; own lantern refused; one use; GET cannot vouc
 test("PRIVACY: gold is invisible publicly (public payload byte-identical after the vouch)", async () => {
   const r = await api(`/api/maps/${S.slug}`);
   assert.equal(r.text, S.publicBefore);
+  assert.deepEqual(Object.keys(r.json).sort(), ["because", "homeCity", "id", "kind", "lanterns", "ownerName", "stats"]);
+  for (const banned of ["gold", "isNew", "entryIndex", "vouch", "tied"]) assert.ok(!r.text.includes(banned), `public payload leaks ${banned}`);
+  // A wrong key, or none, gets nothing extra from the public route or the seen endpoint.
+  const withBadKey = await api(`/api/maps/${S.slug}`, { key: "not-the-key" });
+  assert.equal(withBadKey.text, S.publicBefore);
+  assert.equal((await api(`/api/maps/${S.slug}/owner`, { key: "not-the-key" })).status, 403);
+  assert.equal((await api(`/api/maps/${S.slug}/seen`, { method: "POST" })).status, 403);
+  assert.equal((await api(`/api/maps/${S.slug}/seen`, { method: "POST", key: "not-the-key" })).status, 403);
 });
 
 test("owner sees gold, marks it seen; gold lantern takes no new thank link", async () => {

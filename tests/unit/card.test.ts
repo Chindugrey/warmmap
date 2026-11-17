@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseCardParams, cardModel, CARD_SIZES, cardUrl } from "@/lib/card";
+import { readFileSync } from "node:fs";
+import { parseCardParams, cardModel, CARD_SIZES, cardUrl, CARD_THREAD } from "@/lib/card";
 import { toPublicMap } from "@/lib/public-map";
 import { computeKind } from "@/lib/kinds";
 
@@ -55,4 +56,11 @@ test("the full-map card unlocks at five lanterns (smaller legacy maps get the ho
   assert.deepEqual(four.nums, []);
   const five = cardModel(toPublicMap(row(["Kochi", "Pune", "Delhi", "Mumbai", "Chennai"])), "story");
   assert.equal(five.title, "Ananya's Warm Map");
+});
+
+test("PRIVACY: the share card draws no gold (threads are the one shared amber)", () => {
+  const GOLD = /f2c230/i;
+  assert.ok(!GOLD.test(CARD_THREAD));
+  assert.ok(!GOLD.test(readFileSync("src/app/api/og/route.tsx", "utf8")), "og route must not use the gold colour");
+  assert.ok(!GOLD.test(readFileSync("src/lib/card.ts", "utf8").replace(/\/\/.*$/gm, "")), "card model must not use the gold colour");
 });

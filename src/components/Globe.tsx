@@ -127,7 +127,9 @@ export function Globe({
     <svg ref={svgRef} className={`wm-globe wm-m-${motion} ${className}`} viewBox={viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label={aria}>
       <defs>
         <radialGradient id="wm-gA"><stop offset="0%" stopColor={AMBER} stopOpacity={0.75} /><stop offset="100%" stopColor={AMBER} stopOpacity={0} /></radialGradient>
-        <radialGradient id="wm-gG"><stop offset="0%" stopColor={GOLD} stopOpacity={0.9} /><stop offset="100%" stopColor={GOLD} stopOpacity={0} /></radialGradient>
+        {(turn !== undefined || lit > 0) && (
+          <radialGradient id="wm-gG"><stop offset="0%" stopColor={GOLD} stopOpacity={0.9} /><stop offset="100%" stopColor={GOLD} stopOpacity={0} /></radialGradient>
+        )}
         <radialGradient id={`${uid}-home`}><stop offset="0%" stopColor={AMBER} stopOpacity={0.6} /><stop offset="100%" stopColor={AMBER} stopOpacity={0} /></radialGradient>
         <clipPath id={`${uid}-clip`}><circle cx={CENTER} cy={CENTER} r={SPHERE_R} /></clipPath>
       </defs>

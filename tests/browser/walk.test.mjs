@@ -184,6 +184,18 @@ test("Make yours: starts with the carried lantern, still needs 5 questions", { s
   assertNoNames(b, ["F0qx", "F1qx", "F2qx", "F3qx", "F4qx", ...FRIENDS]);
 });
 
+/** A visitor's globe: every lantern and thread amber; no gold colour, gold gradient, ring or "gold" label. */
+async function assertNoGold(b, where) {
+  const r = await b.eval(`(()=>{const svg=document.querySelector('svg.wm-globe');if(!svg)return {missing:true};
+    const bad=[...svg.querySelectorAll('*')].filter(e=>['fill','stroke','stop-color'].some(a=>/f2c230|#wm-gG/i.test(e.getAttribute(a)||'')||/f2c230|wm-gG/i.test(e.getAttribute('style')||'')));
+    return {missing:false,bad:bad.length,aria:svg.getAttribute('aria-label'),turn:svg.querySelectorAll('.wm-turn').length,html:document.body.innerText.toLowerCase()}})()`);
+  assert.ok(!r.missing, `${where}: no globe`);
+  assert.equal(r.bad, 0, `${where}: gold-coloured globe element for a visitor`);
+  assert.ok(!/gold/i.test(r.aria), `${where}: aria mentions gold: ${r.aria}`);
+  assert.equal(r.turn, 0, `${where}: gold turn for a visitor`);
+  assert.ok(!/gold|answered|tied/.test(r.html), `${where}: gold wording for a visitor`);
+}
+
 test("owner returns: Kochi answered. [Share your gratitude map]; visitors see no gold", { skip }, async () => {
   const b = S.owner;
   await b.goto(`${BASE}/m/${S.slug}`, 500);
@@ -203,6 +215,10 @@ test("owner returns: Kochi answered. [Share your gratitude map]; visitors see no
   assert.match(vt, /Make yours/);
   assert.ok(!vt.includes("answered"), "no gold moment for visitors");
   assert.equal(await v.eval(`document.querySelectorAll('circle[stroke="#F2C230"]').length`), 0, "no gold ring for visitors");
+  await assertNoGold(v, "390x844");
+  const wide = await browser({ width: 1440, height: 900, mobile: false });
+  await wide.goto(`${BASE}/m/${S.slug}`);
+  await assertNoGold(wide, "1440x900");
   for (const n of FRIENDS) assert.ok(!(await v.eval("document.documentElement.outerHTML")).includes(n));
 });
 
