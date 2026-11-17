@@ -87,7 +87,7 @@ test("make a map: hero → home → 5 questions → reveal (tap to skip) → nam
   for (let i = 1; i < 5; i++) await answer(b, FRIENDS[i], CITIES[i]);
   assert.match(await text(b), /See my map/);
   const lit = await b.eval(`document.querySelector('.wm-prog').getAttribute('aria-label')`);
-  assert.equal(lit, "5 of 12 lanterns lit");
+  assert.equal(lit, "5 of 8 lanterns lit");
   await clickText(b, "See my map");
   await waitFor(b, `!!document.querySelector('.wm-reveal.wm-play')`);
   await b.shot(`${SHOTS}/walk-3-reveal-dusk.png`);
@@ -119,7 +119,7 @@ test("Tell them on WhatsApp: one lantern, one person; the link carries the name 
   await captureOpens(b);
   await clickText(b, "Tell them on WhatsApp");
   assert.match(await text(b), /Five people\. Two minutes\./);
-  // First suggested row is question 12 if answered, else question 1 (Meera, Kochi).
+  // First suggested row is the last question if answered, else question 1 (Meera, Kochi).
   await clickText(b, "Send on WhatsApp");
   await waitFor(b, `window.__opened.length > 0`);
   const wa = await b.eval(`window.__opened[0]`);
