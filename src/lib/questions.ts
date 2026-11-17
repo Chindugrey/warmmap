@@ -45,6 +45,15 @@ export const LEGACY_QUESTIONS = [
   "Who do you want to meet this year?",
 ];
 
+/** Questions a map of this set was asked: 12 for set 2 (and the legacy set 1). */
+export function questionCountFor(questionSet: number): number {
+  return questionSet === 1 ? LEGACY_QUESTIONS.length : QUESTION_COUNT;
+}
+
+const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+/** "twelve", "eight": small counts in words, so copy never hard-codes the number. */
+export const numberWord = (n: number) => WORDS[n] ?? String(n);
+
 export function questionFor(questionSet: number, index: number): string | null {
   if (!Number.isInteger(index) || index < 0) return null;
   if (questionSet === 1) return LEGACY_QUESTIONS[index] ?? null;

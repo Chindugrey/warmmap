@@ -51,7 +51,12 @@ export function PublicMap({ map }: { map: PublicMapData }) {
       setUrl(`${window.location.origin}/m/${map.id}`);
       setNames(stored);
     });
-    if (!k) return;
+    if (!k) {
+      // A visitor (not the owner) opened the map: count one view, with the share channel if the link had one.
+      const s = new URLSearchParams(window.location.search).get("s");
+      apiFetch(`/api/maps/${map.id}${s ? `?s=${encodeURIComponent(s)}` : ""}`).catch(() => {});
+      return;
+    }
     apiFetch(`/api/maps/${map.id}/owner`, { ownerKey: k }).then(async (res) => {
       if (res.status === 403) return forgetOwnerKey(map.id);
       if (!res.ok) return;
@@ -90,11 +95,11 @@ export function PublicMap({ map }: { map: PublicMapData }) {
   // "Share your gratitude map": the Status/Story picture with the map link where
   // the phone can share files; else the link alone; else WhatsApp.
   async function shareGratitude() {
-    const text = mapShareText(map.stats.cities, url);
-    if (await sharePicture(storyFile.current, text.replace(` ${url}`, ""), url)) return;
+    const text = mapShareText(map.stats.cities, `${url}?s=wa`);
+    if (await sharePicture(storyFile.current, text.replace(` ${url}?s=wa`, ""), `${url}?s=st`)) return;
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${owner}'s Warm Map`, text: text.replace(` ${url}`, ""), url });
+        await navigator.share({ title: `${owner}'s Warm Map`, text: text.replace(` ${url}?s=wa`, ""), url: `${url}?s=st` });
         return;
       } catch {
         /* cancelled */

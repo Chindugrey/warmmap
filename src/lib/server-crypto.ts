@@ -1,7 +1,8 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
-// Lantern tokens are made on the phone: 24 random bytes, base64url (32 chars).
-const TOKEN_RE = /^[A-Za-z0-9_-]{32}$/;
+// Lantern tokens are made on the phone: 12 base62 characters. Links made before
+// 17 Nov 2026 carry 24 random bytes as base64url (32 chars); they keep working.
+const TOKEN_RE = /^(?:[A-Za-z0-9]{12}|[A-Za-z0-9_-]{32})$/;
 
 export function isWellFormedToken(token: string): boolean {
   return TOKEN_RE.test(token);

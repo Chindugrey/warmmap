@@ -22,7 +22,14 @@ const ENUMS: Record<string, readonly string[]> = {
   via: ["cold", "map", "thanks", "seed"],
   inApp: ["whatsapp", "linkedin", "instagram", "none"],
   channel: ["whatsapp", "linkedin", "copy", "native", "story"],
+  // How the link reached the visitor: ?s= on a share link (WhatsApp, LinkedIn, copied, Story).
+  s: ["wa", "li", "cp", "st"],
 };
+
+/** The ?s= value if it is one of the allowed tags, else undefined. Never anything the sender typed. */
+export function channelTag(v: string | null | undefined): string | undefined {
+  return typeof v === "string" && ENUMS.s.includes(v) ? v : undefined;
+}
 const NUMS = ["n", "questionSet"];
 
 export function cleanMetadata(meta: unknown): Record<string, string | number> {

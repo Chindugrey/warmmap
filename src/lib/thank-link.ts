@@ -3,7 +3,7 @@
 import { prisma } from "./prisma";
 import { isWellFormedToken, sha256Hex } from "./server-crypto";
 import { parseEntries } from "./entries";
-import { questionFor } from "./questions";
+import { questionCountFor, questionFor } from "./questions";
 
 export type LinkState = "ok" | "used" | "expired" | "missing";
 
@@ -22,6 +22,7 @@ export async function lookupThankLink(token: string) {
     ownerHome: map.homeCity,
     city: entry?.city ?? null,
     question: questionFor(map.questionSet, link.entryIndex),
+    questionCount: questionCountFor(map.questionSet),
   };
   const tiedElsewhere = await prisma.vouch.findUnique({
     where: { mapId_entryIndex: { mapId: map.id, entryIndex: link.entryIndex } },

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { lookupThankLink } from "@/lib/thank-link";
 import { FriendPage } from "@/components/FriendPage";
 import { cardUrl, CARD_SIZES } from "@/lib/card";
+import { numberWord, QUESTION_COUNT } from "@/lib/questions";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -11,16 +12,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { token } = await params;
   const found = await lookupThankLink(token);
   const owner = found.state === "missing" ? "Someone" : found.view.ownerName;
+  const count = numberWord(found.state === "missing" ? QUESTION_COUNT : found.view.questionCount);
+  const description = `You were the answer to one of ${count} questions. Open to see which.`;
   // Every link of a map previews the same, so a preview fetch reveals nothing.
   return {
     title: `${owner} lit a lantern for you`,
-    description: "You were the answer to one of twelve questions. Open to see which.",
+    description,
     robots: { index: false, follow: false },
     referrer: "no-referrer",
     twitter: { card: "summary_large_image" },
     openGraph: {
       title: `${owner} lit a lantern for you`,
-      description: "You were the answer to one of twelve questions. Open to see which.",
+      description,
       images: [{ url: cardUrl(found.state === "missing" ? null : found.view.mapSlug), ...CARD_SIZES.link }],
     },
   };

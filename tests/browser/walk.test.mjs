@@ -106,8 +106,8 @@ test("make a map: hero → home → 5 questions → reveal (tap to skip) → nam
   for (const c of ["Tell them on WhatsApp", "Share on LinkedIn", "Copy link"]) assert.ok(done.includes(c), `missing CTA ${c}`);
   assert.match(done, /lanterns? lit so far/, "live counter after the reveal");
   const li = await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Share on LinkedIn').href`);
-  assert.match(li, /^https:\/\/www\.linkedin\.com\/sharing\/share-offsite\/\?url=.*%2Fm%2F[a-z0-9]{8}$/);
-  S.slug = decodeURIComponent(li).match(/\/m\/([a-z0-9]{8})$/)[1];
+  assert.match(li, /^https:\/\/www\.linkedin\.com\/sharing\/share-offsite\/\?url=.*%2Fm%2F[a-z0-9]{8}%3Fs%3Dli$/);
+  S.slug = decodeURIComponent(li).match(/\/m\/([a-z0-9]{8})\?s=li$/)[1];
   const story = await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Save the picture for Status and Story')?.getAttribute('href')`);
   assert.equal(story, `/api/og?id=${S.slug}&f=story&dl=1`);
   await b.shot(`${SHOTS}/walk-4-glowing.png`);
@@ -124,11 +124,12 @@ test("Tell them on WhatsApp: one lantern, one person; the link carries the name 
   await waitFor(b, `window.__opened.length > 0`);
   const wa = await b.eval(`window.__opened[0]`);
   const msg = decodeURIComponent(wa.replace("https://wa.me/?text=", ""));
-  const m = msg.match(/(http:\/\/[^ ]+\/t\/([A-Za-z0-9_-]{32}))#(\S+)$/);
+  const m = msg.match(/(http:\/\/[^ ]+\/t\/([A-Za-z0-9]{12}))(\?s=wa)?#(\S+)$/);
   assert.ok(m, `no thank link in ${msg}`);
-  assert.equal(decodeURIComponent(m[3]), FRIENDS[0]);
+  assert.equal(m[3], "?s=wa", "the thank link is tagged as sent from WhatsApp");
+  assert.equal(decodeURIComponent(m[4]), FRIENDS[0]);
   assert.ok(!/2am/.test(msg), "the message does not spoil the question");
-  S.thank = m[1] + "#" + m[3];
+  S.thank = m[1] + m[3] + "#" + m[4];
   await b.shot(`${SHOTS}/walk-5-thank-sheet.png`);
   assertNoNames(b, FRIENDS);
 });
@@ -175,7 +176,7 @@ test("Make yours: starts with the carried lantern, still needs 5 questions", { s
   await type(b, "#wm-owner", "Meera");
   await clickText(b, "Show me");
   await waitFor(b, `document.body.innerText.includes("Your corner is glowing.")`);
-  const slug = decodeURIComponent(await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Share on LinkedIn').href`)).match(/\/m\/([a-z0-9]{8})$/)[1];
+  const slug = decodeURIComponent(await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Share on LinkedIn').href`)).match(/\/m\/([a-z0-9]{8})\?s=li$/)[1];
   const pub = await (await fetch(`${BASE}/api/maps/${slug}`)).json();
   assert.equal(pub.stats.lanterns, 6);
   assert.ok(pub.lanterns.includes("Bengaluru"), "the carried lantern points at the inviter's home");

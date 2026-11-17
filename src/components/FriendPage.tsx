@@ -34,7 +34,7 @@ export function FriendPage({ token, state: initial, view }: { token: string; sta
   const [reported, setReported] = useState(false);
 
   useEffect(() => {
-    apiFetch("/api/analytics", { method: "POST", body: JSON.stringify({ event: "t_open", metadata: { via: "thanks" } }) }).catch(() => {});
+    apiFetch("/api/analytics", { method: "POST", body: JSON.stringify({ event: "t_open", metadata: { via: "thanks", s: new URLSearchParams(window.location.search).get("s") } }) }).catch(() => {});
   }, []);
 
   async function tie() {
@@ -84,7 +84,7 @@ export function FriendPage({ token, state: initial, view }: { token: string; sta
   const city = view.city ?? "your city";
   const tied = state === "tied";
   const makeYours = `/?invitedBy=${view.mapSlug}&via=thanks`;
-  const tellBack = whatsAppUrl(`I'm in your corner. Always was.${mapUrl ? ` ${mapUrl}` : ""}`);
+  const tellBack = whatsAppUrl(`I'm in your corner. Always was.${mapUrl ? ` ${mapUrl}?s=wa` : ""}`);
 
   return (
     <div className="wm">

@@ -2,16 +2,21 @@
 // The phone makes the token; the server only ever receives its SHA-256 hash and
 // the lantern index. The friend's name goes after "#", which browsers never send.
 
-function toBase64Url(bytes: Uint8Array): string {
-  let s = "";
-  for (const b of bytes) s += String.fromCharCode(b);
-  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
+const BASE62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+const TOKEN_LENGTH = 12; // 62^12 is about 2^71; links are single-use, expire and are rate limited
 
+// No "-" or "_", so WhatsApp never breaks the link at a hyphen. Bytes at or above 248
+// are skipped (248 = 4 x 62), so every symbol is equally likely.
 export function makeLanternToken(): string {
-  const bytes = new Uint8Array(24);
-  crypto.getRandomValues(bytes);
-  return toBase64Url(bytes);
+  let out = "";
+  while (out.length < TOKEN_LENGTH) {
+    const bytes = new Uint8Array(TOKEN_LENGTH * 2);
+    crypto.getRandomValues(bytes);
+    for (const b of bytes) {
+      if (b < 248 && out.length < TOKEN_LENGTH) out += BASE62[b % 62];
+    }
+  }
+  return out;
 }
 
 export async function hashLanternToken(token: string): Promise<string> {
@@ -29,11 +34,13 @@ export async function prepareThank(opts: {
   mapId: string;
   entryIndex: number;
   friendName?: string;
+  /** Share channel tag (?s=), one of the allow-listed analytics tags. */
+  channel?: "wa" | "li" | "cp" | "st";
 }): Promise<PreparedThank> {
   const token = makeLanternToken();
   const tokenHash = await hashLanternToken(token);
   const name = (opts.friendName ?? "").trim().slice(0, 24);
-  const url = `${opts.base}/t/${token}` + (name ? `#${encodeURIComponent(name)}` : "");
+  const url = `${opts.base}/t/${token}` + (opts.channel ? `?s=${opts.channel}` : "") + (name ? `#${encodeURIComponent(name)}` : "");
   return { url, body: { mapId: opts.mapId, entryIndex: opts.entryIndex, tokenHash } };
 }
 

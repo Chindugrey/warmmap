@@ -106,6 +106,32 @@ test("/t/[token]: question shown, no-referrer, noindex, name not on the server",
   assert.ok(bad.text.includes("couldn"));
 });
 
+test("a 32-character token issued before the short ones still resolves; the preview says the question count", async () => {
+  const legacy = randomBytes(24).toString("base64url");
+  assert.equal(legacy.length, 32);
+  const hash = createHash("sha256").update(legacy).digest("hex");
+  const r = await api("/api/thanks", { method: "POST", key: S.key, body: { mapId: S.slug, entryIndex: 1, tokenHash: hash } });
+  assert.equal(r.status, 201, r.text);
+  const page = await api(`/t/${legacy}`);
+  assert.equal(page.status, 200);
+  assert.ok(page.text.includes("Tie it back"));
+  assert.match(page.text, /one of twelve questions/);
+  assert.match(S.token, /^[A-Za-z0-9]{12}$/, "new links carry 12 base62 characters");
+});
+
+test("channel tag: ?s= is recorded on map_view and t_open when allow-listed, ignored otherwise, no PII", async () => {
+  const map = await db.map.findFirst({ where: { OR: [{ shortSlug: S.slug }, { publicId: S.slug }] } });
+  const since = new Date();
+  for (const s of ["wa", "li", "cp", "st", "bogus", "wa%26x%3D1"]) assert.equal((await api(`/api/maps/${S.slug}?s=${s}`)).status, 200);
+  assert.equal((await api(`/api/maps/${S.slug}`)).status, 200);
+  const views = await db.analyticsEvent.findMany({ where: { event: "map_view", mapId: map!.id, createdAt: { gte: since } }, orderBy: { createdAt: "asc" } });
+  assert.deepEqual(views.map((v) => (v.metadata as any).s), ["wa", "li", "cp", "st", undefined, undefined, undefined]);
+  await api("/api/analytics", { method: "POST", body: { event: "t_open", metadata: { via: "thanks", s: "wa" } } });
+  await api("/api/analytics", { method: "POST", body: { event: "t_open", metadata: { via: "thanks", s: "Meera" } } });
+  const opens = await db.analyticsEvent.findMany({ where: { event: "t_open", createdAt: { gte: since } }, orderBy: { createdAt: "asc" } });
+  assert.deepEqual(opens.map((v) => v.metadata), [{ via: "thanks", s: "wa" }, { via: "thanks" }]);
+});
+
 test("Tie it back: one tap = gold; own lantern refused; one use; GET cannot vouch", async () => {
   assert.equal((await api("/api/vouch")).status, 405);
   const own = await api("/api/vouch", { method: "POST", key: S.key, body: { token: S.token } });
@@ -184,7 +210,7 @@ test("admin connector score: token required; score and CSV", async () => {
   assert.equal(me.vouchesReceived, 1);
   assert.equal(me.distinctVouchers, 1);
   assert.equal(me.mapsBroughtIn, 1);
-  assert.equal(me.thankYousSent, 2);
+  assert.equal(me.thankYousSent, 3, "two links in the thank-you test, one more for the 32-character token");
   assert.equal(me.score, 1 + 1 + me.cities);
   const csv = await api("/api/admin/connectors?format=csv", { headers: { Authorization: `Bearer ${ADMIN}` } });
   assert.match(csv.headers.get("content-type") ?? "", /text\/csv/);

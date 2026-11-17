@@ -159,6 +159,7 @@
 .wm-thank { border-top: 1px solid #2E221933; padding: 12px 0; display: flex; flex-direction: column; gap: 8px; }
 .wm-thank .q { font-style: italic; color: var(--soft); font-size: 16px; }
 .wm-thank textarea { width: 100%; min-height: 84px; font: 400 16px/1.35 var(--fb); color: var(--ink); background: var(--page); border: 1px solid var(--ink); border-radius: 2px; padding: 8px; }
+.wm-sends { overflow-wrap: anywhere; border-left: 2px solid var(--glow); padding-left: 8px; }
 .wm-keeper { margin-top: 14px; font-size: 16px; text-align: center; }
 
 /* the friend's page */

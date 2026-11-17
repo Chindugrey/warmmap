@@ -12,10 +12,10 @@ export function ShareRow({ url }: { url: string }) {
   const [copied, setCopied] = useState(false);
   async function copy() {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(`${url}?s=cp`);
     } catch {
       const ta = document.createElement("textarea");
-      ta.value = url;
+      ta.value = `${url}?s=cp`;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand("copy");
@@ -27,7 +27,7 @@ export function ShareRow({ url }: { url: string }) {
   }
   return (
     <div className="wm-r2">
-      <a className="wm-btn two" href={linkedInShareUrl(url)} target="_blank" rel="noopener noreferrer" onClick={() => track("linkedin")}>
+      <a className="wm-btn two" href={linkedInShareUrl(`${url}?s=li`)} target="_blank" rel="noopener noreferrer" onClick={() => track("linkedin")}>
         Share on LinkedIn
       </a>
       <button className="wm-lnk" type="button" onClick={copy} aria-live="polite">

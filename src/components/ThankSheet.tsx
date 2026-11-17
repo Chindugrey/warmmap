@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiFetch, ownerKeyFor } from "@/lib/device";
-import { prepareThank } from "@/lib/lantern-token";
+import { prepareThank, type PreparedThank } from "@/lib/lantern-token";
 import { THANK_ORDER, thankMessage, whatsAppUrl } from "@/lib/flow";
 import { questionFor } from "@/lib/questions";
 
@@ -31,13 +31,23 @@ export function ThankSheet({ slug, people, goldQuestions = [], onClose }: Props)
     Object.fromEntries(rows.map((r) => [r.questionIndex, thankMessage(r.name, "").trim()]))
   );
   const [sent, setSent] = useState<Record<number, boolean>>({});
+  // The link is made on this phone as soon as a row opens, so the message can be shown with the real short link.
+  const [links, setLinks] = useState<Record<number, PreparedThank>>({});
+  useEffect(() => {
+    const p = rows.find((r) => r.questionIndex === open);
+    if (!p || links[p.questionIndex]) return;
+    prepareThank({ base: window.location.origin, mapId: slug, entryIndex: p.questionIndex, friendName: p.name, channel: "wa" }).then((t) =>
+      setLinks((l) => (l[p.questionIndex] ? l : { ...l, [p.questionIndex]: t }))
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
   const [error, setError] = useState<string | null>(null);
 
   async function send(p: Named) {
     setError(null);
     const win = window.open("", "_blank"); // in the same tap, so the browser allows it
     try {
-      const t = await prepareThank({ base: window.location.origin, mapId: slug, entryIndex: p.questionIndex, friendName: p.name });
+      const t = links[p.questionIndex] ?? (await prepareThank({ base: window.location.origin, mapId: slug, entryIndex: p.questionIndex, friendName: p.name, channel: "wa" }));
       const res = await apiFetch("/api/thanks", { method: "POST", ownerKey: ownerKeyFor(slug), body: JSON.stringify(t.body) });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "That didn't go through. Try once more.");
       const wa = whatsAppUrl(`${texts[p.questionIndex]} ${t.url}`);
@@ -78,6 +88,11 @@ export function ThankSheet({ slug, people, goldQuestions = [], onClose }: Props)
                     maxLength={600}
                     onChange={(e) => setTexts((t) => ({ ...t, [p.questionIndex]: e.target.value }))}
                   />
+                  {links[p.questionIndex] && (
+                    <p className="wm-kick wm-sends" aria-label="What will be sent">
+                      {texts[p.questionIndex]} {links[p.questionIndex].url}
+                    </p>
+                  )}
                   <button className="wm-btn" type="button" onClick={() => send(p)}>
                     {sent[p.questionIndex] ? "Send again on WhatsApp" : "Send on WhatsApp"}
                   </button>

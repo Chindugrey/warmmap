@@ -1,7 +1,7 @@
 // GET: the public map, cities only. PATCH / DELETE: owner, by keeper key.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { trackEvent } from "@/lib/analytics";
+import { channelTag, trackEvent } from "@/lib/analytics";
 import { toPublicMap } from "@/lib/public-map";
 import { parsePatchInput } from "@/lib/map-input";
 import { mapShape, pinCarried } from "@/lib/map-shape";
@@ -11,11 +11,11 @@ import { limitRequest, HOUR } from "@/lib/limits";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(_req: NextRequest, { params }: Ctx) {
+export async function GET(req: NextRequest, { params }: Ctx) {
   const { id } = await params;
   const map = await findMap(id);
   if (!map) return NextResponse.json({ error: "Map not found" }, { status: 404 });
-  await trackEvent("map_view", map.id);
+  await trackEvent("map_view", map.id, { s: channelTag(req.nextUrl.searchParams.get("s")) });
   return NextResponse.json(toPublicMap(map), { headers: { "Cache-Control": "no-store" } });
 }
 
