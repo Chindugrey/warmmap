@@ -1,23 +1,37 @@
+import Image from "next/image";
 import { CornerFlow } from "@/components/CornerFlow";
 
-// The page is the game: the hero turns into question one. The rest of the
-// landing sits below the hero and goes away once the map is under way.
+const FOUNDERS = [
+  { name: "Aadarsh", photo: "/aadarsh.png", href: "https://www.linkedin.com/in/aadarsh-k-s/" },
+  { name: "Abhijith", photo: "/abhijith.png", href: "https://www.linkedin.com/in/abhijithharikumar-gtm/" },
+  { name: "Arjun", photo: "/arjun.png", href: "https://www.linkedin.com/in/arjun-aravind-708647125/" },
+];
+
+// The page is the game: the hero turns into question one. Below the hero, in
+// order: the narrative, the founders, what we never do. They go away once the
+// map is under way.
 export default function Home() {
   return (
     <CornerFlow
       below={
         <>
-          <section className="wm-sec">
-            <p className="wm-fable">
-              Every evening, someone on a veranda lights a lantern for someone far away. A thread runs from that lantern to the other one: Kochi
-              to London, Pune to Toronto, two streets over. This is a map of those threads.
-            </p>
+          <section className="wm-sec wm-narr">
+            <p>Think of the people who&apos;ve had your back: the 2am call, the first break, the hard truth.</p>
+            <p>Each answer lights a lantern in their city. In five answers, you&apos;ll see how far your warmth reaches &mdash; and their names never leave your phone.</p>
+            <p>Send each one a thank-you. When they tie it back, their lantern turns gold.</p>
           </section>
-          <section className="wm-sec wm-how">
-            <h2>How it works</h2>
-            <p><b>Light.</b> Name the people who were there. One question at a time.</p>
-            <p><b>Look.</b> See your map: how many people, how many cities, how far the thread runs.</p>
-            <p><b>Thank.</b> Send a few of them a note, from your own phone. They can tie it back.</p>
+          <section className="wm-sec wm-founders" aria-labelledby="wm-fcap">
+            <p className="wm-fcap" id="wm-fcap">Built by three people who kept meaning to say thank you.</p>
+            <ul>
+              {FOUNDERS.map((f) => (
+                <li key={f.name}>
+                  <a href={f.href} target="_blank" rel="noopener noreferrer">
+                    <Image src={f.photo} alt="" width={72} height={72} />
+                    <span>{f.name}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </section>
           <section className="wm-sec" id="never">
             <h2>What we never do</h2>

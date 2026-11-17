@@ -176,3 +176,48 @@ test("city search in the browser: Cheruvathur and Kannur are found, US lists US 
     assert.match(await b.eval("document.body.innerText"), /Which city in the USA\?/);
   }
 });
+
+test("landing order: hero, narrative, founders, then the rest; confirmed copy; photos load; links open LinkedIn safely", { skip }, async () => {
+  for (const [w, h] of SIZES) {
+    const b = await phone(w, h);
+    const info = await b.eval(`(()=>{
+      const top = (s) => { const e = document.querySelector(s); return e ? e.getBoundingClientRect().top + scrollY : null; };
+      const imgs = [...document.querySelectorAll('.wm-founders img')];
+      return {
+        hero: top('.wm-hero .wm-cta'), narr: top('.wm-narr'), fnd: top('.wm-founders'), never: top('#never'),
+        narrText: [...document.querySelectorAll('.wm-narr p')].map(p => p.textContent.trim()),
+        caption: document.querySelector('.wm-founders .wm-fcap')?.textContent.trim(),
+        chips: [...document.querySelectorAll('.wm-founders a')].map(a => ({ t: a.textContent.trim(), href: a.href, rel: a.rel, target: a.target })),
+        imgs: imgs.map(i => ({ src: new URL(i.src).pathname, ok: i.complete && i.naturalWidth > 0, w: i.getBoundingClientRect().width })),
+        body: document.body.innerText,
+        hscroll: document.documentElement.scrollWidth > innerWidth,
+      };
+    })()`);
+    const tag = `${w}x${h}`;
+    assert.ok(info.hero < info.narr && info.narr < info.fnd && info.fnd < info.never, `${tag}: order ${JSON.stringify([info.hero, info.narr, info.fnd, info.never])}`);
+    assert.deepEqual(info.narrText, [
+      "Think of the people who've had your back: the 2am call, the first break, the hard truth.",
+      "Each answer lights a lantern in their city. In five answers, you'll see how far your warmth reaches — and their names never leave your phone.",
+      "Send each one a thank-you. When they tie it back, their lantern turns gold.",
+    ]);
+    assert.equal(info.caption, "Built by three people who kept meaning to say thank you.");
+    assert.deepEqual(info.chips.map((c) => c.t), ["Aadarsh", "Abhijith", "Arjun"]);
+    assert.deepEqual(info.chips.map((c) => c.href), [
+      "https://www.linkedin.com/in/aadarsh-k-s/",
+      "https://www.linkedin.com/in/abhijithharikumar-gtm/",
+      "https://www.linkedin.com/in/arjun-aravind-708647125/",
+    ]);
+    for (const c of info.chips) {
+      assert.equal(c.target, "_blank");
+      assert.match(c.rel, /noopener/);
+    }
+    assert.deepEqual(info.imgs.map((i) => i.src), ["/aadarsh.png", "/abhijith.png", "/arjun.png"]);
+    assert.ok(!/MQL|campaigns|Every evening, someone on a veranda/.test(info.body), `${tag}: old quote is gone`);
+    assert.ok(!info.hscroll, `${tag}: sideways scroll`);
+    await b.eval(`document.querySelector('.wm-founders').scrollIntoView()`);
+    await sleep(700);
+    const ok = await b.eval(`[...document.querySelectorAll('.wm-founders img')].map(i => i.complete && i.naturalWidth > 0)`);
+    assert.deepEqual(ok, [true, true, true], `${tag}: photos did not load`);
+    await b.shot(`${SHOTS}/p1-landing-founders-${w}x${h}.png`);
+  }
+});
