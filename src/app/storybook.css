@@ -41,7 +41,9 @@
 .wm-th { stroke-dasharray: 1; stroke-dashoffset: 0; }
 .wm-ln, .wm-halo { transform-box: fill-box; transform-origin: center; }
 .wm-mapw { position: relative; display: flex; justify-content: center; }
-.wm-mapw > svg { max-width: 100%; max-height: 100%; }
+/* The globe fills the box and centres itself (viewBox, meet), so no browser has to resolve a percentage height:
+   iOS Safari let the svg outgrow its flex item, which put it over the card and off-centre. */
+.wm-mapw > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 @keyframes wm-draw { from { stroke-dashoffset: 1 } to { stroke-dashoffset: 0 } }
 @keyframes wm-warm { 0% { opacity: 0; transform: scale(.55) } 45% { opacity: .6 } 100% { opacity: 1; transform: scale(1) } }
@@ -63,9 +65,10 @@
 /* landing hero (hero 1, the frontispiece) */
 .wm-hero { text-align: center; }
 .wm-hero .wm-kick { margin-top: 18px; padding: 0 40px; }
-.wm-hero h1 { font-size: 50px; line-height: 1; margin-top: 8px; padding: 0 16px; }
-.wm-hero .wm-mapw { margin: 6px 30px 0; aspect-ratio: 1; max-height: 340px; }
-.wm-hero .wm-lead { padding: 0 28px; margin-top: 6px; font-size: 17.5px; }
+.wm-hero h1 { font-size: clamp(36px, 6dvh, 50px); line-height: 1; margin-top: 8px; padding: 0 16px; }
+/* the globe takes what the screen has left, so the button is above the fold on every phone height */
+.wm-hero .wm-mapw { margin: 6px 16px 0; aspect-ratio: 1; max-height: clamp(170px, calc(100dvh - 470px), 380px); }
+.wm-hero .wm-lead { padding: 0 28px; margin-top: 6px; font-size: clamp(16px, 2.2dvh, 17.5px); }
 .wm-hero .wm-cta { padding: 16px 24px 0; margin-top: auto; }
 .wm-hero .wm-cta .wm-note { margin-top: 10px; }
 .wm-sec { max-width: 560px; margin: 0 auto; padding: 36px 24px 0; }
