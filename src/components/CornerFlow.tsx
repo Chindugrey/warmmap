@@ -294,34 +294,41 @@ function HomeScreen({ onPick }: { onPick: (city: string) => void }) {
 /* ───────── a question ───────── */
 
 /**
- * The on-screen keyboard: when the visual viewport shrinks, the globe drops to
- * about a third of what is left and the card (with Light it) is scrolled to
- * sit just above the keyboard.
+ * The on-screen keyboard. iOS keeps the layout viewport at full height and
+ * only shrinks (and pans) the visual viewport, so the page is laid out from
+ * visualViewport: --vvh is its height, --vvt how far it has panned. While the
+ * keyboard is open the question screen is pinned to exactly that window
+ * (see .wm-kbd in storybook.css), so nothing jumps and the card sits right
+ * above the keys.
  */
-function useKeyboard(ref: React.RefObject<HTMLElement | null>, target: React.RefObject<HTMLElement | null>) {
+function useKeyboard(ref: React.RefObject<HTMLElement | null>) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
+    const root = document.documentElement;
     // Compare with the tallest height seen: some browsers shrink innerHeight
     // with the keyboard too, others only the visual viewport.
     let tallest = Math.max(window.innerHeight, vv.height);
     const onRotate = () => (tallest = Math.max(window.innerHeight, vv.height));
-    const onResize = () => {
+    const sync = () => {
       tallest = Math.max(tallest, vv.height);
-      const isOpen = vv.height < tallest * 0.78;
-      ref.current?.style.setProperty("--vvh", `${Math.round(vv.height)}px`);
-      setOpen(isOpen);
-      if (isOpen) requestAnimationFrame(() => target.current?.scrollIntoView({ block: "end", behavior: "auto" }));
+      root.style.setProperty("--vvh", `${Math.round(vv.height)}px`);
+      root.style.setProperty("--vvt", `${Math.round(vv.offsetTop)}px`);
+      setOpen(vv.height < tallest * 0.78);
     };
-    onResize();
-    vv.addEventListener("resize", onResize);
+    sync();
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
     window.addEventListener("orientationchange", onRotate);
     return () => {
-      vv.removeEventListener("resize", onResize);
+      vv.removeEventListener("resize", sync);
+      vv.removeEventListener("scroll", sync);
       window.removeEventListener("orientationchange", onRotate);
+      root.style.removeProperty("--vvh");
+      root.style.removeProperty("--vvt");
     };
-  }, [ref, target]);
+  }, [ref]);
   return open;
 }
 
@@ -357,7 +364,7 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
   const cityRef = useRef<HTMLInputElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const lightRef = useRef<HTMLButtonElement>(null);
-  const kbd = useKeyboard(mainRef, lightRef);
+  const kbd = useKeyboard(mainRef);
   const current = answered.has(d.current) ? nextQuestion(answered, new Set(d.skipped), d.current) ?? d.current : d.current;
   const q = QUESTIONS[current];
   const unlocked = d.answers.length >= UNLOCK_AT;
