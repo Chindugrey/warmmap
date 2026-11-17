@@ -82,6 +82,25 @@ test("question screen: globe centred and clear of the card, no keyboard", { skip
   }
 });
 
+test("question screen at 1440x900: the globe is large and centred in its column; chapter gaps after lanterns 3 and 6", { skip }, async () => {
+  const b = await launch({ width: 1440, height: 900, mobile: false });
+  open.push(b);
+  await b.goto(BASE + "/", 900);
+  await toAsk(b);
+  await sleep(400);
+  const g = await rect(b, ".wm-ask .wm-mapw svg");
+  const col = await rect(b, ".wm-ask .wm-mapw");
+  const card = await cardTop(b);
+  assert.ok(g.b - g.t >= 300 && g.r - g.l >= 300, `globe only ${Math.round(g.r - g.l)}x${Math.round(g.b - g.t)}px`);
+  assert.ok(g.b <= 900, "globe runs off the screen");
+  assert.ok(g.r <= card.l, "globe overlaps the card");
+  assert.ok(Math.abs((g.l + g.r) / 2 - (col.l + col.r) / 2) <= 2, "globe off-centre in its column");
+  const xs = await b.eval(`[...document.querySelectorAll('.wm-prog svg')].map(e=>e.getBoundingClientRect().left)`);
+  const step = xs[1] - xs[0], gaps = xs.slice(1).map((x, i) => i).filter((i) => xs[i + 1] - xs[i] > step + 5);
+  assert.deepEqual(gaps, [2, 5], "progress gaps after lanterns 3 and 6");
+  await b.shot(`${SHOTS}/layout-ask-1440x900.png`);
+});
+
 test("keyboard open (visual viewport shrinks, layout viewport does not): card above the keys, no jump", { skip }, async () => {
   for (const [w, h, vvh] of SIZES) {
     for (const top of [0, 120]) {

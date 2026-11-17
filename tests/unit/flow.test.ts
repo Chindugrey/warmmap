@@ -132,3 +132,13 @@ test("globe labels: a wanted label that fits stays inside the sphere, and a far-
     }
   }
 });
+
+test("progress gaps follow the chapter sizes (3/3/2 -> after lanterns 3 and 6), not fixed positions", async () => {
+  const { chapterGaps } = await import("@/lib/flow");
+  const { QUESTIONS } = await import("@/lib/questions");
+  assert.deepEqual(chapterGaps(QUESTIONS.map((q) => q.chapter)), [2, 5]);
+  assert.deepEqual(chapterGaps([1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3]), [3, 7]);
+  assert.deepEqual(chapterGaps([1, 1, 2]), [1]);
+  assert.deepEqual(chapterGaps([1, 1, 1]), []);
+  assert.deepEqual(chapterGaps([]), []);
+});

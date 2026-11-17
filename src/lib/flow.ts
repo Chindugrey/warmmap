@@ -14,6 +14,11 @@ export function nextQuestion(answered: Set<number>, skipped: Set<number>, curren
   return null;
 }
 
+/** Indices of the lanterns that end a chapter but not the whole list: where the progress row leaves a gap. */
+export function chapterGaps(chapters: readonly number[]): number[] {
+  return chapters.flatMap((c, i) => (i < chapters.length - 1 && chapters[i + 1] !== c ? [i] : []));
+}
+
 /** Who to thank first: "who haven't you thanked", then 2am, the first break, who showed up, then the rest. */
 export function thankOrderFor(questionSet: number): number[] {
   // Set 2 (preview maps): question 12, then 1, 5, 3, 2, then the rest.

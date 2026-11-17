@@ -18,7 +18,7 @@ import { citiesByName, countryOf, findCity, matchCities } from "@/lib/cities";
 import { mapStats } from "@/lib/geo";
 import { computeKind, KIND_LINES } from "@/lib/kinds";
 import { compareKm } from "@/lib/compare";
-import { nextQuestion, whatsAppUrl } from "@/lib/flow";
+import { chapterGaps, nextQuestion, whatsAppUrl } from "@/lib/flow";
 import { rewardLine } from "@/lib/reward";
 import { apiFetch, ownerKeyFor, rememberOwnerKey } from "@/lib/device";
 
@@ -335,10 +335,11 @@ function useKeyboard(ref: React.RefObject<HTMLElement | null>) {
 }
 
 function ProgressLanterns({ answered }: { answered: Set<number> }) {
+  const gaps = chapterGaps(QUESTIONS.map((q) => q.chapter));
   return (
     <div className="wm-prog" role="img" aria-label={`${answered.size} of ${QUESTION_COUNT} lanterns lit`}>
       {QUESTIONS.map((_, i) => (
-        <svg key={i} viewBox="-9 -15 18 24" aria-hidden="true">
+        <svg key={i} className={gaps.includes(i) ? "wm-gap" : undefined} viewBox="-9 -15 18 24" aria-hidden="true">
           <LanternGlyph state={answered.has(i) ? "lit" : "off"} />
         </svg>
       ))}

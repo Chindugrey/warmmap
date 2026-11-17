@@ -100,7 +100,7 @@
 /* a question */
 .wm-prog { display: flex; justify-content: center; gap: 5px; padding: 14px 0 0; }
 .wm-prog svg { width: 15px; height: 20px; overflow: visible; }
-.wm-prog svg:nth-child(4), .wm-prog svg:nth-child(8) { margin-right: 10px; }
+.wm-prog svg.wm-gap { margin-right: 10px; }
 .wm-ask .wm-mapw { flex: 1 1 260px; max-height: 380px; min-height: 120px; margin: 4px 34px 0; }
 .wm-card { margin: auto 14px 0; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 11px;
   border: 1px solid var(--ink); background: var(--page); outline: 1px solid #2E221955; outline-offset: 3px; }
@@ -213,6 +213,8 @@
   .wm-hero .wm-orn { margin-left: 0; }
   .wm-hero .wm-count { justify-content: flex-start; }
   .wm-ask .wm-card { margin: 24px 0 0; }
+  /* the globe is a square filling its column (as in the reveal), not the 120 px the phone's flex rule leaves it */
+  .wm-scr.wm-ask > .wm-mapw { aspect-ratio: 1; min-height: 0; width: min(100%, calc(100dvh - 130px)); justify-self: center; align-self: center; margin: 20px 0 0; }
   .wm-friend .wm-art { grid-column: 1; grid-row: 2 / span 4; min-height: 420px; }
 }
 
