@@ -186,7 +186,9 @@ test("Make yours: starts with the carried lantern, still needs 5 questions", { s
 
 test("owner returns: Kochi answered. [Share your gratitude map]; visitors see no gold", { skip }, async () => {
   const b = S.owner;
-  await b.goto(`${BASE}/m/${S.slug}`, 2000);
+  await b.goto(`${BASE}/m/${S.slug}`, 500);
+  // wait for the owner view to load (a cold dev server can take a while) instead of a fixed pause
+  await waitFor(b, `document.body.innerText.includes("Kochi answered.")`, 15000);
   const t = await text(b);
   assert.match(t, /Kochi answered\./);
   assert.match(t, /The thread to Kochi is tied at both ends now\./);

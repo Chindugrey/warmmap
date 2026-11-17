@@ -153,3 +153,26 @@ test("globe labels stay inside the screen and off each other (Kerala / Karnataka
     await b.shot(`${SHOTS}/layout-reveal-${w}x${h}.png`);
   }
 });
+
+test("city search in the browser: Cheruvathur and Kannur are found, US lists US cities", { skip }, async () => {
+  for (const [w, h] of SIZES) {
+    const b = await phone(w, h);
+    await clickText(b, "Light my first lantern");
+    await clickText(b, "Other");
+    const chips = () => b.eval(`[...document.querySelectorAll('.wm-chips.small .wm-chip')].map(e=>e.textContent.trim())`);
+    await type(b, ".wm-fld input", "Cheruvathur");
+    assert.equal((await chips())[0], "Cheruvathur", `${w}x${h}`);
+    await b.eval(`document.querySelector('.wm-fld input').select()`);
+    await b.send("Input.insertText", { text: "Kannur" });
+    await sleep(100);
+    const k = await chips();
+    assert.equal(k[0], "Kannur");
+    assert.ok(!k.includes("Kanpur"));
+    await b.eval(`document.querySelector('.wm-fld input').select()`);
+    await b.send("Input.insertText", { text: "US" });
+    await sleep(100);
+    const us = await chips();
+    assert.ok(us.length >= 4 && us.every((c) => ["Austin", "New York", "San Francisco", "San Jose", "Palo Alto", "Los Angeles", "San Diego", "Seattle", "Portland", "Dallas", "Houston", "Chicago", "Boston", "Washington DC", "Philadelphia", "Atlanta", "Miami", "Denver", "Phoenix", "Las Vegas", "Salt Lake City", "Minneapolis", "Detroit", "Nashville", "Raleigh", "Charlotte", "Pittsburgh", "Newark", "Honolulu"].includes(c)), `US -> ${us}`);
+    assert.match(await b.eval("document.body.innerText"), /Which city in the USA\?/);
+  }
+});
