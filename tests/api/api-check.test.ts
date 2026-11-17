@@ -283,16 +283,16 @@ test("share cards: PNG, 1200x627 link preview and 1080x1920 Status/Story; extra 
   assert.deepEqual(pngSize(bogus.buf), { width: 1200, height: 627 });
 });
 
-test("thank-link cap: 12 per map per 30 days, the 13th is refused", async () => {
-  const twelve = Array.from({ length: 12 }, (_, q) => ({ city: ["Kochi", "Pune", "Delhi", "Mumbai"][q % 4], questionIndex: q }));
-  const m = await api("/api/maps", { method: "POST", dev: device(), body: { homeCity: "Bengaluru", ownerName: "Cap", entries: twelve } });
+test("thank-link cap: one per question (8) per map per 30 days, the 9th is refused", async () => {
+  const eight = Array.from({ length: 8 }, (_, q) => ({ city: ["Kochi", "Pune", "Delhi", "Mumbai"][q % 4], questionIndex: q }));
+  const m = await api("/api/maps", { method: "POST", dev: device(), body: { homeCity: "Bengaluru", ownerName: "Cap", entries: eight } });
   assert.equal(m.status, 201);
   const codes: number[] = [];
-  for (let q = 0; q < 13; q++) {
-    const t = await prepareThank({ base: BASE, mapId: m.json.id, entryIndex: q % 12 });
+  for (let q = 0; q < 9; q++) {
+    const t = await prepareThank({ base: BASE, mapId: m.json.id, entryIndex: q % 8 });
     codes.push((await api("/api/thanks", { method: "POST", key: m.json.ownerKey, dev: device(), body: t.body })).status);
   }
-  assert.deepEqual(codes, [...Array(12).fill(201), 429]);
+  assert.deepEqual(codes, [...Array(8).fill(201), 429]);
 });
 
 test("pre-v2 verified vouches stay in the DB but are shown nowhere (owner, public, admin)", async () => {
