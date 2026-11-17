@@ -56,7 +56,7 @@ test("save at Show me: strict input", async () => {
   S.key = r.json.ownerKey;
   const row = await db.map.findFirst({ where: { shortSlug: S.slug } });
   assert.notEqual(row!.ownerKeyHash, S.key, "only the key's hash is stored");
-  assert.equal(row!.questionSet, 2);
+  assert.equal(row!.questionSet, 3);
   assert.equal(row!.kind, "constellation");
 });
 
@@ -115,7 +115,7 @@ test("a 32-character token issued before the short ones still resolves; the prev
   const page = await api(`/t/${legacy}`);
   assert.equal(page.status, 200);
   assert.ok(page.text.includes("Tie it back"));
-  assert.match(page.text, /one of twelve questions/);
+  assert.match(page.text, /one of eight questions/);
   assert.match(S.token, /^[A-Za-z0-9]{12}$/, "new links carry 12 base62 characters");
 });
 
@@ -322,6 +322,32 @@ test("pre-v2 verified vouches stay in the DB but are shown nowhere (owner, publi
   assert.equal((await api(`/api/maps/${map.shortSlug}`, { method: "PATCH", key, body: { ownerName: "X" } })).status, 409);
   const t = await prepareThank({ base: BASE, mapId: map.shortSlug!, entryIndex: 1 });
   assert.equal((await api("/api/thanks", { method: "POST", key, body: t.body })).status, 409);
+  await db.map.delete({ where: { id: map.id } });
+});
+
+test("a set-2 map saved on the preview: its 12 questions, thank links and edits still work; the friend page says twelve", async () => {
+  const key = "set2-probe-key-" + DEV;
+  const slug = "s2" + DEV.slice(0, 6).toLowerCase().replace(/[^a-z0-9]/g, "x");
+  const map = await db.map.create({
+    data: {
+      shortSlug: slug, homeCity: "Bengaluru", ownerName: "Rhea", questionSet: 2,
+      entries: [0, 1, 2, 3, 11].map((q, i) => ({ city: ["Kochi", "Pune", "Delhi", "Mumbai", "Chennai"][i], questionIndex: q })),
+      ownerKeyHash: createHash("sha256").update(key).digest("hex"),
+    },
+  });
+  const t = await prepareThank({ base: BASE, mapId: slug, entryIndex: 11 });
+  assert.equal((await api("/api/thanks", { method: "POST", key, body: t.body })).status, 201);
+  const page = await api(`/t/${t.url.split("/t/")[1]}`);
+  assert.ok(page.text.includes("Who haven&#x27;t you thanked properly yet?") || page.text.includes("Who haven't you thanked properly yet?"));
+  assert.match(page.text, /one of twelve questions/);
+  const t3 = await prepareThank({ base: BASE, mapId: slug, entryIndex: 3 });
+  assert.equal((await api("/api/thanks", { method: "POST", key, body: t3.body })).status, 201);
+  assert.ok((await api(`/t/${t3.url.split("/t/")[1]}`)).text.includes("still makes you laugh"), "old wording kept for set 2");
+  const patch = await api(`/api/maps/${slug}`, { method: "PATCH", key, body: { entries: [0, 1, 2, 3, 11, 9].map((q, i) => ({ city: ["Kochi", "Pune", "Delhi", "Mumbai", "Chennai", "Goa"][i], questionIndex: q })) } });
+  assert.equal(patch.status, 200, patch.text);
+  // A new map is set 3 and cannot use index 8+.
+  const bad = await api("/api/maps", { method: "POST", body: { homeCity: "Kochi", ownerName: "Z", entries: [0, 1, 2, 3, 8].map((q) => ({ city: "Delhi", questionIndex: q })) } });
+  assert.equal(bad.status, 400);
   await db.map.delete({ where: { id: map.id } });
 });
 

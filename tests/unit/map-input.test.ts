@@ -25,7 +25,9 @@ test("needs five answered questions to save (Show me comes after the fifth)", ()
   assert.equal(parseSaveInput({ ...base, entries: five.slice(0, 4) }).ok, false);
 });
 
-test("at most twelve questions; index 0..11; no repeats", () => {
+test("new maps have eight questions; index 0..7; no repeats", () => {
+  assert.equal(parseSaveInput({ ...base, entries: [...five, { city: "Pune", questionIndex: 7 }] }).ok, true);
+  assert.equal(parseSaveInput({ ...base, entries: [...five, { city: "Pune", questionIndex: 8 }] }).ok, false);
   assert.equal(parseSaveInput({ ...base, entries: [...five, { city: "Pune", questionIndex: 12 }] }).ok, false);
   assert.equal(parseSaveInput({ ...base, entries: [...five, { city: "Pune", questionIndex: 4 }] }).ok, false);
 });
@@ -71,4 +73,11 @@ test("patch: same entry rules; carried only when the map was brought in", () => 
   assert.equal(parsePatchInput({ entries: [carried, ...five] }, { hasInviter: false }).ok, false);
   assert.equal(parsePatchInput({ entries: [carried, ...five] }, { hasInviter: true }).ok, true);
   assert.equal(parsePatchInput({ ownerName: "Ana" }, { hasInviter: false }).ok, true);
+});
+
+test("editing a preview map (set 2) still accepts its question indices up to 11", () => {
+  const es = [...five, { city: "Pune", questionIndex: 11 }];
+  assert.equal(parsePatchInput({ entries: es }, { hasInviter: false, questionCount: 12 }).ok, true);
+  assert.equal(parsePatchInput({ entries: es }, { hasInviter: false, questionCount: 8 }).ok, false);
+  assert.equal(parsePatchInput({ entries: five }, { hasInviter: false }).ok, true, "default is the current set");
 });

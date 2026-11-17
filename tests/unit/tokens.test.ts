@@ -70,7 +70,8 @@ test("owner key: 256 bits base64url; hmac depends on secret; day stamp is UTC da
 
 test("copy counts follow the question set, never a typed-in 12", async () => {
   const { numberWord, questionCountFor, QUESTION_COUNT } = await import("@/lib/questions");
-  assert.equal(questionCountFor(2), QUESTION_COUNT);
+  assert.equal(questionCountFor(3), QUESTION_COUNT);
+  assert.equal(questionCountFor(2), 12);
   assert.equal(questionCountFor(1), 12);
   assert.equal(numberWord(12), "twelve");
   assert.equal(numberWord(8), "eight");

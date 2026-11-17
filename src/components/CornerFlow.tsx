@@ -1,7 +1,7 @@
 "use client";
 
 // The whole making of a map, on one card at a time:
-// hero → home-city chips → questions (5 unlock the reveal, 12 complete it) →
+// hero → home-city chips → questions (5 unlock the reveal, all of them complete it) →
 // reveal (dusk, threads, warm, three cards; 3.4 s, tap to skip) → name at
 // "Show me", which saves → "Your corner is glowing." and the three CTAs.
 // Friends' names live only in this browser (localStorage) and in the
@@ -13,7 +13,7 @@ import { LiveCounter } from "@/components/LiveCounter";
 import { ThankSheet } from "@/components/ThankSheet";
 import { ShareRow } from "@/components/ShareRow";
 import { StoryPictureLink } from "@/components/StoryPicture";
-import { CHAPTERS, QUESTIONS, QUESTION_COUNT, UNLOCK_AT } from "@/lib/questions";
+import { CHAPTERS, CURRENT_SET, QUESTIONS, QUESTION_COUNT, UNLOCK_AT } from "@/lib/questions";
 import { citiesByName, countryOf, findCity, matchCities } from "@/lib/cities";
 import { mapStats } from "@/lib/geo";
 import { computeKind, KIND_LINES } from "@/lib/kinds";
@@ -39,6 +39,8 @@ interface Carried {
 
 interface Draft {
   v: 2;
+  /** Question set the answers belong to. A draft from another set is dropped: its question indices mean other questions. */
+  qs: number;
   home: string | null;
   answers: Answer[];
   skipped: number[];
@@ -56,12 +58,12 @@ const ROMAN = ["I", "II", "III"];
 const REVEAL_MS = 3400;
 const REWARD_MS = 1200;
 
-const emptyDraft = (): Draft => ({ v: 2, home: null, answers: [], skipped: [], current: 0, invitedBy: null, via: "cold", carried: null, saved: null });
+const emptyDraft = (): Draft => ({ v: 2, qs: CURRENT_SET, home: null, answers: [], skipped: [], current: 0, invitedBy: null, via: "cold", carried: null, saved: null });
 
 function readDraft(): Draft | null {
   try {
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
-    return d && d.v === 2 ? (d as Draft) : null;
+    return d && d.v === 2 && d.qs === CURRENT_SET ? (d as Draft) : null;
   } catch {
     return null;
   }
@@ -743,7 +745,7 @@ function RevealScreen({ d, setD, onKeepGoing }: { d: Draft; setD: (f: (x: Draft)
         </div>
       </main>
       {sheet && saved && (
-        <ThankSheet slug={saved.slug} people={d.answers.map((a) => ({ questionIndex: a.q, name: a.name, city: a.city }))} onClose={() => setSheet(false)} />
+        <ThankSheet slug={saved.slug} questionSet={CURRENT_SET} people={d.answers.map((a) => ({ questionIndex: a.q, name: a.name, city: a.city }))} onClose={() => setSheet(false)} />
       )}
     </div>
   );

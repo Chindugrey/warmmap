@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Globe, type GlobeLantern } from "@/components/Globe";
 import { ThankSheet, type Named } from "@/components/ThankSheet";
+import { CURRENT_SET } from "@/lib/questions";
 import { ShareRow } from "@/components/ShareRow";
 import { LiveCounter } from "@/components/LiveCounter";
 import { StoryPictureLink, sharePicture, useStoryFile } from "@/components/StoryPicture";
@@ -218,7 +219,7 @@ export function PublicMap({ map }: { map: PublicMapData }) {
                   Only you can see which lanterns are gold. On the map you share, every lantern looks the same.
                 </p>
               )}
-              {view.questionSet === 2 && (
+              {view.questionSet >= 2 && (
                 <button className="wm-btn" type="button" onClick={() => setSheet(true)}>
                   Tell them on WhatsApp
                 </button>
@@ -267,7 +268,7 @@ export function PublicMap({ map }: { map: PublicMapData }) {
         </div>
       </main>
       {sheet && (
-        <ThankSheet slug={map.id} people={names} goldQuestions={view?.gold.map((g) => g.entryIndex) ?? []} onClose={() => setSheet(false)} />
+        <ThankSheet slug={map.id} questionSet={view?.questionSet ?? CURRENT_SET} people={names} goldQuestions={view?.gold.map((g) => g.entryIndex) ?? []} onClose={() => setSheet(false)} />
       )}
     </div>
   );

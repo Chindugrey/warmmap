@@ -6,10 +6,9 @@ import { trackEvent } from "@/lib/analytics";
 import { noStore, requireOwner } from "@/lib/owner";
 import { limitRequest, HOUR } from "@/lib/limits";
 import { parseEntries } from "@/lib/entries";
-import { numberWord, QUESTION_COUNT } from "@/lib/questions";
+import { numberWord, questionCountFor } from "@/lib/questions";
 
 const THANK_LINK_DAYS = 30;
-const THANK_LINKS_PER_30_DAYS = QUESTION_COUNT; // one per question (Aadarsh, 14 Nov)
 const DAY = 24 * HOUR;
 
 export async function POST(req: NextRequest) {
@@ -34,7 +33,7 @@ export async function POST(req: NextRequest) {
   const owned = await requireOwner(req, b.mapId);
   if (owned.error) return owned.error;
   const map = owned.map;
-  if (map.questionSet !== 2) {
+  if (map.questionSet < 2) {
     return NextResponse.json({ error: "Older maps can't send thank-yous. Make a new one." }, { status: 409 });
   }
   const answered = parseEntries(map.entries).some((e) => "questionIndex" in e && e.questionIndex === b.entryIndex);
@@ -46,8 +45,9 @@ export async function POST(req: NextRequest) {
   const recent = await prisma.thankLink.count({
     where: { mapId: map.id, createdAt: { gt: new Date(Date.now() - 30 * DAY) } },
   });
-  if (recent >= THANK_LINKS_PER_30_DAYS) {
-    return NextResponse.json({ error: `That's ${numberWord(THANK_LINKS_PER_30_DAYS)} thank-yous this month. More next month.` }, { status: 429 });
+  const perMonth = questionCountFor(map.questionSet); // one per question (Aadarsh, 14 Nov)
+  if (recent >= perMonth) {
+    return NextResponse.json({ error: `That's ${numberWord(perMonth)} thank-yous this month. More next month.` }, { status: 429 });
   }
 
   const expiresAt = new Date(Date.now() + THANK_LINK_DAYS * DAY);

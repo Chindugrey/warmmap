@@ -9,6 +9,7 @@ import { limitRequest, HOUR } from "@/lib/limits";
 import { findMap, noStore } from "@/lib/owner";
 import { newOwnerKey, sha256Hex } from "@/lib/server-crypto";
 import { mapUrl } from "@/lib/site";
+import { CURRENT_SET } from "@/lib/questions";
 
 export async function POST(req: NextRequest) {
   const limited = await limitRequest(req, "map_create", { device: [5, HOUR], ip: [40, HOUR] });
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       homeCity: input.homeCity,
       ownerName: input.ownerName,
       entries,
-      questionSet: 2,
+      questionSet: CURRENT_SET,
       ownerKeyHash: sha256Hex(ownerKey),
       kind: shape.kind,
       km: shape.km,

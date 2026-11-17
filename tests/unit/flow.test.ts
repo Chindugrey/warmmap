@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { layoutGlobe, GLOBE_R, CENTER } from "@/lib/globe-layout";
 import { rewardLine } from "@/lib/reward";
 import { compareKm, ROUTES } from "@/lib/compare";
-import { nextQuestion, THANK_ORDER, thankMessage, mapShareText } from "@/lib/flow";
+import { nextQuestion, thankOrderFor, thankMessage, mapShareText } from "@/lib/flow";
+import { QUESTION_COUNT } from "@/lib/questions";
 import { haversineKm } from "@/lib/geo";
 import { citiesByName } from "@/lib/cities";
 
@@ -55,15 +56,18 @@ test("distance comparisons are computed from the city list, never typed in", () 
 test("question order: next unanswered, then skipped ones, then done", () => {
   assert.equal(nextQuestion(new Set([0]), new Set(), 0), 1);
   assert.equal(nextQuestion(new Set([0, 1]), new Set([2]), 1), 3);
-  const all = new Set(Array.from({ length: 11 }, (_, i) => i));
-  assert.equal(nextQuestion(all, new Set(), 10), 11);
-  assert.equal(nextQuestion(new Set([...all, 11].filter((i) => i !== 2)), new Set([2]), 11), 2, "skipped comes back at the end");
-  assert.equal(nextQuestion(new Set(Array.from({ length: 12 }, (_, i) => i)), new Set(), 11), null);
+  const all = new Set(Array.from({ length: 7 }, (_, i) => i));
+  assert.equal(nextQuestion(all, new Set(), 6), 7);
+  assert.equal(nextQuestion(new Set([...all, 7].filter((i) => i !== 2)), new Set([2]), 7), 2, "skipped comes back at the end");
+  assert.equal(nextQuestion(new Set(Array.from({ length: 8 }, (_, i) => i)), new Set(), 7), null);
 });
 
-test("thank-yous: question 12 first, then 1, 5, 3, 2; message does not spoil the question", () => {
-  assert.deepEqual(THANK_ORDER.slice(0, 5), [11, 0, 4, 2, 1]);
-  assert.equal(THANK_ORDER.length, 12);
+test("thank-yous: 'haven't thanked' first, then 2am, first break, ...; set 2 keeps its own order; message does not spoil the question", () => {
+  assert.deepEqual(thankOrderFor(3), [7, 0, 3, 2, 1, 4, 5, 6]);
+  assert.deepEqual(thankOrderFor(2).slice(0, 5), [11, 0, 4, 2, 1]);
+  assert.equal(thankOrderFor(2).length, 12);
+  assert.equal(thankOrderFor(3).length, QUESTION_COUNT);
+  assert.deepEqual([...thankOrderFor(3)].sort(), Array.from({ length: QUESTION_COUNT }, (_, i) => i).sort());
   const m = thankMessage("Meera", "https://warmmap.world/t/abc#Meera");
   assert.ok(m.startsWith("Meera, "));
   assert.ok(!/2am|call/i.test(m));

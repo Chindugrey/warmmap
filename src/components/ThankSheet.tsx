@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch, ownerKeyFor } from "@/lib/device";
 import { prepareThank, type PreparedThank } from "@/lib/lantern-token";
-import { THANK_ORDER, thankMessage, whatsAppUrl } from "@/lib/flow";
+import { thankOrderFor, thankMessage, whatsAppUrl } from "@/lib/flow";
 import { questionFor } from "@/lib/questions";
 
 export interface Named {
@@ -14,6 +14,7 @@ export interface Named {
 
 interface Props {
   slug: string;
+  questionSet: number;
   people: Named[]; // names come from this device only
   goldQuestions?: number[];
   onClose: () => void;
@@ -24,8 +25,8 @@ interface Props {
  * tells the server only its hash and the lantern, and opens the owner's own
  * WhatsApp in the same tap. We never send anything.
  */
-export function ThankSheet({ slug, people, goldQuestions = [], onClose }: Props) {
-  const rows = THANK_ORDER.map((q) => people.find((p) => p.questionIndex === q)).filter((p): p is Named => !!p);
+export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onClose }: Props) {
+  const rows = thankOrderFor(questionSet).map((q) => people.find((p) => p.questionIndex === q)).filter((p): p is Named => !!p);
   const [open, setOpen] = useState<number>(rows.find((r) => !goldQuestions.includes(r.questionIndex))?.questionIndex ?? -1);
   const [texts, setTexts] = useState<Record<number, string>>(() =>
     Object.fromEntries(rows.map((r) => [r.questionIndex, thankMessage(r.name, "").trim()]))
@@ -80,7 +81,7 @@ export function ThankSheet({ slug, people, goldQuestions = [], onClose }: Props)
               </button>
               {open === p.questionIndex && !gold && (
                 <>
-                  <p className="q">{questionFor(2, p.questionIndex)}</p>
+                  <p className="q">{questionFor(questionSet, p.questionIndex)}</p>
                   <label className="wm-kick" htmlFor={`wm-msg-${p.questionIndex}`}>Your message</label>
                   <textarea
                     id={`wm-msg-${p.questionIndex}`}

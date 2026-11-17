@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { channelTag, trackEvent } from "@/lib/analytics";
 import { toPublicMap } from "@/lib/public-map";
 import { parsePatchInput } from "@/lib/map-input";
+import { questionCountFor } from "@/lib/questions";
 import { mapShape, pinCarried } from "@/lib/map-shape";
 import { parseEntries } from "@/lib/entries";
 import { findMap, noStore, requireOwner } from "@/lib/owner";
@@ -26,7 +27,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   const owned = await requireOwner(req, id);
   if (owned.error) return owned.error;
   const map = owned.map;
-  if (map.questionSet !== 2) {
+  if (map.questionSet < 2) {
     return NextResponse.json({ error: "Older maps can't be changed. Make a new one." }, { status: 409 });
   }
   let body: unknown;
@@ -36,7 +37,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
   const inviter = map.invitedByMapId ? await prisma.map.findUnique({ where: { id: map.invitedByMapId } }) : null;
-  const parsed = parsePatchInput(body, { hasInviter: !!inviter });
+  const parsed = parsePatchInput(body, { hasInviter: !!inviter, questionCount: questionCountFor(map.questionSet) });
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
   const data: { ownerName?: string; entries?: object; kind?: string | null; km?: number } = {};

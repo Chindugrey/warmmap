@@ -37,9 +37,9 @@ function ownerName(v: unknown): string | null {
   return t;
 }
 
-function entries(v: unknown, allowCarried: boolean): Result<{ list: StoredEntry[]; answered: number }> {
+function entries(v: unknown, allowCarried: boolean, count: number = QUESTION_COUNT): Result<{ list: StoredEntry[]; answered: number }> {
   if (!Array.isArray(v)) return fail("entries must be a list");
-  if (v.length > QUESTION_COUNT + 1) return fail("too many lanterns");
+  if (v.length > count + 1) return fail("too many lanterns");
   const list: StoredEntry[] = [];
   const seen = new Set<number>();
   let carried = 0;
@@ -54,7 +54,7 @@ function entries(v: unknown, allowCarried: boolean): Result<{ list: StoredEntry[
     }
     if (!only(e, ["city", "questionIndex"])) return fail("unexpected field in a lantern");
     const q = e.questionIndex;
-    if (typeof q !== "number" || !Number.isInteger(q) || q < 0 || q >= QUESTION_COUNT) return fail("bad question");
+    if (typeof q !== "number" || !Number.isInteger(q) || q < 0 || q >= count) return fail("bad question");
     if (seen.has(q)) return fail("question answered twice");
     seen.add(q);
     list.push({ city: e.city, questionIndex: q });
@@ -92,7 +92,7 @@ export function parseSaveInput(body: unknown): Result<SaveInput> {
   };
 }
 
-export function parsePatchInput(body: unknown, ctx: { hasInviter: boolean }): Result<PatchInput> {
+export function parsePatchInput(body: unknown, ctx: { hasInviter: boolean; questionCount?: number }): Result<PatchInput> {
   if (!isObj(body)) return fail("invalid body");
   if (!only(body, ["ownerName", "entries", "repeatMax"])) return fail("unexpected field");
   const out: PatchInput = {};
@@ -102,7 +102,7 @@ export function parsePatchInput(body: unknown, ctx: { hasInviter: boolean }): Re
     out.ownerName = n;
   }
   if (body.entries !== undefined) {
-    const es = entries(body.entries, ctx.hasInviter);
+    const es = entries(body.entries, ctx.hasInviter, ctx.questionCount);
     if (!es.ok) return es;
     out.entries = es.value.list;
     const r = repeatMax(body.repeatMax, es.value.answered);
