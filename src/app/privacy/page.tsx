@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import { PrivacyDelete } from "@/components/PrivacyDelete";
+import { PRIVACY_FACTS, privacyCopy } from "@/lib/privacy-facts";
 
 export const metadata: Metadata = {
   title: "Privacy",
   description: "How Warm Map handles names, cities and your map.",
 };
 
-// DRAFT FOR COUNSEL REVIEW (18 Nov 2026): the sections from "Who is responsible" down to "Children"
-// are proposed GDPR wording, built from build/DATA-INVENTORY-2026-11-18.md. Every [bracketed]
-// placeholder must be filled or removed by counsel before this is treated as final. Not legal advice.
+// GDPR wording drafted 18 Nov 2026 from build/DATA-INVENTORY-2026-11-18.md; not legal advice.
+// Facts live in src/lib/privacy-facts.ts. A fact left null falls back to generic wording,
+// so no placeholder text can reach the page.
 export default function PrivacyPage() {
+  const c = privacyCopy(PRIVACY_FACTS);
+  const email = PRIVACY_FACTS.contactEmail;
   return (
     <main className="page chapter">
       <p className="kicker">Privacy</p>
@@ -46,7 +49,7 @@ export default function PrivacyPage() {
       </p>
       <PrivacyDelete />
       <p>
-        Lost your key? Write to <a href="mailto:hello@warmmap.world">hello@warmmap.world</a> from any address with your map&apos;s link and
+        Lost your key? Write to <a href={`mailto:${email}`}>{email}</a> from any address with your map&apos;s link and
         we will delete it.
       </p>
 
@@ -58,8 +61,8 @@ export default function PrivacyPage() {
 
       <h2>Who is responsible</h2>
       <p>
-        Warm Map is run by [controller: legal name, registered address and country], a small project from the people at Zeyhi. For the
-        purposes of data-protection law (including the GDPR) that is the controller of what is described on this page.
+        {c.who} For the purposes of data-protection law (including the GDPR), that makes them the controller of what is described on
+        this page.
       </p>
 
       <h2>What we collect, and why</h2>
@@ -93,35 +96,30 @@ export default function PrivacyPage() {
       <ul style={{ listStyle: "disc", paddingLeft: "1.2em" }}>
         <li>Your map, its thank-you links and ties: until you delete your map.</li>
         <li>Limit counters: about two days.</li>
-        <li>Counts with no personal mark: [retention period to be set by counsel, for example 25 months].</li>
-        <li>Hosting providers keep their own technical logs for the period in their terms [to confirm].</li>
+        <li>{c.counts}</li>
+        <li>Hosting providers keep their own technical logs, under their own terms.</li>
       </ul>
 
       <h2>Your rights</h2>
       <p>
         You can ask us for a copy of what we hold about you (access), to correct it (rectification), to delete it (erasure), to limit it or
         object to how we use it, and to receive it in a portable format. You can delete your own map yourself, at any time, as described
-        above. For anything else write to the address below; we aim to answer within one month. If you think we have got something wrong
-        you can complain to your data-protection supervisory authority [counsel: name the lead authority, for India the Data Protection
-        Board, for the EU the authority in your country].
+        above. For anything else write to the address below; we aim to answer within one month. {c.complaint}
       </p>
 
       <h2>Where it is kept</h2>
       <p>
-        The site runs on Vercel [region to confirm] and the database on Neon [region to confirm]. Both are companies in the United States
-        [to confirm]; where data of people in the EU, the UK or elsewhere leaves their region we rely on the safeguards the law provides
-        (for example standard contractual clauses or an adequacy framework) [counsel to confirm which].
+        {c.where} {c.safeguards}
       </p>
 
       <h2>Children</h2>
       <p>
-        Warm Map is not meant for children under [16, or the age set by counsel for each country]. We do not knowingly keep a map made by a
-        child; if you think one exists, write to us and we will delete it.
+        {c.children} We do not knowingly keep a map made by a child; if you think one exists, write to us and we will delete it.
       </p>
 
       <h2>Contact</h2>
       <p>
-        Questions? Write to <a href="mailto:hello@warmmap.world">hello@warmmap.world</a>.
+        Questions? Write to <a href={`mailto:${email}`}>{email}</a>.
       </p>
     </main>
   );
