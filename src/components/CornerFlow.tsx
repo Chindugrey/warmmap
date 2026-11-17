@@ -14,7 +14,7 @@ import { ThankSheet } from "@/components/ThankSheet";
 import { ShareRow } from "@/components/ShareRow";
 import { StoryPictureLink } from "@/components/StoryPicture";
 import { CHAPTERS, QUESTIONS, QUESTION_COUNT, UNLOCK_AT } from "@/lib/questions";
-import { citiesByName, findCity, matchCities } from "@/lib/cities";
+import { citiesByName, countryOf, findCity, matchCities } from "@/lib/cities";
 import { mapStats } from "@/lib/geo";
 import { computeKind, KIND_LINES } from "@/lib/kinds";
 import { compareKm } from "@/lib/compare";
@@ -227,6 +227,9 @@ function Hero({
 
 /* ───────── home city ───────── */
 
+const THE = new Set(["USA", "UK", "UAE", "Netherlands", "Philippines", "Maldives"]);
+const withThe = (c: string) => (THE.has(c) ? `the ${c}` : c);
+
 function HomeScreen({ onPick }: { onPick: (city: string) => void }) {
   const [other, setOther] = useState(false);
   const [text, setText] = useState("");
@@ -275,6 +278,7 @@ function HomeScreen({ onPick }: { onPick: (city: string) => void }) {
                   </button>
                 ))}
               </div>
+              {countryOf(text) && <p className="wm-hint">{`Which city in ${withThe(countryOf(text)!)}?`}</p>}
               {text.trim().length > 2 && matches.length === 0 && (
                 <p className="wm-hint">We couldn&apos;t place that. Pick the nearest big city above.</p>
               )}
@@ -358,7 +362,7 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
   const q = QUESTIONS[current];
   const unlocked = d.answers.length >= UNLOCK_AT;
   const recent = [...new Set(d.answers.map((a) => a.city).reverse())].slice(0, 3);
-  const suggestions = cityText.trim() && !cityPick ? matchCities(cityText, 4) : [];
+  const suggestions = cityText.trim() && !cityPick ? matchCities(cityText, 4, home) : [];
 
   useEffect(() => {
     if (window.matchMedia?.("(pointer: fine)").matches) nameRef.current?.focus();
@@ -406,8 +410,13 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
     }
     const city = cityPick ? citiesByName[cityPick] : findCity(cityText);
     if (!city) {
-      const near = matchCities(cityText.slice(0, 3), 3);
-      setHint(near.length ? `We couldn't place that. Pick the nearest town? ${near.join(", ")}` : "We couldn't place that. Pick the nearest big city.");
+      const country = countryOf(cityText);
+      const near = matchCities(cityText, 3, home);
+      setHint(
+        country ? `Which city in ${withThe(country)}? Tap one.`
+        : near.length ? `Not sure of that one. Did you mean ${near.join(", ")}?`
+        : "We couldn't place that. Pick the nearest big city."
+      );
       cityRef.current?.focus();
       return;
     }

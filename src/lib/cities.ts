@@ -3,6 +3,8 @@ export interface City {
   country: string;
   lat: number;
   lon: number;
+  /** State or province, where we know it (India, USA). Used to rank a user's neighbours first. */
+  region?: string;
 }
 
 const raw: City[] = [
@@ -89,6 +91,55 @@ const raw: City[] = [
   { name: "Gangtok", country: "India", lat: 27.33, lon: 88.61 },
   { name: "Port Blair", country: "India", lat: 11.62, lon: 92.73 },
   { name: "Leh", country: "India", lat: 34.15, lon: 77.58 },
+
+  // Kerala towns (small places people actually come from)
+  { name: "Kannur", country: "India", lat: 11.87, lon: 75.37 },
+  { name: "Kasaragod", country: "India", lat: 12.5, lon: 74.99 },
+  { name: "Cheruvathur", country: "India", lat: 12.2, lon: 75.17 },
+  { name: "Kanhangad", country: "India", lat: 12.31, lon: 75.09 },
+  { name: "Nileshwar", country: "India", lat: 12.26, lon: 75.13 },
+  { name: "Payyannur", country: "India", lat: 12.1, lon: 75.2 },
+  { name: "Taliparamba", country: "India", lat: 12.04, lon: 75.36 },
+  { name: "Thalassery", country: "India", lat: 11.75, lon: 75.49 },
+  { name: "Mattannur", country: "India", lat: 11.93, lon: 75.58 },
+  { name: "Vadakara", country: "India", lat: 11.6, lon: 75.59 },
+  { name: "Kalpetta", country: "India", lat: 11.61, lon: 76.08 },
+  { name: "Sulthan Bathery", country: "India", lat: 11.66, lon: 76.26 },
+  { name: "Mananthavady", country: "India", lat: 11.8, lon: 76.0 },
+  { name: "Malappuram", country: "India", lat: 11.07, lon: 76.07 },
+  { name: "Manjeri", country: "India", lat: 11.12, lon: 76.12 },
+  { name: "Perinthalmanna", country: "India", lat: 10.98, lon: 76.23 },
+  { name: "Tirur", country: "India", lat: 10.91, lon: 75.92 },
+  { name: "Ponnani", country: "India", lat: 10.77, lon: 75.93 },
+  { name: "Palakkad", country: "India", lat: 10.78, lon: 76.65 },
+  { name: "Ottappalam", country: "India", lat: 10.77, lon: 76.38 },
+  { name: "Thrissur", country: "India", lat: 10.53, lon: 76.21 },
+  { name: "Guruvayur", country: "India", lat: 10.59, lon: 76.04 },
+  { name: "Irinjalakuda", country: "India", lat: 10.34, lon: 76.21 },
+  { name: "Chalakudy", country: "India", lat: 10.31, lon: 76.33 },
+  { name: "Kodungallur", country: "India", lat: 10.23, lon: 76.2 },
+  { name: "Aluva", country: "India", lat: 10.11, lon: 76.35 },
+  { name: "Angamaly", country: "India", lat: 10.2, lon: 76.39 },
+  { name: "Perumbavoor", country: "India", lat: 10.11, lon: 76.48 },
+  { name: "Muvattupuzha", country: "India", lat: 9.99, lon: 76.58 },
+  { name: "Thodupuzha", country: "India", lat: 9.9, lon: 76.72 },
+  { name: "Munnar", country: "India", lat: 10.09, lon: 77.06 },
+  { name: "Kottayam", country: "India", lat: 9.59, lon: 76.52 },
+  { name: "Changanassery", country: "India", lat: 9.44, lon: 76.54 },
+  { name: "Pala", country: "India", lat: 9.71, lon: 76.68 },
+  { name: "Alappuzha", country: "India", lat: 9.49, lon: 76.34 },
+  { name: "Cherthala", country: "India", lat: 9.68, lon: 76.34 },
+  { name: "Chengannur", country: "India", lat: 9.32, lon: 76.61 },
+  { name: "Thiruvalla", country: "India", lat: 9.38, lon: 76.57 },
+  { name: "Pathanamthitta", country: "India", lat: 9.26, lon: 76.79 },
+  { name: "Adoor", country: "India", lat: 9.15, lon: 76.73 },
+  { name: "Kollam", country: "India", lat: 8.89, lon: 76.61 },
+  { name: "Karunagappally", country: "India", lat: 9.06, lon: 76.54 },
+  { name: "Kayamkulam", country: "India", lat: 9.17, lon: 76.5 },
+  { name: "Attingal", country: "India", lat: 8.7, lon: 76.82 },
+  { name: "Varkala", country: "India", lat: 8.73, lon: 76.72 },
+  { name: "Nedumangad", country: "India", lat: 8.6, lon: 77.0 },
+  { name: "Neyyattinkara", country: "India", lat: 8.4, lon: 77.09 },
 
   // South Asia
   { name: "Colombo", country: "Sri Lanka", lat: 6.93, lon: 79.86 },
@@ -266,6 +317,61 @@ const raw: City[] = [
   { name: "Montevideo", country: "Uruguay", lat: -34.9, lon: -56.16 },
 ];
 
+const REGIONS: Record<string, string[]> = {
+  Kerala: [
+    "Kochi", "Thiruvananthapuram", "Kozhikode", "Kannur", "Kasaragod", "Cheruvathur", "Kanhangad", "Nileshwar", "Payyannur", "Taliparamba",
+    "Thalassery", "Mattannur", "Vadakara", "Kalpetta", "Sulthan Bathery", "Mananthavady", "Malappuram", "Manjeri", "Perinthalmanna", "Tirur",
+    "Ponnani", "Palakkad", "Ottappalam", "Thrissur", "Guruvayur", "Irinjalakuda", "Chalakudy", "Kodungallur", "Aluva", "Angamaly", "Perumbavoor",
+    "Muvattupuzha", "Thodupuzha", "Munnar", "Kottayam", "Changanassery", "Pala", "Alappuzha", "Cherthala", "Chengannur", "Thiruvalla",
+    "Pathanamthitta", "Adoor", "Kollam", "Karunagappally", "Kayamkulam", "Attingal", "Varkala", "Nedumangad", "Neyyattinkara",
+  ],
+  Karnataka: ["Bengaluru", "Mysuru", "Mangaluru", "Hubballi"],
+  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tiruppur"],
+  Maharashtra: ["Mumbai", "Pune", "Nagpur", "Nashik", "Navi Mumbai", "Thane", "Bhiwandi", "Aurangabad", "Solapur"],
+  Delhi: ["Delhi"],
+  Telangana: ["Hyderabad", "Warangal"],
+  "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur"],
+  "West Bengal": ["Kolkata", "Durgapur", "Asansol", "Malda"],
+  Gujarat: ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Gandhinagar"],
+  Rajasthan: ["Jaipur", "Jodhpur", "Udaipur"],
+  "Uttar Pradesh": ["Lucknow", "Kanpur", "Agra", "Varanasi", "Ghaziabad", "Meerut", "Noida", "Allahabad", "Saharanpur", "Bareilly", "Moradabad", "Aligarh"],
+  "Madhya Pradesh": ["Indore", "Bhopal", "Jabalpur", "Gwalior"],
+  Haryana: ["Gurugram", "Faridabad"],
+  Punjab: ["Ludhiana", "Amritsar"],
+  Chandigarh: ["Chandigarh"],
+  Bihar: ["Patna", "Muzaffarpur"],
+  Jharkhand: ["Ranchi", "Jamshedpur"],
+  Odisha: ["Bhubaneswar"],
+  Chhattisgarh: ["Raipur"],
+  Uttarakhand: ["Dehradun"],
+  Goa: ["Goa"],
+  Assam: ["Guwahati", "Dibrugarh"],
+  "Himachal Pradesh": ["Shimla"],
+  "Jammu and Kashmir": ["Srinagar"],
+  Puducherry: ["Puducherry"],
+  California: ["San Francisco", "San Jose", "Palo Alto", "Los Angeles", "San Diego"],
+  Washington: ["Seattle"],
+  Oregon: ["Portland"],
+  Texas: ["Austin", "Dallas", "Houston"],
+  "New York": ["New York"],
+  "New Jersey": ["Newark"],
+  Illinois: ["Chicago"],
+  Massachusetts: ["Boston"],
+  Georgia: ["Atlanta"],
+  Florida: ["Miami"],
+  Colorado: ["Denver"],
+  Arizona: ["Phoenix"],
+  Nevada: ["Las Vegas"],
+  Utah: ["Salt Lake City"],
+  Minnesota: ["Minneapolis"],
+  Michigan: ["Detroit"],
+  Tennessee: ["Nashville"],
+  "North Carolina": ["Raleigh", "Charlotte"],
+  Pennsylvania: ["Philadelphia", "Pittsburgh"],
+  Hawaii: ["Honolulu"],
+  "District of Columbia": ["Washington DC"],
+};
+
 export const citiesByName: Record<string, City> = {};
 export const citiesByLabel: Record<string, string> = {};
 export const allCityNames: string[] = [];
@@ -276,6 +382,7 @@ raw.forEach((city) => {
   citiesByLabel[label] = city.name;
   allCityNames.push(city.name);
 });
+for (const [region, names] of Object.entries(REGIONS)) for (const n of names) if (citiesByName[n]) citiesByName[n].region = region;
 
 const aliases: Record<string, string> = {
   bangalore: "Bengaluru",
@@ -292,6 +399,12 @@ const aliases: Record<string, string> = {
   cochin: "Kochi",
   pondicherry: "Puducherry",
   hubli: "Hubballi",
+  cannanore: "Kannur",
+  tellicherry: "Thalassery",
+  trichur: "Thrissur",
+  quilon: "Kollam",
+  alleppey: "Alappuzha",
+  palghat: "Palakkad",
   nyc: "New York",
   sf: "San Francisco",
   "bay area": "San Francisco",
@@ -304,34 +417,112 @@ const aliases: Record<string, string> = {
   allahabad: "Allahabad",
 };
 
+// Country names and the few codes people actually type, to the dataset's country name.
+// Two-letter codes that are also common word starts (in, it, no, is, be) are left out on purpose.
+const countryAliases: Record<string, string> = {
+  us: "USA", usa: "USA", america: "USA", "united states": "USA", "united states of america": "USA", "the us": "USA", "the usa": "USA",
+  uk: "UK", gb: "UK", gbr: "UK", "united kingdom": "UK", britain: "UK", "great britain": "UK", england: "UK",
+  uae: "UAE", ae: "UAE", "united arab emirates": "UAE", emirates: "UAE",
+  ca: "Canada", can: "Canada", au: "Australia", aus: "Australia", nz: "New Zealand", sg: "Singapore", jp: "Japan",
+  fr: "France", de: "Germany", deu: "Germany", ie: "Ireland", cn: "China", bharat: "India", ind: "India", turkey: "Türkiye", korea: "South Korea",
+  holland: "Netherlands", ksa: "Saudi Arabia", pk: "Pakistan", bd: "Bangladesh", lk: "Sri Lanka", np: "Nepal",
+};
+const countryNames = new Map<string, string>();
+raw.forEach((c) => countryNames.set(norm(c.country), c.country));
+
+function norm(t: string): string {
+  return t
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** The part before the first comma, normalised. "Kochi, Kerala" is looked up as "kochi". */
+const head = (t: string) => norm(t.split(",")[0]);
+
+/** The dataset country a query names exactly ("US", "United Kingdom", "India"), or null. */
+export function countryOf(text: string): string | null {
+  const q = norm(text);
+  if (!q) return null;
+  return countryAliases[q] ?? countryNames.get(q) ?? null;
+}
+
+// Distance from the query to the same-length start of a name, one slip allowed
+// (two for long queries). Only a fallback for when nothing matches plainly.
+function nearPrefix(q: string, name: string): boolean {
+  const max = q.length >= 8 ? 2 : q.length >= 4 ? 1 : 0;
+  if (!max) return false;
+  for (let len = q.length - max; len <= q.length + max; len++) {
+    if (len > 0 && editDistance(q, name.slice(0, len)) <= max) return true;
+  }
+  return false;
+}
+
+function editDistance(a: string, b: string): number {
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+type Tier = "exact" | "prefix" | "loose";
+
+/**
+ * Ranked city names for what the user typed.
+ * A country name or code gives that country's cities (never substring hits).
+ * Otherwise: exact or alias, then names that start with it, then a word that
+ * starts with it, then (4+ letters only) names that contain it, and only if
+ * none of those exist, near misses. Ties go to the home state, then the home
+ * country, then dataset order.
+ */
+function rank(text: string, home?: string): { names: string[]; tier: Tier | "country" } {
+  const q = head(text);
+  if (!q) return { names: [], tier: "loose" };
+  const h = home ? citiesByName[home] : undefined;
+  const boost = (name: string) => {
+    const c = citiesByName[name];
+    return h && c.country === h.country ? (h.region && c.region === h.region ? 0 : 1) : 2;
+  };
+  const stable = (names: string[]) => names.map((n, i) => [n, i] as const).sort((a, b) => boost(a[0]) - boost(b[0]) || a[1] - b[1]).map((x) => x[0]);
+  const country = countryOf(text);
+  const out = new Set<string>();
+  const alias = aliases[q];
+  if (alias) out.add(alias);
+  if (country) {
+    stable(allCityNames.filter((n) => citiesByName[n].country === country)).forEach((n) => out.add(n));
+    return { names: [...out], tier: "country" };
+  }
+  const normed = allCityNames.map((n) => [n, norm(n)] as const);
+  for (const [n, l] of normed) if (l === q) out.add(n);
+  const exact = out.size > 0;
+  const add = (pred: (l: string) => boolean) => stable(normed.filter(([n, l]) => !out.has(n) && pred(l)).map(([n]) => n)).forEach((n) => out.add(n));
+  add((l) => l.startsWith(q));
+  const prefixEnd = out.size;
+  add((l) => l.split(/[\s-]/).some((w) => w.startsWith(q)));
+  if (q.length >= 4) add((l) => l.includes(q));
+  if (out.size === 0) add((l) => nearPrefix(q, l));
+  return { names: [...out], tier: exact || prefixEnd > 0 ? (exact ? "exact" : "prefix") : "loose" };
+}
+
 export function findCity(text: string): City | null {
   const t = text.trim();
   if (!t) return null;
   const label = citiesByLabel[t];
   if (label) return citiesByName[label];
-  const low = t.toLowerCase().split(",")[0].trim();
-  if (aliases[low]) return citiesByName[aliases[low]];
-  for (const name of allCityNames) {
-    if (name.toLowerCase() === low) return citiesByName[name];
-  }
-  for (const name of allCityNames) {
-    if (name.toLowerCase().startsWith(low)) return citiesByName[name];
-  }
+  const r = rank(t);
+  // A half-typed name of 3 letters or fewer is never guessed for the user.
+  if (r.tier === "exact" || (r.tier === "prefix" && head(t).length >= 4)) return citiesByName[r.names[0]] ?? null;
   return null;
 }
 
-export function matchCities(text: string, limit = 8): string[] {
-  const low = text.toLowerCase().split(",")[0].trim();
-  if (!low) return [];
-  const out = new Set<string>();
-  if (aliases[low]) out.add(aliases[low]);
-  for (const name of allCityNames) {
-    if (name.toLowerCase().startsWith(low)) out.add(name);
-  }
-  for (const name of allCityNames) {
-    if (name.toLowerCase().includes(low) && !out.has(name)) out.add(name);
-  }
-  return Array.from(out).slice(0, limit);
+export function matchCities(text: string, limit = 8, home?: string): string[] {
+  return rank(text, home).names.slice(0, limit);
 }
 
 export function nearestBigCity(lat: number, lon: number): City | null {
