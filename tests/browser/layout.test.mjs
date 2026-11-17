@@ -221,3 +221,41 @@ test("landing order: hero, narrative, founders, then the rest; confirmed copy; p
     await b.shot(`${SHOTS}/p1-landing-founders-${w}x${h}.png`);
   }
 });
+
+// Rendered size of an SVG label in CSS px (the globe is scaled to fit its box).
+const PX = `(sel)=>[...document.querySelectorAll(sel)].map(t=>{const m=t.getScreenCTM();return {t:t.textContent,px:parseFloat(t.getAttribute('font-size'))*Math.hypot(m.a,m.b)}})`;
+const SMALL = `(()=>[...document.querySelectorAll('a,button')].filter(e=>e.getBoundingClientRect().width>0&&getComputedStyle(e).visibility!=='hidden').map(e=>{const r=e.getBoundingClientRect();return {t:e.textContent.trim().slice(0,30),w:Math.round(r.width),h:Math.round(r.height)}}).filter(l=>l.w<44||l.h<44))()`;
+
+test("accessibility: globe labels render at 12 px or more; every link and button is at least 44 x 44", { skip }, async () => {
+  for (const [w, h] of SIZES) {
+    const tag = `${w}x${h}`;
+    const b = await phone(w, h);
+    const hero = await b.eval(`(${PX})('.wm-hero .wm-cl')`);
+    assert.ok(hero.length >= 1, `${tag}: hero keeps at least one label`);
+    for (const l of hero) assert.ok(l.px >= 11.95, `${tag}: hero label ${l.t} renders at ${l.px.toFixed(1)}px`);
+    assert.deepEqual(await b.eval(SMALL), [], `${tag}: landing tap targets under 44x44`);
+    for (const sel of [".wm-top a", ".wm-foot a"]) {
+      const boxes = await b.eval(`[...document.querySelectorAll(${JSON.stringify(sel)})].map(e=>{const r=e.getBoundingClientRect();return [r.width,r.height]})`);
+      assert.ok(boxes.length > 0 && boxes.every(([bw, bh]) => bw >= 44 && bh >= 44), `${tag}: ${sel} ${JSON.stringify(boxes)}`);
+    }
+    await toAsk(b);
+    const cities = ["Kochi", "Kozhikode", "Mysuru", "Kannur", "Mangaluru"];
+    for (let i = 0; i < 5; i++) {
+      await type(b, ".wm-flds label:nth-child(1) input", `Nm${i}qx`);
+      await type(b, ".wm-flds label:nth-child(2) input", cities[i]);
+      await clickText(b, "Light it");
+      await sleep(1400);
+    }
+    const ask = await b.eval(`(${PX})('.wm-ask .wm-cl')`);
+    assert.ok(ask.some((l) => l.t !== "you"), `${tag}: the newest city keeps its label`);
+    for (const l of ask) assert.ok(l.px >= 11.95, `${tag}: question label ${l.t} renders at ${l.px.toFixed(1)}px`);
+    assert.deepEqual(await b.eval(SMALL), [], `${tag}: question screen tap targets under 44x44`);
+    await clickText(b, "See my map");
+    await b.eval(`document.querySelector('.wm-reveal').click()`);
+    await sleep(700);
+    const rv = await b.eval(`(${PX})('.wm-reveal .wm-cl')`);
+    assert.ok(rv.length >= 2, `${tag}: reveal keeps its home label and at least one city`);
+    for (const l of rv) assert.ok(l.px >= 11.95, `${tag}: reveal label ${l.t} renders at ${l.px.toFixed(1)}px`);
+    assert.deepEqual(await b.eval(SMALL), [], `${tag}: reveal tap targets under 44x44`);
+  }
+});

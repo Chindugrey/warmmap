@@ -1,8 +1,10 @@
 "use client";
 
-import { useId, useMemo } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { CENTER, SPHERE_R, layoutGlobe, placeLabels, threadPath } from "@/lib/globe-layout";
 
+/** Smallest label text on a phone, in rendered CSS px. */
+export const MIN_LABEL_PX = 12;
 export const GOLD = "#F2C230";
 const AMBER = "#E8A84A";
 const HAND = "M-5-8h10l1.6 3v7.6L5 5.6H-5l-1.6-3V-5z";
@@ -79,6 +81,19 @@ export function Globe({
   className = "",
 }: GlobeProps) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  // The globe is scaled to fit its box (600 units across), so a label's rendered size is its font size
+  // times boxPx / 612. Measure the box and size the labels up to MIN_LABEL_PX; the collision pass then drops what no longer fits.
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [boxPx, setBoxPx] = useState(0);
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const read = () => setBoxPx(Math.min(el.clientWidth, el.clientHeight));
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const { points } = useMemo(() => layoutGlobe(homeCity, lanterns.map((l) => l.city)), [homeCity, lanterns]);
 
   const placedLabels = useMemo(() => {
@@ -88,9 +103,10 @@ export function Globe({
       want: (c) => labels === "all" || (Array.isArray(labels) && labels.includes(c)),
       scale,
       homeLabel,
+      fontSize: boxPx > 0 ? Math.max(19 * Math.max(1, scale * 0.95), (MIN_LABEL_PX * 612) / boxPx) : undefined,
     });
     return { out: labels === "none" ? [] : r.labels, fs: r.fontSize };
-  }, [points, lanterns, labels, scale, homeLabel]);
+  }, [points, lanterns, labels, scale, homeLabel, boxPx]);
 
   let viewBox = "-6 -6 612 612";
   if (focus !== undefined && points[focus]) {
@@ -108,7 +124,7 @@ export function Globe({
     }.`;
 
   return (
-    <svg className={`wm-globe wm-m-${motion} ${className}`} viewBox={viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label={aria}>
+    <svg ref={svgRef} className={`wm-globe wm-m-${motion} ${className}`} viewBox={viewBox} preserveAspectRatio="xMidYMid meet" role="img" aria-label={aria}>
       <defs>
         <radialGradient id="wm-gA"><stop offset="0%" stopColor={AMBER} stopOpacity={0.75} /><stop offset="100%" stopColor={AMBER} stopOpacity={0} /></radialGradient>
         <radialGradient id="wm-gG"><stop offset="0%" stopColor={GOLD} stopOpacity={0.9} /><stop offset="100%" stopColor={GOLD} stopOpacity={0} /></radialGradient>

@@ -21,7 +21,7 @@
 .wm :focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
 
 .wm-scr { min-height: 100dvh; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; padding: 0 0 calc(12px + var(--sab)); position: relative; }
-.wm-top { display: flex; justify-content: space-between; align-items: baseline; padding: calc(14px + env(safe-area-inset-top, 0px)) 22px 0; font-family: var(--fm); font-size: 13px; color: var(--soft); }
+.wm-top { display: flex; justify-content: space-between; align-items: center; padding: calc(14px + env(safe-area-inset-top, 0px)) 22px 0; font-family: var(--fm); font-size: 13px; color: var(--soft); }
 .wm-wm { font-family: var(--fsc); font-size: 20px; letter-spacing: .06em; color: var(--ink); text-decoration: none; }
 .wm-kick { font-family: var(--fm); font-size: 13px; color: var(--soft); letter-spacing: .01em; }
 .wm-note { font: italic 400 16px/1.3 var(--fb); color: var(--soft); }
@@ -86,7 +86,8 @@
 .wm-founders img { width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid var(--ink); object-fit: cover; display: block; background: var(--bg2); }
 @media (min-width: 640px) { .wm-founders ul { flex-direction: row; justify-content: center; gap: 14px; } }
 .wm-foot { max-width: 560px; margin: 0 auto; padding: 40px 24px calc(28px + var(--sab)); font: 400 13px/1.8 var(--fm); color: var(--soft); text-align: center; }
-.wm-foot a { color: var(--soft); }
+.wm-foot a { color: var(--soft); display: inline-block; min-width: 44px; min-height: 44px; line-height: 44px; }
+.wm-top a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; justify-content: flex-end; }
 
 /* home chips */
 .wm-home { padding: 0 20px; text-align: center; }
