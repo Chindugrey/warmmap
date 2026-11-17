@@ -126,10 +126,26 @@ export interface PlacedLabel {
   anchor: "start" | "end" | "middle";
 }
 
+/** Width of a label in globe units. Deliberately generous: the real font varies between phones. */
+export const labelWidth = (text: string, fs: number) => text.length * fs * 0.58 + 6;
+
+/** The box a placed label covers (the inverse of how placeLabels positions the text). */
+export function labelBox(l: PlacedLabel, fs: number): Box {
+  const w = labelWidth(l.text, fs);
+  const x = l.anchor === "start" ? l.x : l.anchor === "end" ? l.x - w : l.x - w / 2;
+  return { x, y: l.y - fs * 0.8, w, h: fs };
+}
+
+const inSphere = (b: Box, r: number) =>
+  [[b.x, b.y], [b.x + b.w, b.y], [b.x, b.y + b.h], [b.x + b.w, b.y + b.h]].every(([px, py]) => Math.hypot(px - CENTER, py - CENTER) <= r);
+
 /**
  * City labels with collision handling (from the v2 deck): try the outer side,
- * then the inner, above, below; skip a label that fits nowhere. Coordinates
- * are in the 600-unit globe space; `y` is the text baseline.
+ * then the inner, above, below, then the corners; skip a label that fits
+ * nowhere. A spot inside the sphere wins over one outside it; nothing ever
+ * leaves the 600-unit picture. Coordinates are in globe space; `y` is the
+ * text baseline. Lanterns are placed in order, so the newest should come last
+ * only if it matters less: callers pass the ones they want.
  */
 export function placeLabels(opts: {
   points: GlobePoint[];
@@ -143,32 +159,49 @@ export function placeLabels(opts: {
   const fs = opts.fontSize ?? 19 * Math.max(1, scale * 0.95);
   const boxes: Box[] = [{ x: 282, y: 282, w: 36, h: 36 }];
   if (opts.homeLabel) {
-    const w = opts.homeLabel.length * fs * 0.52 + 4;
+    const w = labelWidth(opts.homeLabel, fs);
     boxes.push({ x: CENTER - w / 2, y: CENTER + 36 - fs * 0.8, w, h: fs });
   }
   opts.points.forEach((p, i) => {
     const g = (opts.gold?.[i] ? 1.5 : 1) * scale;
     boxes.push({ x: p.x - 9 * g, y: p.y - 15 * g, w: 18 * g, h: 23 * g });
   });
-  const out: PlacedLabel[] = [];
-  const done = new Set<string>();
-  opts.points.forEach((p, i) => {
-    if (!opts.want(p.city) || done.has(p.city)) return;
-    const g = (opts.gold?.[i] ? 1.5 : 1) * scale;
-    const w = p.city.length * fs * 0.52 + 4, h = fs, left = p.x < CENTER, gx = 13 * g;
-    for (const k of left ? (["l", "r", "t", "b"] as const) : (["r", "l", "t", "b"] as const)) {
-      const b: Box =
-        k === "r" ? { x: p.x + gx, y: p.y - h * 0.62, w, h }
-        : k === "l" ? { x: p.x - gx - w, y: p.y - h * 0.62, w, h }
-        : k === "t" ? { x: p.x - w / 2, y: p.y - 17 * g - h, w, h }
-        : { x: p.x - w / 2, y: p.y + 12 * g, w, h };
-      if (b.x < -2 || b.x + b.w > 602) continue;
-      if (boxes.some((o) => overlaps(o, b))) continue;
-      boxes.push(b);
-      done.add(p.city);
-      out.push({ text: p.city, x: k === "r" ? b.x : k === "l" ? b.x + b.w : b.x + b.w / 2, y: b.y + b.h * 0.8, anchor: k === "r" ? "start" : k === "l" ? "end" : "middle" });
-      break;
+  const placed = new Map<string, { b: Box; k: string }>();
+  const wanted = opts.points.map((p, i) => ({ p, i })).filter(({ p }) => opts.want(p.city));
+  for (const strict of [true, false]) {
+    for (const { p, i } of wanted) {
+      if (placed.has(p.city)) continue;
+      const g = (opts.gold?.[i] ? 1.5 : 1) * scale;
+      const w = labelWidth(p.city, fs), h = fs, left = p.x < CENTER, gx = 13 * g;
+      const at = {
+        r: { x: p.x + gx, y: p.y - h * 0.62, w, h },
+        l: { x: p.x - gx - w, y: p.y - h * 0.62, w, h },
+        t: { x: p.x - w / 2, y: p.y - 17 * g - h, w, h },
+        b: { x: p.x - w / 2, y: p.y + 12 * g, w, h },
+        tr: { x: p.x + gx * 0.6, y: p.y - 17 * g - h, w, h },
+        tl: { x: p.x - gx * 0.6 - w, y: p.y - 17 * g - h, w, h },
+        br: { x: p.x + gx * 0.6, y: p.y + 12 * g, w, h },
+        bl: { x: p.x - gx * 0.6 - w, y: p.y + 12 * g, w, h },
+      };
+      const order = left ? (["l", "r", "t", "b", "tl", "bl", "tr", "br"] as const) : (["r", "l", "t", "b", "tr", "br", "tl", "bl"] as const);
+      for (const k of order) {
+        const b = at[k];
+        if (b.x < 0 || b.x + b.w > 600 || b.y < 0 || b.y + b.h > 600) continue;
+        if (strict && !inSphere(b, SPHERE_R - 2)) continue;
+        if (boxes.some((o) => overlaps(o, b))) continue;
+        boxes.push(b);
+        placed.set(p.city, { b, k });
+        break;
+      }
     }
-  });
+  }
+  const out: PlacedLabel[] = [];
+  for (const { p } of wanted) {
+    const hit = placed.get(p.city);
+    if (!hit || out.some((l) => l.text === p.city)) continue;
+    const { b, k } = hit;
+    const anchor = k === "r" || k === "tr" || k === "br" ? "start" : k === "l" || k === "tl" || k === "bl" ? "end" : "middle";
+    out.push({ text: p.city, x: anchor === "start" ? b.x : anchor === "end" ? b.x + b.w : b.x + b.w / 2, y: b.y + b.h * 0.8, anchor });
+  }
   return { labels: out, fontSize: fs };
 }

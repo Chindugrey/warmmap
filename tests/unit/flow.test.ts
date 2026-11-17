@@ -92,3 +92,39 @@ test("India clusters: no two lanterns closer than the minimum, all inside the ri
     }
   }
 });
+
+test("globe labels: inside the picture, off each other, off the lanterns, even in the Kerala / Karnataka cluster", async () => {
+  const { placeLabels, labelBox, labelWidth } = await import("@/lib/globe-layout");
+  const cluster = ["Kochi", "Kozhikode", "Mysuru", "Mangaluru", "Thiruvananthapuram", "Coimbatore", "Kannur", "Thrissur", "Delhi", "London"];
+  for (const home of ["Bengaluru", "Kochi", "Kasaragod"]) {
+    for (const scale of [1, 1.4]) {
+      const { points } = layoutGlobe(home, cluster);
+      const { labels, fontSize } = placeLabels({ points, want: () => true, scale, homeLabel: home });
+      assert.ok(labels.length >= 4, `${home}/${scale}: only ${labels.length} labels placed`);
+      const boxes = labels.map((l) => ({ t: l.text, ...labelBox(l, fontSize) }));
+      for (const b of boxes) {
+        assert.ok(b.x >= 0 && b.x + b.w <= 600 && b.y >= 0 && b.y + b.h <= 600, `${home}/${scale}: ${b.t} outside ${JSON.stringify(b)}`);
+      }
+      const hw = labelWidth(home, fontSize);
+      const homeBox = { t: home, x: CENTER - hw / 2, y: CENTER + 36 - fontSize * 0.8, w: hw, h: fontSize };
+      const all = [...boxes, homeBox];
+      for (let i = 0; i < all.length; i++)
+        for (let j = i + 1; j < all.length; j++) {
+          const a = all[i], b = all[j];
+          assert.ok(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y, `${home}/${scale}: ${a.t} overlaps ${b.t}`);
+        }
+    }
+  }
+});
+
+test("globe labels: a wanted label that fits stays inside the sphere, and a far-east lantern flips its label inward", async () => {
+  const { placeLabels, labelBox, SPHERE_R } = await import("@/lib/globe-layout");
+  const { points } = layoutGlobe("Bengaluru", ["Kozhikode", "Auckland", "Vancouver"]);
+  const { labels, fontSize } = placeLabels({ points, want: () => true, scale: 1.4 });
+  for (const l of labels) {
+    const b = labelBox(l, fontSize);
+    for (const [px, py] of [[b.x, b.y], [b.x + b.w, b.y], [b.x, b.y + b.h], [b.x + b.w, b.y + b.h]]) {
+      assert.ok(Math.hypot(px - CENTER, py - CENTER) <= SPHERE_R + 12, `${l.text} pokes out of the globe`);
+    }
+  }
+});
