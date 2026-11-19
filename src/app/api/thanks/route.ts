@@ -42,6 +42,14 @@ export async function POST(req: NextRequest) {
   const already = await prisma.vouch.findUnique({ where: { mapId_entryIndex: { mapId: map.id, entryIndex: b.entryIndex } } });
   if (already) return NextResponse.json({ error: "That lantern has already answered back." }, { status: 409 });
 
+  // The same link posted again (a reload, a second device that kept the link): if it is this map + lantern and still
+  // unopened and unexpired, it is the link already counted. Nothing new is made and the cap is not touched. Any other
+  // hash match (another lantern or map, opened, expired) falls through to the same 409 as before.
+  const known = await prisma.thankLink.findUnique({ where: { tokenHash: b.tokenHash } });
+  if (known && known.mapId === map.id && known.entryIndex === b.entryIndex && !known.usedAt && known.expiresAt.getTime() > Date.now()) {
+    return NextResponse.json({ ok: true, reused: true, expiresAt: known.expiresAt }, { headers: noStore });
+  }
+
   const recent = await prisma.thankLink.count({
     where: { mapId: map.id, createdAt: { gt: new Date(Date.now() - 30 * DAY) } },
   });
