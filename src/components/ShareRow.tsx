@@ -8,7 +8,7 @@ const track = (channel: string) =>
   apiFetch("/api/analytics", { method: "POST", body: JSON.stringify({ event: "share", metadata: { channel } }) }).catch(() => {});
 
 /** Secondary "Share on LinkedIn" and tertiary "Copy link", both with the person's own map link. */
-export function ShareRow({ url }: { url: string }) {
+export function ShareRow({ url, onLinkedIn }: { url: string; onLinkedIn?: () => void }) {
   const [copied, setCopied] = useState(false);
   async function copy() {
     try {
@@ -27,9 +27,15 @@ export function ShareRow({ url }: { url: string }) {
   }
   return (
     <div className="wm-r2">
-      <a className="wm-btn two" href={linkedInShareUrl(`${url}?s=li`)} target="_blank" rel="noopener noreferrer" onClick={() => track("linkedin")}>
-        Share on LinkedIn
-      </a>
+      {onLinkedIn ? (
+        <button className="wm-btn two" type="button" onClick={onLinkedIn}>
+          Share on LinkedIn
+        </button>
+      ) : (
+        <a className="wm-btn two" href={linkedInShareUrl(`${url}?s=li`)} target="_blank" rel="noopener noreferrer" onClick={() => track("linkedin")}>
+          Share on LinkedIn
+        </a>
+      )}
       <button className="wm-lnk" type="button" onClick={copy} aria-live="polite">
         {copied ? "Copied" : "Copy link"}
       </button>
