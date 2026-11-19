@@ -207,7 +207,7 @@ function Hero({
         <p className="wm-lead">
           {carried
             ? `${carried.ownerName} lit a lantern for you. Your map starts with one already lit, pointing back.`
-            : "Answer a few small questions with a name and a city. Each one lights a lantern. In three minutes, you'll see how far your warmth reaches."}
+            : "Answer a few small questions with a name and a city."}
         </p>
         <div className="wm-cta">
           {resume ? (

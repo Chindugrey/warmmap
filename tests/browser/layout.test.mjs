@@ -204,6 +204,7 @@ test("landing order: hero, narrative, founders, then the rest; confirmed copy; p
       const imgs = [...document.querySelectorAll('.wm-founders img')];
       return {
         hero: top('.wm-hero .wm-cta'), narr: top('.wm-narr'), fnd: top('.wm-founders'), never: top('#never'),
+        lead: document.querySelector('.wm-hero .wm-lead')?.textContent.trim(),
         narrText: [...document.querySelectorAll('.wm-narr p')].map(p => p.textContent.trim()),
         caption: document.querySelector('.wm-founders .wm-fcap')?.textContent.trim(),
         chips: [...document.querySelectorAll('.wm-founders a')].map(a => ({ t: a.textContent.trim(), href: a.href, rel: a.rel, target: a.target })),
@@ -214,6 +215,7 @@ test("landing order: hero, narrative, founders, then the rest; confirmed copy; p
     })()`);
     const tag = `${w}x${h}`;
     assert.ok(info.hero < info.narr && info.narr < info.fnd && info.fnd < info.never, `${tag}: order ${JSON.stringify([info.hero, info.narr, info.fnd, info.never])}`);
+    assert.equal(info.lead, "Answer a few small questions with a name and a city.", `${tag}: hero lead (Aadarsh's pick, 19 Nov)`);
     assert.deepEqual(info.narrText, [
       "Think of the people who've had your back: the 2am call, the first break, the hard truth.",
       "Each answer lights a lantern in their city. In five answers, you'll see how far your warmth reaches — and their names never leave your phone.",
