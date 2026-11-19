@@ -190,18 +190,18 @@ export interface ChannelCounts { channel: string; label: string; shares: number;
 export interface ChannelFunnelRow extends ChannelCounts {
   openPerShare: number | null; // %
   makeYoursPerOpen: number | null; // %
-  savedEst: number; // estimated saved maps (see channelFunnel)
-  savedPerMakeYours: number | null; // %
-  savedPerShare: number | null; // %
-  k: number; // estimated new maps per map through this channel
+  savedEst: number; // ESTIMATED saved maps (see channelFunnel)
+  savedEstPerShare: number | null; // %, from the estimate
+  kEst: number; // ESTIMATED new maps per map through this channel
 }
 
 /**
  * A saved map does not record the ?s= tag it arrived with (no schema change in
- * phase 1), so "saved" per channel is an estimate: the channel's "Make yours"
+ * phase 1), so "saved" per channel is an ESTIMATE: the channel's "Make yours"
  * taps x the overall rate at which "Make yours" became a saved invited map
- * (maps that arrived from a map or a thank-you / all "Make yours" taps, capped
- * at 100%). k by channel = that estimate / all maps.
+ * (maps with a live inviter / all "Make yours" taps, capped at 100%). The rate
+ * is the same for every channel, so it is reported once (saveRate), not per row.
+ * kEst = savedEst / all maps.
  */
 export function channelFunnel(rows: ChannelCounts[], t: { makeYoursAll: number; invitedSaved: number; mapsTotal: number }): {
   saveRate: number; // 0..1
@@ -217,9 +217,8 @@ export function channelFunnel(rows: ChannelCounts[], t: { makeYoursAll: number; 
         openPerShare: pct(r.opens, r.shares),
         makeYoursPerOpen: pct(r.makeYours, r.opens),
         savedEst,
-        savedPerMakeYours: pct(savedEst, r.makeYours),
-        savedPerShare: pct(savedEst, r.shares),
-        k: t.mapsTotal ? Math.round((savedEst / t.mapsTotal) * 1000) / 1000 : 0,
+        savedEstPerShare: pct(savedEst, r.shares),
+        kEst: t.mapsTotal ? Math.round((savedEst / t.mapsTotal) * 1000) / 1000 : 0,
       };
     }),
   };
@@ -247,25 +246,18 @@ export function warmth(p: WarmthParts): number {
 
 // ---------------------------------------------------------------------------
 // Creators list: one row per map. First name, city, dates, counts. Nothing else.
+// The rows are aggregated, filtered, sorted and paged in SQL (growth-load.ts).
+
+/** Invite trees are walked in SQL to this depth at most; deeper counts are shown as "N+". */
+export const TREE_DEPTH_CAP = 50;
+/** The CSV export stops at this many rows (and says so). */
+export const CSV_ROW_CAP = 50_000;
 
 export const SHARE_CHANNELS = ["whatsapp", "linkedin", "copy", "story", "native"] as const;
 export type ShareChannel = (typeof SHARE_CHANNELS)[number];
 
-export interface MapFacts extends MapNode {
-  ownerName: string | null;
-  homeCity: string;
-  kind: string | null;
-  km: number;
-  lanterns: number;
-  cities: number;
-  gold: number;
-  thankLinks: number;
-  shares: Record<ShareChannel, number>;
-  opens: number;
-}
-
 export interface CreatorRow {
-  id: string; // internal map id: links to the admin timeline only
+  id: string; // internal map id (not a public address): links to the admin timeline only
   firstName: string;
   homeCity: string;
   createdAt: string;
@@ -280,35 +272,9 @@ export interface CreatorRow {
   opens: number;
   spawnedDirect: number;
   spawnedAll: number;
+  spawnedAllCapped: boolean; // the tree goes deeper than TREE_DEPTH_CAP: spawnedAll is a lower bound
   arrivedVia: string;
   warmth: number;
-}
-
-export function creatorRows(facts: MapFacts[], f: Forest): CreatorRow[] {
-  return facts.map((m) => {
-    const sharesTotal = SHARE_CHANNELS.reduce((a, c) => a + m.shares[c], 0);
-    const spawnedDirect = f.children.get(m.id)?.length ?? 0;
-    const spawnedAll = f.descendants.get(m.id) ?? 0;
-    return {
-      id: m.id,
-      firstName: firstName(m.ownerName),
-      homeCity: m.homeCity,
-      createdAt: m.createdAt.toISOString(),
-      kind: m.kind ?? "",
-      lanterns: m.lanterns,
-      cities: m.cities,
-      km: m.km,
-      gold: m.gold,
-      thankLinks: m.thankLinks,
-      shares: m.shares,
-      sharesTotal,
-      opens: m.opens,
-      spawnedDirect,
-      spawnedAll,
-      arrivedVia: m.arrivedVia,
-      warmth: warmth({ thankLinks: m.thankLinks, tiesBack: m.gold, shares: sharesTotal, spawnedDirect, spawnedAll }),
-    };
-  });
 }
 
 export const CREATOR_SORTS = [
@@ -327,25 +293,13 @@ export function parseCreatorQuery(sp: URLSearchParams): CreatorQuery {
   return { q, sort, dir, page, perPage: 50 };
 }
 
-/** Search (first name or home city, case-insensitive substring), sort (stable: newest first breaks ties), page. */
-export function queryCreators(rows: CreatorRow[], cq: CreatorQuery, paginate = true): { total: number; pages: number; rows: CreatorRow[] } {
-  const needle = cq.q.toLocaleLowerCase();
-  const hit = needle
-    ? rows.filter((r) => r.firstName.toLocaleLowerCase().includes(needle) || r.homeCity.toLocaleLowerCase().includes(needle))
-    : rows.slice();
-  const sign = cq.dir === "asc" ? 1 : -1;
-  const k = cq.sort;
-  hit.sort((a, b) => {
-    const x = a[k];
-    const y = b[k];
-    const c = typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y));
-    return sign * c || b.createdAt.localeCompare(a.createdAt) || a.id.localeCompare(b.id);
-  });
-  const pages = Math.max(1, Math.ceil(hit.length / cq.perPage));
-  if (!paginate) return { total: hit.length, pages, rows: hit };
-  const start = (Math.min(cq.page, pages) - 1) * cq.perPage;
-  return { total: hit.length, pages, rows: hit.slice(start, start + cq.perPage) };
+/** An ILIKE pattern that matches `q` as a plain substring (%, _ and \ in q are literal). */
+export function likePattern(q: string): string {
+  return `%${q.replace(/[\\%_]/g, (c) => "\\" + c)}%`;
 }
+
+/** "12" or "12+" when the count stopped at the depth cap. */
+export const capped = (n: number, isCapped: boolean) => `${n}${isCapped ? "+" : ""}`;
 
 /** IST "19 Nov 2026, 14:05" (or the date alone). */
 export function istStamp(iso: string | Date, dateOnly = false): string {
@@ -360,7 +314,7 @@ export function istStamp(iso: string | Date, dateOnly = false): string {
 export const CREATOR_CSV_COLUMNS: [string, (r: CreatorRow) => string | number][] = [
   ["first_name", (r) => r.firstName],
   ["home_city", (r) => r.homeCity],
-  ["created_ist", (r) => istStamp(r.createdAt)],
+  ["created_ist", (r) => istStamp(r.createdAt, r.arrivedVia === "thanks")],
   ["kind", (r) => r.kind],
   ["arrived_via", (r) => r.arrivedVia],
   ["lanterns", (r) => r.lanterns],
@@ -375,56 +329,93 @@ export const CREATOR_CSV_COLUMNS: [string, (r: CreatorRow) => string | number][]
   ["shares_native", (r) => r.shares.native],
   ["opens", (r) => r.opens],
   ["maps_spawned_direct", (r) => r.spawnedDirect],
-  ["maps_spawned_all", (r) => r.spawnedAll],
+  ["maps_spawned_all", (r) => capped(r.spawnedAll, r.spawnedAllCapped)],
   ["warmth", (r) => r.warmth],
 ];
 
 // ---------------------------------------------------------------------------
 // Per-map timeline: what happened to one map, in order. Timestamps and counts.
+//
+// Privacy: only the map's own thank-links and ties keep their exact time. Opens,
+// shares, "owner saw gold", reports and spawned maps are DAILY COUNTS (IST day),
+// never exact times: an exact open or child timestamp could be lined up with a
+// tie-back, or matched against the creators list, to name who thanked whom.
 
 export interface TimelineItem { at: string; dateOnly?: boolean; what: string; detail: string }
 
+/** One IST day's count of one kind of thing. `day` is YYYY-MM-DD in IST. */
+export interface DayCount { day: string; key: string | null; count: number }
+
 export interface TimelineInput {
-  map: { createdAt: Date; updatedAt: Date; arrivedVia: string; lanterns: number; cities: number; kind: string | null; homeCity: string; generation: number };
+  map: {
+    createdAt: Date; updatedAt: Date; arrivedVia: string; lanterns: number; cities: number; kind: string | null; homeCity: string;
+    generation: number; generationCapped: boolean; descendants: number; descendantsCapped: boolean;
+  };
   thankLinks: { createdAt: Date; usedAt: Date | null }[];
   vouches: { createdAt: Date; seenByOwnerAt: Date | null }[];
-  events: { createdAt: Date; event: string; metadata: unknown }[];
-  spawned: { createdAt: Date; arrivedVia: string; descendants: number }[];
+  daily: { event: string; days: DayCount[] }[]; // share (key = channel), map_view (key = s tag), gold_seen, link_report
+  spawned: DayCount[]; // key = arrivedVia of the spawned maps
 }
+
+/** 00:00 IST of an IST calendar day, as an ISO instant. */
+export const istDayIso = (day: string) => new Date(`${day}T00:00:00+05:30`).toISOString();
 
 const SHARE_LABEL: Record<string, string> = { whatsapp: "WhatsApp", linkedin: "LinkedIn", copy: "copied link", story: "Story picture", native: "share sheet" };
 const TAG_LABEL: Record<string, string> = { wa: "WhatsApp", li: "LinkedIn", cp: "copied link", st: "Story picture" };
+const VIA_LABEL: Record<string, string> = { map: "via shared map", thanks: "via thank-you", cold: "with no route", seed: "seeded" };
+const plural = (n: number, one: string, many = one + "s") => `${n} ${n === 1 ? one : many}`;
+
+function byDay(days: DayCount[]): Map<string, DayCount[]> {
+  const m = new Map<string, DayCount[]>();
+  for (const d of days) {
+    const list = m.get(d.day);
+    if (list) list.push(d);
+    else m.set(d.day, [d]);
+  }
+  return m;
+}
+
+// Largest first; untagged (null key) last on a tie.
+const breakdown = (rows: DayCount[], label: (k: string | null) => string) =>
+  [...rows].sort((a, b) => b.count - a.count || (a.key ?? "\uffff").localeCompare(b.key ?? "\uffff")).map((r) => `${r.count} ${label(r.key)}`).join(", ");
 
 export function timeline(t: TimelineInput): TimelineItem[] {
   const items: TimelineItem[] = [];
+  const m = t.map;
   // A map started from a thank-you keeps a date-only stamp (by design).
-  const created = { at: t.map.createdAt.toISOString(), dateOnly: t.map.arrivedVia === "thanks" };
-  items.push({ ...created, what: "Created", detail: `arrived via ${t.map.arrivedVia}, generation ${t.map.generation}, home ${t.map.homeCity}${t.map.kind ? `, ${t.map.kind}` : ""}` });
-  items.push({ ...created, what: "Lanterns", detail: `${t.map.lanterns} lantern${t.map.lanterns === 1 ? "" : "s"} across ${t.map.cities} cit${t.map.cities === 1 ? "y" : "ies"} at save` });
-  if (t.map.updatedAt.getTime() - t.map.createdAt.getTime() > 60_000) {
-    items.push({ at: t.map.updatedAt.toISOString(), what: "Last changed", detail: "edited by its owner (lanterns, name or key)" });
+  const created = { at: m.createdAt.toISOString(), dateOnly: m.arrivedVia === "thanks" };
+  items.push({
+    ...created,
+    what: "Created",
+    detail:
+      `arrived via ${m.arrivedVia}, generation ${capped(m.generation, m.generationCapped)}, home ${m.homeCity}${m.kind ? `, ${m.kind}` : ""}; ` +
+      `${capped(m.descendants, m.descendantsCapped)} map${m.descendants === 1 && !m.descendantsCapped ? "" : "s"} below it in all generations` +
+      (m.generationCapped || m.descendantsCapped ? ` (depth capped at ${TREE_DEPTH_CAP})` : ""),
+  });
+  items.push({ ...created, what: "Lanterns", detail: `${plural(m.lanterns, "lantern")} across ${plural(m.cities, "city", "cities")} at save` });
+  if (m.updatedAt.getTime() - m.createdAt.getTime() > 60_000) {
+    items.push({ at: m.updatedAt.toISOString(), what: "Last changed", detail: "edited by its owner (lanterns, name or key)" });
   }
-  for (const l of t.thankLinks) {
-    items.push({ at: l.createdAt.toISOString(), what: "Thank-link sent", detail: l.usedAt ? "later opened and tied back" : "" });
-  }
+  for (const l of t.thankLinks) items.push({ at: l.createdAt.toISOString(), what: "Thank-link sent", detail: l.usedAt ? "tied back" : "" });
   for (const v of t.vouches) {
-    items.push({ at: v.createdAt.toISOString(), what: "Tied back (gold)", detail: v.seenByOwnerAt ? `owner saw it ${istStamp(v.seenByOwnerAt)}` : "not seen by the owner yet" });
+    items.push({ at: v.createdAt.toISOString(), what: "Tied back (gold)", detail: v.seenByOwnerAt ? `owner saw it on ${istStamp(v.seenByOwnerAt, true)}` : "not seen by the owner yet" });
   }
-  for (const e of t.events) {
-    const m = (e.metadata ?? {}) as Record<string, unknown>;
-    const at = e.createdAt.toISOString();
-    if (e.event === "share") items.push({ at, what: "Shared", detail: SHARE_LABEL[String(m.channel)] ?? "untagged" });
-    else if (e.event === "map_view") items.push({ at, what: "Opened", detail: m.s ? `link from ${TAG_LABEL[String(m.s)] ?? "?"}` : "untagged link" });
-    else if (e.event === "gold_seen") items.push({ at, what: "Owner saw gold", detail: typeof m.n === "number" ? `${m.n} new` : "" });
-    else if (e.event === "link_report") items.push({ at, what: "Link reported", detail: "" });
+  const sum = (rows: DayCount[]) => rows.reduce((a, r) => a + r.count, 0);
+  for (const { event, days } of t.daily) {
+    for (const [day, rows] of byDay(days)) {
+      const at = istDayIso(day);
+      const n = sum(rows);
+      if (event === "share") items.push({ at, dateOnly: true, what: `Shared ${plural(n, "time")}`, detail: breakdown(rows, (k) => SHARE_LABEL[k ?? ""] ?? "untagged") });
+      else if (event === "map_view") items.push({ at, dateOnly: true, what: `Opened ${plural(n, "time")}`, detail: breakdown(rows, (k) => (k ? TAG_LABEL[k] ?? "other" : "untagged")) });
+      else if (event === "gold_seen") items.push({ at, dateOnly: true, what: "Owner saw new gold", detail: `on ${plural(n, "visit")}` });
+      else if (event === "link_report") items.push({ at, dateOnly: true, what: `Link reported ${plural(n, "time")}`, detail: "" });
+    }
   }
-  for (const c of t.spawned) {
-    items.push({
-      at: c.createdAt.toISOString(),
-      dateOnly: c.arrivedVia === "thanks",
-      what: "Spawned a map",
-      detail: `arrived via ${c.arrivedVia}${c.descendants ? `; it brought ${c.descendants} more` : ""}`,
-    });
+  for (const [day, rows] of byDay(t.spawned)) {
+    items.push({ at: istDayIso(day), dateOnly: true, what: `Spawned ${plural(sum(rows), "map")}`, detail: breakdown(rows, (k) => VIA_LABEL[k ?? ""] ?? String(k)) });
   }
-  return items.sort((a, b) => a.at.localeCompare(b.at));
+  // A daily count belongs to the whole IST day, so it sorts after that day's exact events.
+  const counted = new Set(items.filter((i) => i.dateOnly && i.what !== "Created" && i.what !== "Lanterns"));
+  const key = (i: TimelineItem) => (counted.has(i) ? new Date(new Date(i.at).getTime() + DAY - 1).toISOString() : i.at);
+  return items.sort((a, b) => key(a).localeCompare(key(b)));
 }

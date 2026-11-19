@@ -6,9 +6,9 @@
 //   DATABASE_URL=postgresql://warmmap@127.0.0.1:55433/warmmap_perf \
 //   node --import ./tests/register.mjs scripts/seed-analytics.ts [maps=10000] [events=100000]
 import { PrismaClient, type Prisma } from "@prisma/client";
-import { loadCreators, loadTimeline, loadVirality } from "@/lib/growth-load";
+import { loadCreators, loadCreatorsCsv, loadCreatorsPage, loadTimeline, loadVirality } from "@/lib/growth-load";
 import { loadDashboard } from "@/lib/dashboard";
-import { parseCreatorQuery, queryCreators } from "@/lib/growth";
+import { parseCreatorQuery } from "@/lib/growth";
 
 const url = process.env.DATABASE_URL ?? "";
 if (!/@(127\.0\.0\.1|localhost)[:/]/.test(url)) throw new Error("seed-analytics only runs against a local DATABASE_URL");
@@ -90,7 +90,10 @@ async function main() {
     console.log(`${label.padEnd(34)} median ${Math.round(runs.sort((x, y) => x - y)[1])} ms`);
   };
   await time("overview (loadDashboard)", () => loadDashboard(db));
-  await time("creators (load + search + sort)", async () => queryCreators(await loadCreators(db), parseCreatorQuery(new URLSearchParams("q=ko&sort=warmth"))));
+  await time("creators page (search + sort)", () => loadCreators(db, parseCreatorQuery(new URLSearchParams("q=ko&sort=warmth"))));
+  await time("creators page 100 (default sort)", () => loadCreators(db, parseCreatorQuery(new URLSearchParams("page=100"))));
+  await time("ranking (top 100)", () => loadCreatorsPage(db, { q: "", sort: "warmth", dir: "desc" }, { limit: 100, offset: 0, warmOnly: true }));
+  await time("creators CSV (all rows)", () => loadCreatorsCsv(db, parseCreatorQuery(new URLSearchParams(""))));
   await time("virality (all time)", () => loadVirality(db));
   await time("virality (last 7 days)", () => loadVirality(db, "d7"));
   await time("timeline (a root map)", () => loadTimeline(db, maps[0].id!));

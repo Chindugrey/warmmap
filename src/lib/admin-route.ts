@@ -8,6 +8,7 @@ export const ADMIN_HEADERS = {
   "Cache-Control": "no-store",
   "X-Robots-Tag": "noindex, nofollow",
   "Referrer-Policy": "no-referrer",
+  "X-Content-Type-Options": "nosniff",
   "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
 };
 

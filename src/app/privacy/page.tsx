@@ -82,8 +82,17 @@ export default function PrivacyPage() {
           days (legitimate interests: security and abuse prevention).
         </li>
         <li>
-          <strong>Counts</strong>: a few taps and steps (for example, that someone started, or shared) with no name, no address and no
-          device or connection mark, so they cannot be traced to a person (legitimate interests: knowing whether the service works).
+          <strong>Counts</strong>: a few taps and steps (for example, that someone started, or shared). Most are plain totals with no
+          name and no device or connection mark. A few are kept with your map: how many times its link was opened and from which kind
+          of link, and when you saw a new gold lantern. They carry no device or connection mark and no friend&apos;s name (legitimate
+          interests: knowing whether the service works).
+        </li>
+        <li>
+          <strong>What the people who run Warm Map can see</strong>: in a private, password-protected view, each map&apos;s first name,
+          home city and date, next to its counts: lanterns and cities, thank-you links sent, lanterns tied back, how often its link was
+          opened (per day), and how many maps it led to (per day, not which ones). We use this to understand how Warm Map spreads and to
+          rank maps by how much warmth they pass on. Never your friends&apos; names, which we do not have, and never a device or
+          connection mark (legitimate interests: knowing whether the service works and improving it).
         </li>
       </ul>
       <p>
@@ -96,6 +105,7 @@ export default function PrivacyPage() {
       <ul style={{ listStyle: "disc", paddingLeft: "1.2em" }}>
         <li>Your map, its thank-you links and ties: until you delete your map.</li>
         <li>Limit counters: about two days.</li>
+        <li>Counts kept with your map: until you delete your map.</li>
         <li>{c.counts}</li>
         <li>Hosting providers keep their own technical logs, under their own terms.</li>
       </ul>
