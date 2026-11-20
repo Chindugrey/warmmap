@@ -88,7 +88,10 @@ test("thank-you link: phone makes the token; server gets only hash + lantern ind
   assert.equal((await api("/api/thanks", { method: "POST", key: S.key, body: { ...t.body, entryIndex: 9 } })).status, 400);
   const r = await api("/api/thanks", { method: "POST", key: S.key, body: t.body });
   assert.equal(r.status, 201, r.text);
-  assert.equal((await api("/api/thanks", { method: "POST", key: S.key, body: t.body })).status, 409, "same hash twice");
+  const again = await api("/api/thanks", { method: "POST", key: S.key, body: t.body });
+  assert.equal(again.status, 200, "same hash again is the same link: reused, not a 409");
+  assert.equal(again.json.reused, true);
+  assert.equal(await db.thankLink.count({ where: { tokenHash: t.body.tokenHash } }), 1);
   S.url = t.url;
   S.token = t.url.split("/t/")[1].split("#")[0];
 });
@@ -301,6 +304,57 @@ test("thank-link cap: one per question (8) per map per 30 days, the 9th is refus
     codes.push((await api("/api/thanks", { method: "POST", key: m.json.ownerKey, dev: device(), body: t.body })).status);
   }
   assert.deepEqual(codes, [...Array(8).fill(201), 429]);
+});
+
+test("thank-link reuse: the same unused link re-posted costs no new row and no cap slot; nothing else reuses it", async () => {
+  const eight = Array.from({ length: 8 }, (_, q) => ({ city: ["Kochi", "Pune", "Delhi", "Mumbai"][q % 4], questionIndex: q }));
+  const dev = device();
+  const mk = async (name: string) => (await api("/api/maps", { method: "POST", dev: device(), body: { homeCity: "Bengaluru", ownerName: name, entries: eight } })).json;
+  const A = await mk("ReuseA");
+  const B = await mk("ReuseB");
+  const post = (m: any, body: unknown) => api("/api/thanks", { method: "POST", key: m.ownerKey, dev, body });
+  const rows = (m: any) => db.thankLink.count({ where: { map: { shortSlug: m.id } } });
+
+  // Reuse within the same map + entry, any number of times.
+  const t = await prepareThank({ base: BASE, mapId: A.id, entryIndex: 0 });
+  assert.equal((await post(A, t.body)).status, 201);
+  for (let i = 0; i < 3; i++) {
+    const r = await post(A, t.body);
+    assert.equal(r.status, 200);
+    assert.equal(r.json.reused, true);
+  }
+  assert.equal(await rows(A), 1, "one row, one cap slot");
+
+  // Reuse never crosses entries or maps.
+  assert.equal((await post(A, { ...t.body, entryIndex: 1 })).status, 409, "other entry");
+  assert.equal((await post(B, { ...t.body, mapId: B.id })).status, 409, "other map, its own key");
+  assert.equal((await post(B, { ...t.body, mapId: B.id, entryIndex: 0 })).status, 409);
+  assert.equal(await rows(B), 0);
+  assert.equal((await api("/api/thanks", { method: "POST", dev, body: t.body })).status, 403, "still owner-only");
+
+  // The cap counts it once: seven more links fill all eight slots; re-posting the first still answers 200.
+  for (let q = 1; q < 8; q++) {
+    assert.equal((await post(A, (await prepareThank({ base: BASE, mapId: A.id, entryIndex: q })).body)).status, 201);
+  }
+  assert.equal(await rows(A), 8);
+  assert.equal((await post(A, t.body)).status, 200, "at the cap, a known link is still reusable");
+  assert.equal((await post(A, (await prepareThank({ base: BASE, mapId: A.id, entryIndex: 0 })).body)).status, 429, "a new hash is still capped");
+
+  // Not reused once expired, opened, or tied back.
+  const C = await mk("ReuseC");
+  const postC = (body: unknown) => api("/api/thanks", { method: "POST", key: C.ownerKey, dev, body });
+  const tx = await prepareThank({ base: BASE, mapId: C.id, entryIndex: 0 });
+  const tu = await prepareThank({ base: BASE, mapId: C.id, entryIndex: 1 });
+  const tv = await prepareThank({ base: BASE, mapId: C.id, entryIndex: 2 });
+  for (const x of [tx, tu, tv]) assert.equal((await postC(x.body)).status, 201);
+  await db.thankLink.update({ where: { tokenHash: tx.body.tokenHash }, data: { expiresAt: new Date(Date.now() - 1000) } });
+  await db.thankLink.update({ where: { tokenHash: tu.body.tokenHash }, data: { usedAt: new Date() } });
+  const link = await db.thankLink.findUnique({ where: { tokenHash: tv.body.tokenHash } });
+  await db.vouch.create({ data: { mapId: link!.mapId, entryIndex: 2, tier: "tap", thankLinkId: link!.id } });
+  assert.equal((await postC(tx.body)).status, 409, "expired");
+  assert.equal((await postC(tu.body)).status, 409, "opened");
+  assert.equal((await postC(tv.body)).status, 409, "tied back");
+  assert.equal(await db.thankLink.count({ where: { mapId: link!.mapId } }), 3, "no new rows");
 });
 
 test("pre-v2 verified vouches stay in the DB but are shown nowhere (owner, public, admin)", async () => {

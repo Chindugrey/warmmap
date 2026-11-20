@@ -46,7 +46,7 @@ const instrument = (b) => b.eval(`(()=>{
 const posts = (b) => b.eval("window.__posts");
 const sendLabel = (b) => b.eval(`[...document.querySelectorAll('.wm-thank .wm-btn')].map(e=>e.textContent.trim()).join('|')`);
 
-test("make → send → send again → OK; no second POST; other person and reload still work", { skip }, async () => {
+test("make → send → send again → reload → send again reuses the same link", { skip }, async () => {
   const b = await launch({ width: 390, height: 844 });
   open.push(b);
   await b.goto(BASE + "/");
@@ -97,13 +97,25 @@ test("make → send → send again → OK; no second POST; other person and relo
   assert.equal((await posts(b)).at(-1).status, 201);
   assert.notEqual((await posts(b))[0].body, (await posts(b)).at(-1).body);
 
-  // Reload: local state is gone, so a re-send makes a fresh link and registers it (201, not 409).
+  // Reload: the sent links come back from this phone. "Send again" shows, reuses the SAME link, and the server
+  // answers reused (200): no new row, no second cap slot.
   const slug = JSON.parse((await posts(b))[0].body).mapId;
+  const firstMsg = w1;
+  const firstHash = JSON.parse((await posts(b))[0].body).tokenHash;
   await b.goto(BASE + `/m/${slug}`);
   await b.shot(`${SHOTS}/sendagain-after-reload.png`);
   await instrument(b);
   await clickText(b, "Tell them on WhatsApp");
-  await clickText(b, "Send on WhatsApp");
+  assert.equal(await sendLabel(b), "Send again on WhatsApp", "the first person is remembered after a reload");
+  await clickText(b, "Send again on WhatsApp");
   await waitFor(b, `window.__opened.length === 1`);
-  assert.equal((await posts(b))[0].status, 201);
+  const rp = await posts(b);
+  assert.equal(rp.length, 1);
+  assert.equal(rp[0].status, 200);
+  assert.equal(JSON.parse(rp[0].res).reused, true);
+  assert.equal(JSON.parse(rp[0].body).tokenHash, firstHash, "the same hash goes back, so the server counts the same row");
+  assert.equal((await b.eval(`window.__opened[0]`)), firstMsg, "same message and link as before the reload");
+  assert.ok(!(await b.eval(`!!document.querySelector('[role=alert]')`)));
+  // Two people were sent, so two links are kept on this phone (and two rows count against the cap).
+  assert.equal(Object.keys(JSON.parse(await b.eval(`localStorage.getItem('wm:sent:${slug}')`))).length, 2);
 });
