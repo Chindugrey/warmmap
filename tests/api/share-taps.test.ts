@@ -125,3 +125,55 @@ test("the privacy page says what is counted and what is not", async () => {
   assert.match(html, /tap a share button[^<]*we add one to a count for your map, for that day and that channel/);
   assert.match(html, /do not keep who tapped, any names, or anything about the device/);
 });
+
+// Verifier additions: what a tap may name, the answer it gets, and the creators column's window.
+test("only a public slug or public id names a map: the internal id, a deleted map or junk count against none, with the same answer", async () => {
+  const m = await makeMap();
+  const gone = await makeMap();
+  await db.map.delete({ where: { id: gone.id } });
+  const answers = new Set<string>();
+  for (const map of [m.id, gone.shortSlug, `never${tag}`, "a'; drop table \"Map\";--", "x".repeat(41), { shortSlug: m.shortSlug }, [m.shortSlug], 7]) {
+    const r = await post({ event: "share", map, metadata: { channel: "copy" } });
+    answers.add(`${r.status} ${await r.text()}`);
+  }
+  const live = await post({ event: "share", map: m.shortSlug, metadata: { channel: "copy" } });
+  answers.add(`${live.status} ${await live.text()}`);
+  assert.deepEqual([...answers], ['200 {"ok":true}'], "a live and an unknown map get the same answer (no slug oracle)");
+  assert.equal(await db.analyticsEvent.count({ where: { mapId: m.id } }), 1, "only the slug tap is on the map; the internal id is not accepted");
+});
+
+test("creators list and map page use the same 30 IST days: the evening before the window is out of both", async () => {
+  const { loadCreatorsPage } = await import("@/lib/growth-load");
+  const { shareTapsSince } = await import("@/lib/share-taps");
+  const m = await makeMap();
+  const now = new Date("2026-11-20T06:30:00Z"); // 12:00 IST: the window opens 00:00 IST on 22 Oct, 12 h before a rolling 30 x 24 h would
+  const since = shareTapsSince(now);
+  await db.analyticsEvent.createMany({
+    data: [
+      { event: "share", mapId: m.id, createdAt: new Date(since.getTime() - 60_000), metadata: { channel: "copy" } }, // 23:59 IST, 21 Oct: out
+      { event: "share", mapId: m.id, createdAt: new Date(since.getTime() + 12 * 3_600_000), metadata: { channel: "copy" } }, // noon IST, 22 Oct: in
+    ],
+  });
+  const t = await loadShareTaps(db, m.id, now);
+  const page = await loadCreatorsPage(db, { q: OWNER, sort: "createdAt", dir: "desc" }, { limit: 50, offset: 0, now });
+  const row = page.rows.find((r) => r.id === m.id)!;
+  assert.equal(t.totals.total, 1, "map page");
+  assert.equal(row.shares30d, 1, "creators column: same window as the map page");
+  assert.equal(row.shares30d, t.totals.total);
+});
+
+// Prisma sends a Date as timestamptz and "createdAt" is timestamp without time zone, so `"createdAt" >= ${since}` is
+// read in the database session's TimeZone. On a session that is not UTC (the local cluster is Asia/Kolkata) the first
+// IST day of the window loses its 00:00-05:30 taps. Passes on a UTC session; fails on this local cluster.
+test("the window's first IST day keeps its 00:01 tap whatever the database session's time zone", { todo: "window edge depends on the DB session TimeZone (see verifier finding)" }, async () => {
+  const { loadCreatorsPage } = await import("@/lib/growth-load");
+  const { shareTapsSince } = await import("@/lib/share-taps");
+  const m = await makeMap();
+  const now = new Date("2026-11-20T06:30:00Z");
+  const since = shareTapsSince(now);
+  await db.analyticsEvent.createMany({ data: [{ event: "share", mapId: m.id, createdAt: new Date(since.getTime() + 60_000), metadata: { channel: "story" } }] });
+  const t = await loadShareTaps(db, m.id, now);
+  const page = await loadCreatorsPage(db, { q: OWNER, sort: "createdAt", dir: "desc" }, { limit: 50, offset: 0, now });
+  assert.equal(t.days.at(-1)!.story, 1, "map page, oldest day");
+  assert.equal(page.rows.find((r) => r.id === m.id)!.shares30d, 1, "creators column");
+});
