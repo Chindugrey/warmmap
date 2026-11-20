@@ -253,3 +253,32 @@
 }
 /* tap to skip: the reveal jumps to its final state */
 .wm-done *, .wm-done::before { animation: none !important; }
+
+/* v2.1a (behind NEXT_PUBLIC_WM_V21A): sub-line, LinkedIn kit, 2027 card. Unused with the flag off. */
+.wm-sub { font: italic 400 17px/1.32 var(--fb); color: var(--soft); text-align: center; margin-top: -4px; }
+.wm-ppl { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.wm-ppl li { display: flex; align-items: center; gap: 2px; border: 1px solid var(--ink); background: #fbf4e4; border-radius: 22px; padding: 0 0 0 10px; min-height: 44px; font-size: 17px; }
+.wm-x { background: none; border: 0; min-width: 44px; min-height: 44px; font: 400 20px var(--fb); color: var(--ink); cursor: pointer; border-radius: 22px; }
+.wm-kit .in { display: flex; flex-direction: column; gap: 10px; }
+.wm-kit .in > * { flex-shrink: 0; }
+.wm-kit h3 { font-size: 22px; }
+.wm-kit-post { width: 100%; font: 400 16px/1.4 var(--fb); color: var(--ink); background: var(--page); border: 1px solid var(--ink); border-radius: 2px; padding: 8px; }
+.wm-seg { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid var(--ink); border-radius: 2px; margin: 0; padding: 0; }
+.wm-seg legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.wm-seg label { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; cursor: pointer; font-size: 16px; padding: 0 8px; text-align: center; }
+.wm-seg label + label { border-left: 1.5px solid var(--ink); }
+.wm-seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.wm-seg label:has(input:checked) { background: var(--ink); color: var(--bg); }
+.wm-seg label:has(input:focus-visible) { outline: 2.5px solid var(--ink); outline-offset: 2px; }
+.wm-consent { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1.5px dashed var(--ink); background: #f8efdc; cursor: pointer; font-size: 16.5px; line-height: 1.35; }
+.wm-consent.wm-solid { border-style: solid; }
+.wm-consent input, .wm-tag input { width: 24px; height: 24px; margin: 10px; flex: none; accent-color: #2E2219; cursor: pointer; }
+.wm-tags { list-style: none; margin: 0; padding: 0; }
+.wm-tag { display: flex; align-items: center; gap: 4px; border-top: 1px solid #2E221933; }
+.wm-tag label { display: flex; align-items: center; flex: 1; min-width: 0; min-height: 52px; cursor: pointer; overflow-wrap: anywhere; }
+.wm-tag.done b { text-decoration: line-through; text-decoration-color: #2E221988; }
+.wm-tag a { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; font: 400 14px var(--fm); }
+.wm-howto { font: 400 13.5px/1.45 var(--fm); color: var(--soft); border-left: 2px solid var(--glow); padding-left: 10px; }
+.wm-27 { margin: 8px 0 6px; padding: 14px 16px; border: 1.5px dashed var(--ink); background: #f8efdc; display: flex; flex-direction: column; gap: 10px; }
+.wm-27 h2 { font-size: 25px; }
+.wm-27 .wm-r2 { align-items: flex-end; }
