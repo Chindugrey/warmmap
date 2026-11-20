@@ -4,12 +4,19 @@
 //   cd ~/work/warmmap/build/geonames/dl && for f in cities15000.zip cities5000.zip admin1CodesASCII.txt countryInfo.txt; do
 //     curl -sSfLO https://download.geonames.org/export/dump/$f; done
 //   cd ../x && unzip -o ../dl/cities15000.zip && unzip -o ../dl/cities5000.zip
-// Then:  node --import ./tests/register.mjs scripts/build-cities.ts ~/work/warmmap/build/geonames
+// Districts (India, US counties, Canadian divisions) and the US / Canada / India alternate names also need the three
+// country files (~400 MB unzipped, scratch only):
+//   mkdir -p ~/work/warmmap/build/geonames/{dl2,x2}
+//   cd ~/work/warmmap/build/geonames/dl2 && for c in IN US CA; do curl -sSfLO https://download.geonames.org/export/dump/$c.zip; done
+//   cd ../x2 && for c in IN US CA; do unzip -oq ../dl2/$c.zip $c.txt; done
+// Then:  node --max-old-space-size=4096 --import ./tests/register.mjs scripts/build-cities.ts ~/work/warmmap/build/geonames
 //
 // Picks: every city of 100,000+ anywhere (the EU and UK majors are inside that), every
 // national capital, US / Canada state and province capitals, and India at 50,000+ plus its
 // state capitals. The curated list in src/lib/cities.ts is kept as is (its names are what
 // saved maps store), and GeoNames duplicates of it are dropped by name + country + distance.
+// Alternate names (Latin script only, de-duplicated) are kept for India, the US and Canada; districts are written to
+// src/lib/districts-data.ts (see the end of this file).
 // Same-named cities get a qualified key ("Springfield, IL", "Hyderabad, Pakistan"); a curated
 // city keeps its bare name.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -32,6 +39,35 @@ const admin1: Record<string, string> = {};
 for (const l of read("dl/admin1CodesASCII.txt")) {
   const f = l.split("\t");
   admin1[f[0]] = f[1];
+}
+
+// Latin-script variants only, 4-26 letters, no digits, de-duplicated, not the name itself. In the US and Canada
+// GeoNames' alternates are mostly abbreviations and neighbourhoods, so only near spellings of the name stay.
+const ALT_CODES = new Set(["IN", "US", "CA"]);
+function altsOf(cc: string, raw: string, names: string[]): string[] {
+  if (!ALT_CODES.has(cc)) return [];
+  const known = new Set(names.map(norm));
+  const out: string[] = [];
+  for (const a of raw.split(",")) {
+    const n = norm(a);
+    if (!/^[\x20-\x7e]+$/.test(a) || n.length < 4 || n.length > 26 || /\d/.test(n) || known.has(n)) continue;
+    if (cc !== "IN" && !names.some((b) => near(n, norm(b)))) continue;
+    known.add(n);
+    out.push(a.trim());
+    if (out.length === (cc === "IN" ? 6 : 3)) break;
+  }
+  return out;
+}
+// Within 3 edits (a spelling variant, not a different word).
+function near(a: string, b: string): boolean {
+  if (Math.abs(a.length - b.length) > 3) return false;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length] <= 3;
 }
 
 const rad = (d: number) => (d * Math.PI) / 180;
@@ -58,10 +94,8 @@ for (const file of ["x/cities15000.txt", "x/cities5000.txt"]) {
     const ascii = f[2];
     // Keep accents where they are the usual spelling (Zürich, São Paulo); India reads better without macrons.
     const base = cc !== "IN" && norm(f[1]) === norm(ascii) ? f[1] : ascii;
-    // Alternate spellings are only worth keeping for India (Bangalore, Trivandrum); elsewhere GeoNames' name is the one people type.
-    const alts = cc !== "IN" ? [] : [...new Set(f[3].split(","))]
-      .filter((a) => /^[\x20-\x7e]+$/.test(a) && a.length >= 4 && a.length <= 26 && !/\d/.test(a) && norm(a) !== norm(base) && norm(a) !== norm(ascii))
-      .slice(0, 3);
+    // Alternate spellings are only worth keeping for India, the US and Canada (Bangalore, Trivandrum); elsewhere GeoNames' name is the one people type.
+    const alts = altsOf(cc, f[3], [base, ascii]);
     picked.push({ names: new Set([f[1], ascii, ...f[3].split(",")].map(norm)), key: base, base, alts, cc, country: countries[cc] ?? cc, region: admin1[`${cc}.${f[10]}`] ?? "", lat: Math.round(Number(f[4]) * 100) / 100, lon: Math.round(Number(f[5]) * 100) / 100, pop });
   }
 }
@@ -70,6 +104,7 @@ picked.sort((a, b) => b.pop - a.pop);
 // Drop what the curated list already has: same country, within 30 km, and the name (or an alternate
 // name) matches; or simply within 5 km (Kitchener inside Kitchener-Waterloo).
 const curatedNames = new Set(curated.map((c) => c.name));
+const curatedAlts = new Map<string, string[]>(); // curated city -> GeoNames alternate names for it
 const learned = new Map<string, string>(); // GeoNames admin1 name -> curated region, from the pairs found
 const kept: Row[] = [];
 let dropped = 0;
@@ -81,6 +116,8 @@ for (const r of picked) {
     const d = km(c, r);
     if (d <= 5 || (d <= 30 && names.has(norm(c.name)))) {
       dup = true;
+      const more = r.alts.filter((a) => norm(a) !== norm(c.name));
+      if (more.length) curatedAlts.set(c.name, [...new Set([...(curatedAlts.get(c.name) ?? []), ...more])].slice(0, 6));
       if (c.region && r.region && !learned.has(r.region)) learned.set(r.region, c.region);
       break;
     }
@@ -99,6 +136,7 @@ for (const r of kept) groups.set(norm(r.base), [...(groups.get(norm(r.base)) ?? 
 const curatedBases = new Set(curated.map((c) => norm(c.name)));
 const out: Row[] = [];
 const keys = new Set(curatedNames);
+const citiesByNameKeys = keys; // district names must not reuse a city key
 for (const [b, rows] of groups) {
   const clash = rows.length > 1 || curatedBases.has(b);
   for (const r of rows) {
@@ -115,11 +153,60 @@ const lines = out.map((r) => [r.key, r.key === r.base ? "" : r.base, r.alts.join
 const used = Object.fromEntries([...new Set(out.map((r) => r.cc))].sort().map((cc) => [cc, countries[cc]]));
 const file = `// GENERATED by scripts/build-cities.ts from GeoNames (https://www.geonames.org, CC BY 4.0). Do not edit.
 // Server-side only: read by src/lib/cities-full.ts, never imported by client code.
-// Columns (tab separated): key, base name if it differs from the key, alternate names (|), country code,
+// Columns of CITIES_TSV (tab separated): key, base name if it differs from the key, alternate names (|), country code,
 // region (admin1), lat, lon, population in thousands. Rows are largest first.
 export const COUNTRY_NAMES: Record<string, string> = ${JSON.stringify(used)};
+// CURATED_ALTS_TSV: alternate names of the curated cities (tab separated: curated name, alternates |).
+export const CURATED_ALTS_TSV = \`${esc([...curatedAlts].map(([n, a]) => `${n}\t${a.join("|")}`).join("\n"))}\`;
 export const CITIES_TSV = \`${esc(lines.join("\n"))}\`;
 `;
 writeFileSync("src/lib/cities-data.ts", file);
 console.log(`picked ${picked.length}, dropped ${dropped} as curated twins, wrote ${out.length} rows, ${file.length} bytes`);
 console.log("learned regions:", [...learned]);
+
+// Districts: India (admin2), US counties and Canadian census divisions (admin2 where GeoNames has them as such).
+// Each is a place of its own, "Kasaragod district, Kerala" / "Travis County, Texas" / "Bruce County, Ontario", so it
+// never collides with a town. India sits at its district HQ: the PPLA2 seat in the same district, else a populated
+// place named like the district, else the admin2 point. US and Canada sit at the admin2 point GeoNames holds.
+// Alberta, Saskatchewan and Newfoundland are left out: GeoNames' admin2 there is municipalities (hundreds), not divisions.
+const SKIP_CA = new Set(["01", "05", "11"]);
+const dRows: string[] = [];
+const dKeys = new Set<string>();
+const how = { seat: 0, named: 0, centroid: 0 };
+const r2 = (n: string) => Math.round(Number(n) * 100) / 100;
+for (const cc of ["IN", "US", "CA"]) {
+  const lines = read(`x2/${cc}.txt`).map((l) => l.split("\t"));
+  const placesIn = new Map<string, string[][]>();
+  if (cc === "IN") for (const f of lines) if (f[6] === "P" && f[11]) placesIn.set(`${f[10]}.${f[11]}`, [...(placesIn.get(`${f[10]}.${f[11]}`) ?? []), f]);
+  for (const f of lines) {
+    if (f[7] !== "ADM2") continue;
+    if (cc === "CA" && SKIP_CA.has(f[10])) continue;
+    const region0 = admin1[`${cc}.${f[10]}`];
+    if (!region0) continue;
+    const region = learned.get(region0) ?? region0;
+    let base = f[2].replace(/\s*\(.*\)\s*$/, "").trim();
+    let [lat, lon] = [r2(f[4]), r2(f[5])];
+    if (cc === "IN") {
+      base = base.replace(/\s+district$/i, "");
+      const here = placesIn.get(`${f[10]}.${f[11]}`) ?? [];
+      const seat = here.find((p) => p[7] === "PPLA2") ?? here.filter((p) => norm(p[2]) === norm(base)).sort((a, b) => Number(b[14]) - Number(a[14]))[0];
+      if (seat) {
+        [lat, lon] = [r2(seat[4]), r2(seat[5])];
+        how[seat[7] === "PPLA2" ? "seat" : "named"]++;
+      } else how.centroid++;
+    }
+    if (!base || norm(base) === norm(region)) continue;
+    const label = cc === "IN" ? `${base} district` : base;
+    const key = `${label}, ${region}`;
+    if (dKeys.has(key.toLowerCase()) || citiesByNameKeys.has(key)) continue;
+    dKeys.add(key.toLowerCase());
+    dRows.push([key, label, cc, region, lat, lon].join("\t"));
+  }
+}
+const dfile = `// GENERATED by scripts/build-cities.ts from GeoNames (https://www.geonames.org, CC BY 4.0). Do not edit.
+// Server-side only: read by src/lib/cities-full.ts, never imported by client code.
+// Columns (tab separated): key (what a map stores), name to match on, country code, region, lat, lon.
+export const DISTRICTS_TSV = \`${esc(dRows.join("\n"))}\`;
+`;
+writeFileSync("src/lib/districts-data.ts", dfile);
+console.log(`districts ${dRows.length}, ${dfile.length} bytes; India HQ: ${JSON.stringify(how)}`);

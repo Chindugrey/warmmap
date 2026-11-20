@@ -469,25 +469,28 @@ export function countryOf(text: string, ix: CityIndex = curatedIndex): string | 
   return c && ix.countries.has(norm(c)) ? c : null;
 }
 
-// Distance from the query to the same-length start of a name, one slip allowed
-// (two for long queries). Only a fallback for when nothing matches plainly.
-function nearPrefix(q: string, name: string): boolean {
-  const max = q.length >= 8 ? 2 : q.length >= 4 ? 1 : 0;
-  if (!max) return false;
-  for (let len = q.length - max; len <= q.length + max; len++) {
-    if (len > 0 && editDistance(q, name.slice(0, len)) <= max) return true;
-  }
-  return false;
+// One slip (insert, delete, substitute or swap two neighbours) between the query and the same-length
+// start of a name. Only for queries of 5+ letters: a short one has too many near neighbours.
+export const FUZZY_MIN = 5;
+function sameFrom(a: string, i: number, b: string, j: number, bl: number): boolean {
+  if (a.length - i !== bl - j) return false;
+  for (; i < a.length; i++, j++) if (a.charCodeAt(i) !== b.charCodeAt(j)) return false;
+  return true;
 }
-
-function editDistance(a: string, b: string): number {
-  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
-  for (let i = 1; i <= a.length; i++) {
-    const cur = [i];
-    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-    prev = cur;
-  }
-  return prev[b.length];
+/** a is within one edit of the first `bl` letters of b. */
+function oneEdit(a: string, b: string, bl: number): boolean {
+  const d = a.length - bl;
+  if (d > 1 || d < -1) return false;
+  let i = 0;
+  while (i < a.length && i < bl && a.charCodeAt(i) === b.charCodeAt(i)) i++;
+  if (i === a.length && i === bl) return true;
+  if (d === 0) return sameFrom(a, i + 1, b, i + 1, bl) || (a[i] === b[i + 1] && a[i + 1] === b[i] && sameFrom(a, i + 2, b, i + 2, bl));
+  return d === 1 ? sameFrom(a, i + 1, b, i, bl) : sameFrom(a, i, b, i + 1, bl);
+}
+function nearPrefix(q: string, name: string): boolean {
+  if (q.length < FUZZY_MIN) return false;
+  for (let len = q.length - 1; len <= q.length + 1; len++) if (len <= name.length && oneEdit(q, name, len)) return true;
+  return false;
 }
 
 type Tier = "exact" | "prefix" | "loose";
@@ -508,7 +511,7 @@ export function rank(text: string, home?: string, ix: CityIndex = curatedIndex):
     const c = citiesByName[name];
     return h && c.country === h.country ? (h.region && c.region === h.region ? 0 : 1) : 2;
   };
-  const stable = (names: string[]) => names.map((n, i) => [n, i] as const).sort((a, b) => boost(a[0]) - boost(b[0]) || a[1] - b[1]).map((x) => x[0]);
+  const stable = (names: string[]) => !h || names.length < 2 ? names : names.map((n, i) => [n, i] as const).sort((a, b) => boost(a[0]) - boost(b[0]) || a[1] - b[1]).map((x) => x[0]);
   const country = countryOf(text, ix);
   const out = new Set<string>();
   const alias = aliases[q];
@@ -517,16 +520,35 @@ export function rank(text: string, home?: string, ix: CityIndex = curatedIndex):
     stable(ix.rows.filter((r) => citiesByName[r.name].country === country).map((r) => r.name)).forEach((n) => out.add(n));
     return { names: [...out], tier: "country" };
   }
-  // A row's own name and its alternate spellings all count; the ranking is the same for each.
-  const forms = (r: CityIndex["rows"][number]) => [r.base, ...r.alts];
-  for (const r of ix.rows) if (forms(r).includes(q)) out.add(r.name);
-  const exact = out.size > 0;
-  const add = (pred: (l: string) => boolean) => stable(ix.rows.filter((r) => !out.has(r.name) && forms(r).some(pred)).map((r) => r.name)).forEach((n) => out.add(n));
-  add((l) => l.startsWith(q));
-  const prefixEnd = out.size;
-  add((l) => l.split(/[\s-]/).some((w) => w.startsWith(q)));
-  if (q.length >= 4) add((l) => l.includes(q));
-  if (out.size === 0) add((l) => nearPrefix(q, l));
+  // One pass over the rows; each lands in the best step it reaches. Primary names come before alternate
+  // spellings (Calicut for Kozhikode) in every step; within a step the home state / country first, then
+  // dataset order (curated, then the full list largest first).
+  const steps: string[][] = Array.from({ length: 10 }, () => []);
+  const [sp, hy] = [" " + q, "-" + q];
+  const word = (l: string) => l.includes(sp) || l.includes(hy);
+  const sub = q.length >= 4;
+  const near = q.length >= FUZZY_MIN;
+  for (const { name, base, alts } of ix.rows) {
+    if (out.has(name)) continue;
+    const a = alts.length > 0;
+    const step =
+      base === q ? 0
+      : a && alts.includes(q) ? 1
+      : base.startsWith(q) ? 2
+      : a && alts.some((l) => l.startsWith(q)) ? 3
+      : word(base) ? 4
+      : a && alts.some(word) ? 5
+      : sub && base.includes(q) ? 6
+      : sub && a && alts.some((l) => l.includes(q)) ? 7
+      : near && nearPrefix(q, base) ? 8
+      : near && a && alts.some((l) => nearPrefix(q, l)) ? 9
+      : -1;
+    if (step >= 0) steps[step].push(name);
+  }
+  const exact = out.size > 0 || steps[0].length + steps[1].length > 0;
+  const prefixEnd = out.size + steps[0].length + steps[1].length + steps[2].length + steps[3].length;
+  // A near miss only when nothing matched the name exactly (Kannur must not bring Kanpur), and after every plain hit.
+  steps.forEach((names, i) => (i < 8 || !exact) && stable(names).forEach((n) => out.add(n)));
   return { names: [...out], tier: exact || prefixEnd > 0 ? (exact ? "exact" : "prefix") : "loose" };
 }
 

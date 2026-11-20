@@ -1,10 +1,13 @@
 // The full city list (curated + GeoNames, see scripts/build-cities.ts) and its search. SERVER ONLY:
-// importing this registers every city in `citiesByName`, which is how the API validates and lays out
+// (Districts: src/lib/districts-data.ts.) importing this registers every city in `citiesByName`, which is how the API validates and lays out
 // maps that name a city outside the 290 curated ones. The client never imports it (it would add
 // ~280 KB to the bundle); it asks GET /api/cities instead.
-import { CITIES_TSV, COUNTRY_NAMES } from "./cities-data";
+import { CITIES_TSV, COUNTRY_NAMES, CURATED_ALTS_TSV } from "./cities-data";
+import { DISTRICTS_TSV } from "./districts-data";
 import { REGION_CODES } from "./cities-regions";
 import { buildIndex, cities as curated, citiesByName, countryOf, findCity, norm, rank, registerCities, type City } from "./cities";
+
+const DISTRICT_COUNTRY: Record<string, string> = { IN: "India", US: "USA", CA: "Canada" };
 
 interface Loaded { city: City; base: string; alts: string[] }
 
@@ -18,9 +21,20 @@ for (const line of CITIES_TSV.split("\n")) {
     alts: f[2] ? f[2].split("|") : [],
   });
 }
-registerCities(data.map((d) => d.city));
+// Districts (India), counties (US) and census divisions (Canada): places of their own, named
+// "Kasaragod district, Kerala" so they never collide with a town. They match on their short name
+// ("Kasaragod district") and come after every city of the same rank.
+const districts: Loaded[] = [];
+for (const line of DISTRICTS_TSV.split("\n")) {
+  const f = line.split("\t");
+  if (f.length < 6 || citiesByName[f[0]]) continue;
+  districts.push({ city: { name: f[0], country: DISTRICT_COUNTRY[f[2]] ?? f[2], lat: Number(f[4]), lon: Number(f[5]), region: f[3] }, base: f[1], alts: [] });
+}
+registerCities([...data, ...districts].map((d) => d.city));
 
-const entries: Loaded[] = [...curated.map((city) => ({ city, base: city.name, alts: [] })), ...data];
+// Alternate names of the curated cities (Bombay for Mumbai) come from GeoNames too.
+const curatedAlts = new Map(CURATED_ALTS_TSV.split("\n").map((l) => l.split("\t") as [string, string]));
+const entries: Loaded[] = [...curated.map((city) => ({ city, base: city.name, alts: curatedAlts.get(city.name)?.split("|") ?? [] })), ...data, ...districts];
 const index = buildIndex(entries);
 
 // "Springfield, IL" / "Hyderabad, India": a name shared by several cities is shown with where it is.
