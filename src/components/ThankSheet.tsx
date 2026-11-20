@@ -49,8 +49,11 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
     const win = window.open("", "_blank"); // in the same tap, so the browser allows it
     try {
       const t = links[p.questionIndex] ?? (await prepareThank({ base: window.location.origin, mapId: slug, entryIndex: p.questionIndex, friendName: p.name, channel: "wa" }));
-      const res = await apiFetch("/api/thanks", { method: "POST", ownerKey: ownerKeyFor(slug), body: JSON.stringify(t.body) });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "That didn't go through. Try once more.");
+      // Already registered on the first send: "send again" reuses that same link. Posting the same hash again is a 409.
+      if (!sent[p.questionIndex]) {
+        const res = await apiFetch("/api/thanks", { method: "POST", ownerKey: ownerKeyFor(slug), body: JSON.stringify(t.body) });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "That didn't go through. Try once more.");
+      }
       const wa = whatsAppUrl(`${texts[p.questionIndex]} ${t.url}`);
       if (win) win.location.href = wa;
       else window.location.assign(wa);
