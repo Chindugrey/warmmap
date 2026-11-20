@@ -21,6 +21,9 @@ import { compareKm } from "@/lib/compare";
 import { chapterGaps, nextQuestion, whatsAppUrl } from "@/lib/flow";
 import { rewardLine } from "@/lib/reward";
 import { apiFetch, ownerKeyFor, rememberOwnerKey } from "@/lib/device";
+import { LinkedInKit } from "@/components/LinkedInKit";
+import { Wish2027, useWish } from "@/components/Wish2027";
+import { SUBLINES, V21A } from "@/lib/v21a";
 import { fetchCities, rememberPlaces, restorePlaces, useCitySearch, type CityItem } from "@/lib/city-search";
 
 type Stage = "hero" | "home" | "ask" | "reveal";
@@ -528,6 +531,7 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
             Chapter {ROMAN[q.chapter - 1]} · {CHAPTERS[q.chapter]}
           </p>
           <h2 id="wm-q">{q.text}</h2>
+          {V21A && <p className="wm-sub">{SUBLINES[current]}</p>}
           <div className="wm-flds">
             <label className="wm-fld">
               <span>First name</span>
@@ -622,6 +626,8 @@ function RevealScreen({ d, setD, onKeepGoing }: { d: Draft; setD: (f: (x: Draft)
   const [error, setError] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
   const [keeper, setKeeper] = useState<string | null>(null);
+  const [kit, setKit] = useState(false);
+  const [wish, updateWish] = useWish(V21A ? d.saved?.slug ?? null : null);
 
   useEffect(() => {
     track("reveal", { n: lanterns.length });
@@ -747,7 +753,8 @@ function RevealScreen({ d, setD, onKeepGoing }: { d: Draft; setD: (f: (x: Draft)
               <button className="wm-btn" type="button" onClick={() => setSheet(true)}>
                 Tell them on WhatsApp
               </button>
-              <ShareRow url={url} />
+              <ShareRow url={url} onLinkedIn={V21A ? () => setKit(true) : undefined} />
+              {V21A && <Wish2027 wish={wish} update={updateWish} onSeePost={() => setKit(true)} />}
               <StoryPictureLink slug={saved.slug} />
               <LiveCounter />
               {keeper && (
@@ -773,6 +780,16 @@ function RevealScreen({ d, setD, onKeepGoing }: { d: Draft; setD: (f: (x: Draft)
           )}
         </div>
       </main>
+      {V21A && kit && saved && (
+        <LinkedInKit
+          slug={saved.slug}
+          url={url}
+          friends={d.answers.map((a) => ({ q: a.q, name: a.name, city: a.city }))}
+          cities={stats.cities}
+          wish={wish.inPost ? wish.items : []}
+          onClose={() => setKit(false)}
+        />
+      )}
       {sheet && saved && (
         <ThankSheet slug={saved.slug} questionSet={CURRENT_SET} people={d.answers.map((a) => ({ questionIndex: a.q, name: a.name, city: a.city }))} onClose={() => setSheet(false)} />
       )}

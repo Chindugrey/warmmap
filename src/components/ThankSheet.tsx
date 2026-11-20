@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch, ownerKeyFor } from "@/lib/device";
+import { apiFetch, ownerKeyFor, rememberSentLink, sentLinksFor } from "@/lib/device";
 import { prepareThank, type PreparedThank } from "@/lib/lantern-token";
 import { thankOrderFor, thankMessage, whatsAppUrl } from "@/lib/flow";
 import { questionFor } from "@/lib/questions";
@@ -31,9 +31,14 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
   const [texts, setTexts] = useState<Record<number, string>>(() =>
     Object.fromEntries(rows.map((r) => [r.questionIndex, thankMessage(r.name, "").trim()]))
   );
-  const [sent, setSent] = useState<Record<number, boolean>>({});
+  // Links sent on an earlier visit come back from this phone: "Send again" reuses them (the server checks they are still good).
+  const [stored] = useState(() => sentLinksFor(slug));
+  const [sent, setSent] = useState<Record<number, boolean>>(() => Object.fromEntries(Object.keys(stored).map((q) => [q, true])));
   // The link is made on this phone as soon as a row opens, so the message can be shown with the real short link.
-  const [links, setLinks] = useState<Record<number, PreparedThank>>({});
+  const [links, setLinks] = useState<Record<number, PreparedThank>>(() =>
+    Object.fromEntries(Object.entries(stored).map(([q, l]) => [q, { url: l.url, body: { mapId: slug, entryIndex: Number(q), tokenHash: l.tokenHash } }]))
+  );
+  const [verified, setVerified] = useState<Record<number, boolean>>({}); // registered or confirmed this visit
   useEffect(() => {
     const p = rows.find((r) => r.questionIndex === open);
     if (!p || links[p.questionIndex]) return;
@@ -48,9 +53,23 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
     setError(null);
     const win = window.open("", "_blank"); // in the same tap, so the browser allows it
     try {
-      const t = links[p.questionIndex] ?? (await prepareThank({ base: window.location.origin, mapId: slug, entryIndex: p.questionIndex, friendName: p.name, channel: "wa" }));
-      const res = await apiFetch("/api/thanks", { method: "POST", ownerKey: ownerKeyFor(slug), body: JSON.stringify(t.body) });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "That didn't go through. Try once more.");
+      const fresh = () => prepareThank({ base: window.location.origin, mapId: slug, entryIndex: p.questionIndex, friendName: p.name, channel: "wa" });
+      const register = (t: PreparedThank) => apiFetch("/api/thanks", { method: "POST", ownerKey: ownerKeyFor(slug), body: JSON.stringify(t.body) });
+      let t = links[p.questionIndex] ?? (await fresh());
+      // Registered this visit: "send again" reuses that same link with no second POST. A link kept from an earlier visit
+      // is posted once to check it is still good (the server says reused); if it is not (expired, opened), make a fresh one.
+      if (!verified[p.questionIndex]) {
+        let res = await register(t);
+        if (res.status === 409 && stored[p.questionIndex] && t.url === stored[p.questionIndex].url) {
+          rememberSentLink(slug, p.questionIndex, null);
+          t = await fresh();
+          res = await register(t);
+        }
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "That didn't go through. Try once more.");
+        rememberSentLink(slug, p.questionIndex, { url: t.url, tokenHash: t.body.tokenHash });
+        setLinks((l) => ({ ...l, [p.questionIndex]: t }));
+        setVerified((v) => ({ ...v, [p.questionIndex]: true }));
+      }
       const wa = whatsAppUrl(`${texts[p.questionIndex]} ${t.url}`);
       if (win) win.location.href = wa;
       else window.location.assign(wa);

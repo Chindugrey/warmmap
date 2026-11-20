@@ -2,9 +2,9 @@
 // script, no fonts or files from anywhere else. Every value goes through esc().
 import type { Dashboard, Windowed } from "./dashboard";
 
-const esc = (v: unknown) =>
+export const esc = (v: unknown) =>
   String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-const num = (v: number) => v.toLocaleString("en-IN");
+export const num = (v: number) => v.toLocaleString("en-IN");
 const ist = (iso: string) =>
   new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(iso));
 
@@ -22,14 +22,20 @@ th,td{text-align:left;padding:6px 10px;border-bottom:1px solid #e6d8b8}th{font-s
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}td:first-child{white-space:nowrap}
 .wrap{overflow-x:auto}.bar{height:10px;background:#d98a1c;border-radius:5px;min-width:2px}
 form.out{position:absolute;top:12px;right:16px;margin:0}
+nav.adm{margin:0 0 12px;font-size:15px}nav.adm a{margin-right:14px;color:#8a4b0f}a{color:#8a4b0f}
+form.q{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}form.q input{width:auto;flex:1;min-width:180px}.pager{margin:10px 0}.pager a,.pager span{margin-right:12px}
 button,input{font:inherit}button{padding:8px 16px;border:1px solid #3a2a1a;background:#3a2a1a;color:#F1E6CF;border-radius:6px;cursor:pointer}
 input{padding:8px;border:1px solid #8a7550;border-radius:6px;width:100%;max-width:420px;background:#fffdf6}
 .err{color:#8b1a1a}
 @media (max-width:480px){h1{font-size:23px}.tile b{font-size:22px}}`;
 
-const page = (title: string, body: string) =>
+export const page = (title: string, body: string) =>
   `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">` +
   `<meta name="robots" content="noindex,nofollow"><title>${esc(title)}</title><style>${CSS}</style></head><body><main>${body}</main></body></html>`;
+
+export const ADMIN_NAV =
+  `<nav class="adm"><a href="/admin/dashboard">Overview</a><a href="/admin/dashboard/creators">Creators</a><a href="/admin/dashboard/virality">Virality and channels</a><a href="/admin/dashboard/ranking">Warmth ranking</a></nav>`;
+export const signOut = `<form class="out" method="post" action="/admin/dashboard"><input type="hidden" name="logout" value="1"><button type="submit">Sign out</button></form>`;
 
 export function renderLogin(failed: boolean): string {
   return page(
@@ -39,10 +45,10 @@ export function renderLogin(failed: boolean): string {
   );
 }
 
-const tile = (value: string, label: string) => `<div class="tile"><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
+export const tile = (value: string, label: string) => `<div class="tile"><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
 const windowTiles = (w: Windowed, what: string) =>
   tile(num(w.total), `${what}, total`) + tile(num(w.today), `${what}, today (IST)`) + tile(num(w.d7), `${what}, last 7 days`) + tile(num(w.d30), `${what}, last 30 days`);
-const table = (head: string[], rows: (string | number)[][]) =>
+export const table = (head: string[], rows: (string | number)[][]) =>
   `<div class="wrap"><table><thead><tr>${head.map((h, i) => `<th${i ? ' class="n"' : ""}>${esc(h)}</th>`).join("")}</tr></thead><tbody>` +
   (rows.length ? rows.map((r) => `<tr>${r.map((c, i) => `<td${i ? ' class="n"' : ""}>${esc(typeof c === "number" ? num(c) : c)}</td>`).join("")}</tr>`).join("") : `<tr><td colspan="${head.length}">Nothing yet.</td></tr>`) +
   `</tbody></table></div>`;
@@ -63,6 +69,7 @@ export function renderDashboard(d: Dashboard): string {
   return page(
     "Dashboard",
     `<form class="out" method="post" action="/admin/dashboard"><input type="hidden" name="logout" value="1"><button type="submit">Sign out</button></form>` +
+      ADMIN_NAV +
       `<h1>Warm Map dashboard</h1><p class="sub">Counts only: no names, anywhere. Updated ${esc(ist(d.generatedAt))} IST. "Today" starts 00:00 IST.</p>` +
       `<h2>Maps created</h2><div class="grid">${windowTiles(d.maps, "Maps")}</div>` +
       `<p class="def">Definition: maps that exist now (a deleted map is gone from this count). A map started from a thank-you keeps a date-only stamp (by design), so it can land on the previous IST day.</p>` +
