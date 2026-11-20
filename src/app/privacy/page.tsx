@@ -35,10 +35,11 @@ export default function PrivacyPage() {
         points to. The name in the link sits after the # sign, which browsers never send to us.
       </p>
 
-      {/* PROPOSED wording (not yet approved): says what the per-map share-tap counts are, and are not. */}
+      {/* PROPOSED wording (not yet approved): what the per-map share-tap counts are, and are not. */}
       <p id="share-taps">
-        When you tap a share button (WhatsApp, LinkedIn, copy link, share sheet or Story picture), we add one to a count for your map, for
-        that day and that channel. We do not keep who tapped, any names, or anything about the device.
+        When you tap a share button for your map (WhatsApp, LinkedIn, copy link, the share sheet or the Story picture), or send a thank-you
+        on WhatsApp, we add one to a count for your map, for that day and that channel. We keep no record of who tapped, no names, and
+        nothing about your device with the count (the limit counters described below are separate).
       </p>
 
       <h2>When a friend ties it back</h2>
@@ -90,13 +91,15 @@ export default function PrivacyPage() {
         <li>
           <strong>Counts</strong>: a few taps and steps (for example, that someone started, or shared). Most are plain totals with no
           name and no device or connection mark. A few are kept with your map: how many times its link was opened and from which kind
-          of link, and when you saw a new gold lantern. They carry no device or connection mark and no friend&apos;s name (legitimate
+          of link, how many times its share buttons were tapped (a count per day and channel, with no time of day), and when you saw a
+          new gold lantern. {/* PROPOSED: share-tap counts listed here */} They carry no device or connection mark and no friend&apos;s name (legitimate
           interests: knowing whether the service works).
         </li>
         <li>
           <strong>What the people who run Warm Map can see</strong>: in a private, password-protected view, each map&apos;s first name,
           home city and date, next to its counts: lanterns and cities, thank-you links sent, lanterns tied back, how often its link was
-          opened (per day), and how many maps it led to (per day, not which ones). We use this to understand how Warm Map spreads and to
+          opened (per day), how often its share buttons were tapped (per day, per channel), and how many maps it led to (per day, not which
+          ones). {/* PROPOSED: share-tap counts listed here */} We use this to understand how Warm Map spreads and to
           rank maps by how much warmth they pass on. Never your friends&apos; names, which we do not have, and never a device or
           connection mark (legitimate interests: knowing whether the service works and improving it).
         </li>

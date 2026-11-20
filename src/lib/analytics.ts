@@ -2,7 +2,9 @@
 // metadata keys are allow-listed; values are enums or small numbers. No event
 // ever carries a name, e-mail, token, owner key or the # part of an address.
 import { prisma } from "./prisma";
+import { randomUUID } from "node:crypto";
 import { CHANNEL_TAGS } from "./flow";
+import { istDayStart } from "./dashboard";
 
 export const SERVER_EVENTS = [
   "map_saved",
@@ -45,8 +47,11 @@ export function cleanMetadata(meta: unknown): Record<string, string | number> {
 
 export async function trackEvent(event: EventName, mapId?: string | null, metadata?: unknown) {
   try {
+    // A share tap is kept as a count, not as a moment: its time is the start of its IST day (00:00 IST) and its id is
+    // random (a cuid embeds the time), so a row says "one tap that day" and nothing finer.
+    const share = event === "share" ? { id: randomUUID(), createdAt: istDayStart(new Date()) } : {};
     await prisma.analyticsEvent.create({
-      data: { event, mapId: mapId ?? null, metadata: cleanMetadata(metadata) },
+      data: { event, mapId: mapId ?? null, metadata: cleanMetadata(metadata), ...share },
     });
   } catch (e) {
     console.error("Analytics error:", (e as Error).message);

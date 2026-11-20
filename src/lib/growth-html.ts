@@ -28,8 +28,8 @@ const COLS: [CreatorSort | null, string, (r: CreatorRow) => string][] = [
   ["km", "Km", (r) => num(r.km)],
   ["gold", "Gold", (r) => num(r.gold)],
   ["thankLinks", "Thank-links", (r) => num(r.thankLinks)],
-  ["sharesTotal", "Shares (wa/li/cp/st/native)", (r) => `${num(r.sharesTotal)} <small>(${[r.shares.whatsapp, r.shares.linkedin, r.shares.copy, r.shares.story, r.shares.native].join("/")})</small>`],
-  [null, "Share taps, last 30 days", (r) => num(r.shares30d)],
+  ["sharesTotal", "Shares, all time (wa/li/cp/st/native; total also counts other)", (r) => `${num(r.sharesTotal)} <small>(${[r.shares.whatsapp, r.shares.linkedin, r.shares.copy, r.shares.story, r.shares.native].join("/")})</small>`],
+  [null, "Share taps, last 30 days (IST calendar days)", (r) => num(r.shares30d)],
   ["opens", "Opens", (r) => num(r.opens)],
   ["spawnedDirect", "Spawned", (r) => num(r.spawnedDirect)],
   ["spawnedAll", "Spawned, all gens", (r) => esc(capped(r.spawnedAll, r.spawnedAllCapped))],
@@ -64,7 +64,7 @@ export function renderCreators(res: { total: number; pages: number; page: number
       pager +
       def(
         "Lanterns = lanterns the owner lit (the carried one is left out). Cities = distinct cities on the map. Gold = lanterns tied back. " +
-          "Shares = share taps attributed to this map, all time, by channel. Share taps, last 30 days = all share taps on this map over the last 30 IST days (today and the 29 before), every channel; the per-day split is on the map's page. " +
+          "Shares = share taps attributed to this map, all time, by channel. Share taps, last 30 days (IST calendar days) = share taps on this map over today and the 29 IST days before it, every channel, unknown ones included (the all-time Shares total counts the same set); the per-day split is on the map's page. " +
           "Taps made before share taps carried a map are not attributed to any map. " +
           "Opens = visits to this map's public page. Spawned = maps that carry this map's id (made via its share or a thank-you); all gens = every generation below it, " +
           `counted to ${TREE_DEPTH_CAP} levels (a + means the tree goes deeper). ` +
@@ -90,7 +90,7 @@ export function renderRanking(rows: CreatorRow[]): string {
       def(
         "Top 100 by warmth; ties broken by newest map. Only maps with a warmth above 0 are listed. " +
           "Caution before using this for outreach: anyone can make a map that names any public map as its inviter (limited per device per hour), " +
-          "so maps spawned, the heaviest weight, can be inflated. Shares count only taps that carried a map."
+          "so maps spawned, the heaviest weight, can be inflated. Shares count only taps made with the map's own key (an owner can still inflate their own, up to 200 a day); the Shares column counts every channel, but warmth's shares term leaves out WhatsApp taps (thank-you sends), which are already scored as thank-links."
       )
   );
 }
@@ -146,7 +146,7 @@ const TAP_LABEL: Record<string, string> = { whatsapp: "WhatsApp", linkedin: "Lin
 function shareTapsSection(t: ShareTaps): string {
   const row = (label: string, c: ShareTaps["totals"]) => [label, ...TAP_COLUMNS.map((k) => c[k]), c.total];
   return (
-    `<h2>Share taps per day (last ${t.windowDays} days, IST)</h2>` +
+    `<h2>Share taps per day (last ${t.windowDays} days, IST calendar days)</h2>` +
     table(["Day", ...TAP_COLUMNS.map((k) => TAP_LABEL[k]), "Total"], [...t.days.map((d) => row(d.day, d)), row("Total", t.totals)]) +
     def("Counts of taps on this map's share buttons, per IST day and channel. Not who tapped: no name, device or connection mark is kept with a tap. A tap with no known channel is counted under Other, so the total is every tap. Taps made before share taps carried a map are not here.")
   );

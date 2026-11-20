@@ -7,6 +7,8 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { PrismaClient } from "@prisma/client";
 import { loadShareTaps } from "@/lib/share-taps";
+import { sha256Hex } from "@/lib/server-crypto";
+import { istDayStart } from "@/lib/dashboard";
 
 const BASE = process.env.BASE ?? "http://localhost:3102";
 const ADMIN = process.env.ADMIN_TOKEN ?? "local-admin-token";
@@ -19,6 +21,7 @@ const tag = Date.now().toString(36);
 const OWNER = `Zztapowner${tag}`;
 const TAPPER = `Zztapper${tag}`;
 const DEVICE = `devhash${tag}`.padEnd(64, "d");
+const KEY = `zzkey${tag}`.padEnd(40, "k");
 const mapIds: string[] = [];
 
 after(async () => {
@@ -27,11 +30,12 @@ after(async () => {
 });
 
 const makeMap = async () => {
-  const m = await db.map.create({ data: { homeCity: "Kochi", ownerName: OWNER, entries: [{ city: "Pune", questionIndex: 0 }], shortSlug: `zt${tag}${mapIds.length}` } });
+  const m = await db.map.create({ data: { homeCity: "Kochi", ownerName: OWNER, entries: [{ city: "Pune", questionIndex: 0 }], shortSlug: `zt${tag}${mapIds.length}`, ownerKeyHash: sha256Hex(KEY) } });
   mapIds.push(m.id);
   return m;
 };
-const post = (body: object) => fetch(`${BASE}/api/analytics`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+const post = (body: unknown, key: string | null = KEY) =>
+  fetch(`${BASE}/api/analytics`, { method: "POST", headers: { "Content-Type": "application/json", ...(key ? { "x-owner-key": key } : {}) }, body: JSON.stringify(body) });
 
 test("a share tap carries its map; an unknown map still counts, against none", async () => {
   const m = await makeMap();
@@ -112,7 +116,7 @@ test("creators list: per-map 30-day column, labelled; no tapper identity", async
   const jtext = await (await fetch(`${BASE}/admin/dashboard/creators?format=json&q=${OWNER}`, { headers: bearer })).text();
   const row = JSON.parse(jtext).rows.find((r: any) => r.id === m.id);
   assert.equal(row.shares30d, 2, "the 45-day-old tap is outside; the channel-less one counts");
-  assert.equal(row.sharesTotal, 2 + 0, "all time, known channels only: copy x2 (one old), the channel-less tap is not a channel");
+  assert.equal(row.sharesTotal, 3, "all time, same channel set as the 30-day column (unknown channels included): the 45-day-old tap is in");
   const html = await (await fetch(`${BASE}/admin/dashboard/creators?q=${OWNER}`, { headers: bearer })).text();
   assert.match(html, /Share taps, last 30 days/);
   const csv = await (await fetch(`${BASE}/admin/dashboard/creators?format=csv&q=${OWNER}`, { headers: bearer })).text();
@@ -122,8 +126,10 @@ test("creators list: per-map 30-day column, labelled; no tapper identity", async
 
 test("the privacy page says what is counted and what is not", async () => {
   const html = await (await fetch(`${BASE}/privacy`)).text();
-  assert.match(html, /tap a share button[^<]*we add one to a count for your map, for that day and that channel/);
-  assert.match(html, /do not keep who tapped, any names, or anything about the device/);
+  assert.match(html, /tap a share button for your map[^<]*thank-you\s+on WhatsApp, we add one to a count for your map, for that day and that channel/);
+  assert.match(html, /no record of who tapped, no names, and\s+nothing about your device with the count/);
+  assert.match(html, /how many times its share buttons were tapped/);
+  assert.match(html, /how often its share buttons were tapped \(per day, per channel\)/);
 });
 
 // Verifier additions: what a tap may name, the answer it gets, and the creators column's window.
@@ -162,18 +168,76 @@ test("creators list and map page use the same 30 IST days: the evening before th
   assert.equal(row.shares30d, t.totals.total);
 });
 
-// Prisma sends a Date as timestamptz and "createdAt" is timestamp without time zone, so `"createdAt" >= ${since}` is
-// read in the database session's TimeZone. On a session that is not UTC (the local cluster is Asia/Kolkata) the first
-// IST day of the window loses its 00:00-05:30 taps. Passes on a UTC session; fails on this local cluster.
-test("the window's first IST day keeps its 00:01 tap whatever the database session's time zone", { todo: "window edge depends on the DB session TimeZone (see verifier finding)" }, async () => {
-  const { loadCreatorsPage } = await import("@/lib/growth-load");
-  const { shareTapsSince } = await import("@/lib/share-taps");
+// Prisma sends a Date as timestamptz and "createdAt" is timestamp without time zone, so a bare `"createdAt" >= ${since}` is
+// read in the database session's TimeZone. The window bounds are therefore converted to UTC in SQL; run both zones.
+for (const zone of ["UTC", "Asia/Kolkata"]) {
+  test(`the window's first IST day keeps its 00:01 tap, session TimeZone ${zone}`, async () => {
+    const { loadCreatorsPage } = await import("@/lib/growth-load");
+    const { shareTapsSince } = await import("@/lib/share-taps");
+    const m = await makeMap();
+    const now = new Date("2026-11-20T06:30:00Z");
+    const since = shareTapsSince(now);
+    await db.analyticsEvent.createMany({
+      data: [
+        { event: "share", mapId: m.id, createdAt: new Date(since.getTime() + 60_000), metadata: { channel: "story" } }, // 00:01 IST, first day: in
+        { event: "share", mapId: m.id, createdAt: new Date(since.getTime() - 60_000), metadata: { channel: "story" } }, // 23:59 IST the day before: out
+      ],
+    });
+    const { t, row } = await db.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe(`SET LOCAL TimeZone = '${zone}'`);
+      const t = await loadShareTaps(tx as any, m.id, now);
+      const page = await loadCreatorsPage(tx as any, { q: OWNER, sort: "createdAt", dir: "desc" }, { limit: 50, offset: 0, now });
+      return { t, row: page.rows.find((r) => r.id === m.id)! };
+    });
+    assert.equal(t.days.at(-1)!.story, 1, "map page, oldest day");
+    assert.equal(t.totals.total, 1, "map page: the tap before the window is out");
+    assert.equal(row.shares30d, 1, "creators column");
+  });
+}
+
+test("a share row is kept as a count: createdAt is 00:00 IST of its day and the id is random, not a time-bearing cuid", async () => {
   const m = await makeMap();
-  const now = new Date("2026-11-20T06:30:00Z");
-  const since = shareTapsSince(now);
-  await db.analyticsEvent.createMany({ data: [{ event: "share", mapId: m.id, createdAt: new Date(since.getTime() + 60_000), metadata: { channel: "story" } }] });
-  const t = await loadShareTaps(db, m.id, now);
-  const page = await loadCreatorsPage(db, { q: OWNER, sort: "createdAt", dir: "desc" }, { limit: 50, offset: 0, now });
-  assert.equal(t.days.at(-1)!.story, 1, "map page, oldest day");
-  assert.equal(page.rows.find((r) => r.id === m.id)!.shares30d, 1, "creators column");
+  assert.equal((await post({ event: "share", map: m.shortSlug, metadata: { channel: "copy" } })).status, 200);
+  const g = await post({ event: "share", metadata: { channel: "copy" } }, null); // a tap against no map is kept the same way
+  assert.equal(g.status, 200);
+  const rows = await db.analyticsEvent.findMany({ where: { mapId: m.id } });
+  assert.equal(rows.length, 1);
+  const globalRows = await db.$queryRaw<{ id: string; createdAt: Date }[]>`SELECT "id", "createdAt" FROM "AnalyticsEvent" WHERE "event" = 'share' AND "mapId" IS NULL AND length("id") = 36 ORDER BY "createdAt" DESC LIMIT 1`;
+  assert.equal(globalRows.length, 1, "the map-less tap is kept the same way");
+  rows.push(globalRows[0] as any);
+  for (const r of rows) {
+    assert.equal(r.createdAt.getTime(), istDayStart(new Date()).getTime(), "00:00 IST of the day");
+    assert.match(r.id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/, "a random v4 id, not a cuid");
+  }
+});
+
+test("only the owner's key counts a tap against a map; every other call is counted globally with the very same answer", async () => {
+  const m = await makeMap();
+  const answers = new Set<string>();
+  const globalBefore = await db.analyticsEvent.count({ where: { event: "share", mapId: null } });
+  for (const key of [null, "wrong-key-wrong-key-wrong-key", KEY.slice(1)]) {
+    const r = await post({ event: "share", map: m.shortSlug, metadata: { channel: "copy" } }, key);
+    answers.add(`${r.status} ${await r.text()}`);
+  }
+  const ok = await post({ event: "share", map: m.shortSlug, metadata: { channel: "copy" } });
+  answers.add(`${ok.status} ${await ok.text()}`);
+  assert.deepEqual([...answers], ['200 {"ok":true}']);
+  assert.equal(await db.analyticsEvent.count({ where: { mapId: m.id } }), 1, "only the keyed tap is on the map");
+  assert.equal(await db.analyticsEvent.count({ where: { event: "share", mapId: null } }) - globalBefore, 3, "the others still count, against no map");
+});
+
+test("a map's daily cap: taps past it count globally, same answer", async () => {
+  const m = await makeMap();
+  const day = istDayStart(new Date());
+  await db.analyticsEvent.createMany({ data: Array.from({ length: 200 }, () => ({ event: "share", mapId: m.id, createdAt: day, metadata: { channel: "copy" } })) });
+  const r = await post({ event: "share", map: m.shortSlug, metadata: { channel: "copy" } });
+  assert.deepEqual([r.status, await r.text()], [200, '{"ok":true}']);
+  assert.equal(await db.analyticsEvent.count({ where: { mapId: m.id } }), 200);
+});
+
+test("a JSON null body is a 400, not a 500", async () => {
+  for (const raw of ["null", "7", '"x"']) {
+    const r = await fetch(`${BASE}/api/analytics`, { method: "POST", headers: { "Content-Type": "application/json" }, body: raw });
+    assert.equal(r.status, 400, raw);
+  }
 });

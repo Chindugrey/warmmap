@@ -47,11 +47,15 @@ export async function loadShareTaps(db: PrismaClient, mapId: string, now = new D
     SELECT to_char("createdAt" + interval '5 hours 30 minutes', 'YYYY-MM-DD') AS day,
            "metadata"->>'channel' AS channel, count(*)::int AS count
     FROM "AnalyticsEvent"
-    WHERE "event" = 'share' AND "mapId" = ${mapId} AND "createdAt" >= ${since}
+    WHERE "event" = 'share' AND "mapId" = ${mapId} AND "createdAt" >= (${since} AT TIME ZONE 'UTC')
     GROUP BY 1, 2`;
   return { windowDays: SHARE_TAP_DAYS, ...foldShareTaps(rows, now) };
 }
 export type ShareTaps = Awaited<ReturnType<typeof loadShareTaps>>;
 
-/** SQL for the creators list: this window's tap count (all channels) per map. */
-export const shareTaps30dSql = (now: Date) => Prisma.sql`count(*) FILTER (WHERE "createdAt" >= ${shareTapsSince(now)})`;
+/**
+ * SQL for the creators list: this window's tap count (all channels) per map. "createdAt" is a timestamp WITHOUT time
+ * zone holding UTC, so the bound is turned into the same UTC clock reading; a bare Date parameter would be read in the
+ * database session's time zone and move the window's edge.
+ */
+export const shareTaps30dSql = (now: Date) => Prisma.sql`count(*) FILTER (WHERE "createdAt" >= (${shareTapsSince(now)} AT TIME ZONE 'UTC'))`;

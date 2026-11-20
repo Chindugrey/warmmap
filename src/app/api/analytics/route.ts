@@ -1,8 +1,13 @@
 // POST /api/analytics: allow-listed client events only, small payloads.
 import { NextRequest, NextResponse } from "next/server";
 import { CLIENT_EVENTS, trackEvent } from "@/lib/analytics";
-import { findMap } from "@/lib/owner";
+import { prisma } from "@/lib/prisma";
+import { findMap, keyMatches } from "@/lib/owner";
+import { istDayStart } from "@/lib/dashboard";
 import { limitRequest, HOUR } from "@/lib/limits";
+
+/** Share taps counted against one map per IST day; more still count globally, against no map. */
+const MAP_SHARE_DAILY_CAP = 200;
 
 export async function POST(req: NextRequest) {
   const raw = await req.text();
@@ -15,12 +20,21 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  if (!body || typeof body !== "object") return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   if (typeof body.event !== "string" || !(CLIENT_EVENTS as readonly string[]).includes(body.event)) {
     return NextResponse.json({ error: "Unknown event" }, { status: 400 });
   }
-  // A share tap may name the map it was made for (slug or public id); only the resolved internal id is stored.
-  // An unknown or missing map is still counted, just not against any map.
-  const map = body.event === "share" && typeof body.map === "string" ? await findMap(body.map) : null;
-  await trackEvent(body.event as (typeof CLIENT_EVENTS)[number], map?.id ?? null, body.metadata);
+  // A share tap names its map (slug or public id) and counts against it only with that map's owner key (the share
+  // buttons are owner-only). Anything else (no key, wrong key, unknown map, map over its daily cap) is still counted,
+  // against no map, and gets the very same answer: nothing here tells a caller whether a slug or key was right.
+  let mapId: string | null = null;
+  if (body.event === "share" && typeof body.map === "string") {
+    const map = await findMap(body.map);
+    if (map && keyMatches(map, req.headers.get("x-owner-key"))) {
+      const today = await prisma.analyticsEvent.count({ where: { mapId: map.id, event: "share", createdAt: { gte: istDayStart(new Date()) } } });
+      if (today < MAP_SHARE_DAILY_CAP) mapId = map.id;
+    }
+  }
+  await trackEvent(body.event as (typeof CLIENT_EVENTS)[number], mapId, body.metadata);
   return NextResponse.json({ ok: true });
 }
