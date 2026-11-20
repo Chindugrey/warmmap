@@ -30,6 +30,7 @@ model Map {
   thankLinks     ThankLink[]
   vouches        Vouch[]
   events         AnalyticsEvent[]
+  engagement     EngagementLog[]
 
   @@index([invitedByMapId])
 }
@@ -88,4 +89,27 @@ model AnalyticsEvent {
   @@index([mapId, event])
   @@index([event, createdAt])
   @@index([createdAt])
+}
+
+// Phase 3: the founders' MANUAL log of public engagement on a post (likes, comments,
+// reshares typed in by an admin). Never fetched from any platform. No names of
+// people: just the platform, a campaign label, an optional post URL and counts.
+// Deleting a map deletes its rows (the post URL may be the owner's own).
+model EngagementLog {
+  id         String   @id @default(cuid())
+  mapId      String?
+  map        Map?     @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  platform   String // linkedin | whatsapp_status | instagram | other
+  campaign   String? // short label, e.g. "launch-week"
+  postUrl    String?
+  likes      Int      @default(0)
+  comments   Int      @default(0)
+  reshares   Int      @default(0)
+  occurredOn DateTime @db.Date
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([mapId])
+  @@index([platform, occurredOn])
+  @@index([campaign])
 }
