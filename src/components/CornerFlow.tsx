@@ -23,7 +23,7 @@ import { rewardLine } from "@/lib/reward";
 import { apiFetch, ownerKeyFor, rememberOwnerKey } from "@/lib/device";
 import { LinkedInKit } from "@/components/LinkedInKit";
 import { Wish2027, useWish } from "@/components/Wish2027";
-import { SUBLINES, V21A } from "@/lib/v21a";
+import { SUBLINES, V21A, revealPeople } from "@/lib/v21a";
 import { fetchCities, rememberPlaces, restorePlaces, useCitySearch, type CityItem } from "@/lib/city-search";
 
 type Stage = "hero" | "home" | "ask" | "reveal";
@@ -641,6 +641,7 @@ function RevealScreen({ d, setD, onKeepGoing }: { d: Draft; setD: (f: (x: Draft)
   }, []);
 
   const stats = mapStats(lanterns, home);
+  const people = revealPeople([...(d.carried?.kept ? [d.carried.ownerName] : []), ...d.answers.map((a) => a.name)], lanterns.length);
   const counts = new Map<string, number>();
   d.answers.forEach((a) => counts.set(a.name.toLowerCase(), (counts.get(a.name.toLowerCase()) ?? 0) + 1));
   const repeatMax = Math.max(1, ...counts.values());
@@ -701,8 +702,8 @@ function RevealScreen({ d, setD, onKeepGoing }: { d: Draft; setD: (f: (x: Draft)
           <h1 className="wm-here">{saved ? "Your corner is glowing." : "Here's who's in your corner."}</h1>
           <div className="wm-c3">
             <div className="wm-fc">
-              <b>{lanterns.length}</b>
-              <small>{lanterns.length === 1 ? "person" : "people"}</small>
+              <b>{people.n}</b>
+              <small>{people.label}</small>
               <i>
                 {plural(stats.cities, "city", "cities")} · {plural(stats.countries, "country", "countries")}
               </i>

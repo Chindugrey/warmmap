@@ -36,6 +36,15 @@ test("PRIVACY: the card model is cities, numbers and the owner's first name only
   assert.ok(m.globe.labels.every((l: { text: string }) => ["Kochi", "Mysuru", "Chennai", "Hyderabad", "Bengaluru"].includes(l.text)));
 });
 
+test("v21a on: the card says lanterns (the server never sees names, so it cannot count people); off: unchanged", () => {
+  const pm = toPublicMap(row(["Kochi", "Mysuru", "Chennai", "Hyderabad", "Bengaluru"]));
+  assert.equal(cardModel(pm, "link", true).nums[0].label, "lanterns");
+  assert.equal(cardModel(pm, "link", true).nums[0].value, "5");
+  assert.equal(cardModel(pm, "link", false).nums[0].label, "people");
+  assert.equal(cardModel(pm, "link").nums[0].label, "people", "default follows the flag, off here");
+  assert.ok(!JSON.stringify(cardModel(pm, "story", true)).includes("people'"), "no people count on the flagged card");
+});
+
 test("kind short lines (shown on the cards)", () => {
   assert.equal(computeKind({ homeCity: "Bengaluru", lanterns: ["Kochi", "Mysuru", "Chennai", "Hyderabad", "Pune"].map((city) => ({ city })) }).short, "5 cities, one light in each.");
   const twelve = ["Kochi", "Bengaluru", "Pune", "Bengaluru", "Delhi", "Delhi", "Hyderabad", "Kolkata", "Bengaluru", "Delhi", "London", "Singapore"];

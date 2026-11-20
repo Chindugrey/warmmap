@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { QUESTIONS } from "@/lib/questions";
-import { POST_LINES, SUBLINES, V21A, KIT_COPY, cleanWish, distinctPeople, joinNames, linkedInPost, tagRows, type Friend } from "@/lib/v21a";
+import { POST_LINES, SUBLINES, V21A, KIT_COPY, cleanWish, distinctPeople, revealPeople, joinNames, linkedInPost, tagRows, type Friend } from "@/lib/v21a";
 
 const friends: Friend[] = [
   { q: 0, name: "Meera", city: "Kochi" },
@@ -59,4 +59,17 @@ test("wish entries: trimmed, 3 to 60 characters", () => {
   assert.equal(cleanWish("  a   role "), "a role");
   assert.equal(cleanWish("ab"), null);
   assert.equal(cleanWish("x".repeat(80))?.length, 60);
+});
+
+test("reveal people: duplicate names in any case or spacing count once (flag on)", () => {
+  const names = ["Meera", " meera ", "MEERA", "Kabir", "Tara\t"];
+  assert.deepEqual(revealPeople(names, 5, true), { n: 3, label: "people" });
+  assert.deepEqual(revealPeople(["Meera", "meera "], 2, true), { n: 1, label: "person" });
+  assert.equal(revealPeople(names, 5, true).n, distinctPeople(names.map((name) => ({ q: 0, name, city: "" }))));
+});
+
+test("reveal people: flag off is the lantern count, exactly as at launch", () => {
+  assert.deepEqual(revealPeople(["Meera", " meera ", "MEERA", "Kabir", "Tara"], 5, false), { n: 5, label: "people" });
+  assert.deepEqual(revealPeople(["Meera"], 1, false), { n: 1, label: "person" });
+  assert.equal(revealPeople(["Meera", "meera"], 2).n, 2, "default follows the flag, which is off here");
 });

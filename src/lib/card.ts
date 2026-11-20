@@ -7,6 +7,7 @@ import { computeKind, KIND_LINES } from "./kinds";
 import { layoutGlobe, placeLabels, type GlobePoint, type PlacedLabel } from "./globe-layout";
 import { SITE_URL } from "./site";
 import { UNLOCK_AT } from "./questions";
+import { V21A } from "./v21a";
 
 export type CardFormat = "link" | "story";
 export const CARD_SIZES: Record<CardFormat, { width: number; height: number }> = {
@@ -47,7 +48,8 @@ export interface CardModel {
   globe: { points: GlobePoint[]; labels: PlacedLabel[]; labelSize: number; glyphScale: number };
 }
 
-export function cardModel(input: PublicMap | null, format: CardFormat): CardModel {
+// v21a on: the server only ever holds lanterns, never names, so the card says "lanterns" rather than a people count it cannot know.
+export function cardModel(input: PublicMap | null, format: CardFormat, v21a = V21A): CardModel {
   // The full-map card unlocks at five lanterns; smaller (legacy) maps share the home card.
   const pub = input && input.stats.lanterns >= UNLOCK_AT ? input : null;
   const cities = pub ? pub.lanterns : SAMPLE;
@@ -77,7 +79,7 @@ export function cardModel(input: PublicMap | null, format: CardFormat): CardMode
     sub: pub ? "The people who've had my back." : "A small map of the people who have your back.",
     nums: pub
       ? [
-          { value: pub.stats.lanterns.toLocaleString("en-IN"), label: pub.stats.lanterns === 1 ? "person" : "people" },
+          { value: pub.stats.lanterns.toLocaleString("en-IN"), label: v21a ? (pub.stats.lanterns === 1 ? "lantern" : "lanterns") : pub.stats.lanterns === 1 ? "person" : "people" },
           { value: pub.stats.cities.toLocaleString("en-IN"), label: pub.stats.cities === 1 ? "city" : "cities" },
           { value: pub.stats.km.toLocaleString("en-IN"), label: "km of thread" },
         ]

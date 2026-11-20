@@ -65,6 +65,12 @@ export const joinNames = (a: readonly string[]) => (a.length <= 1 ? a.join("") :
 /** Distinct friends (the same name, any case, counts once). */
 export const distinctPeople = (friends: readonly Friend[]) => new Set(friends.map((f) => f.name.trim().toLowerCase())).size;
 
+/** The reveal's "people" number. Flag on: distinct names, counted on the phone (never sent). Flag off: lanterns, as at launch. */
+export function revealPeople(names: readonly string[], lanterns: number, on = V21A) {
+  const n = on ? distinctPeople(names.map((name) => ({ q: 0, name, city: "" }))) : lanterns;
+  return { n, label: n === 1 ? "person" : "people" };
+}
+
 export interface PostInput {
   friends: readonly Friend[];
   cities: number;

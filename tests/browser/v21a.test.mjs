@@ -185,6 +185,7 @@ for (const [w, h, mobile] of SIZES) {
     // Privacy: no request ever carried a friend's name, the 2027 text or the post.
     const sent = JSON.stringify(b.requests.filter((r) => !r.url.includes("/_next/")).map((r) => [r.url, r.body]));
     for (const secret of [...FRIENDS, WISH, "warm intro"]) assert.ok(!sent.includes(secret), `"${secret}" left the phone`);
+    assert.ok(!/people|distinct/i.test(sent), "a people count left the phone");
     assert.deepEqual(b.errors.filter((e) => !/favicon|Failed to load resource/.test(e)), []);
   });
 }
