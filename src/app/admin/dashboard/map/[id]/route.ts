@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { adminGate, adminHtml, adminJson, adminNotFound } from "@/lib/admin-route";
 import { loadTimeline } from "@/lib/growth-load";
+import { loadShareTaps } from "@/lib/share-taps";
 import { renderTimeline } from "@/lib/growth-html";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   if (!/^[A-Za-z0-9_-]{4,40}$/.test(id)) return adminNotFound();
   const t = await loadTimeline(prisma, id);
   if (!t) return adminNotFound();
-  if (req.nextUrl.searchParams.get("format") === "json") return adminJson(t);
-  return adminHtml(renderTimeline(t.id, t), 200);
+  const shareTaps = await loadShareTaps(prisma, t.id);
+  if (req.nextUrl.searchParams.get("format") === "json") return adminJson({ ...t, shareTaps });
+  return adminHtml(renderTimeline(t.id, { ...t, shareTaps }), 200);
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch, ownerKeyFor, rememberSentLink, sentLinksFor } from "@/lib/device";
+import { trackShare } from "@/lib/track-share";
 import { prepareThank, type PreparedThank } from "@/lib/lantern-token";
 import { thankOrderFor, thankMessage, whatsAppUrl } from "@/lib/flow";
 import { questionFor } from "@/lib/questions";
@@ -74,7 +75,7 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
       if (win) win.location.href = wa;
       else window.location.assign(wa);
       setSent((s) => ({ ...s, [p.questionIndex]: true }));
-      apiFetch("/api/analytics", { method: "POST", body: JSON.stringify({ event: "share", metadata: { channel: "whatsapp" } }) }).catch(() => {});
+      trackShare("whatsapp", slug);
     } catch (e) {
       win?.close();
       setError((e as Error).message);

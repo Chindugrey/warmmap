@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { apiFetch } from "@/lib/device";
+import { trackShare } from "@/lib/track-share";
 
 /** Fetches the 9:16 Status/Story picture once, so a later tap can share it straight away. */
 export function useStoryFile(slug: string | null) {
@@ -52,7 +52,7 @@ export function StoryPictureLink({ slug }: { slug: string }) {
         setBusy(true);
         await sharePicture(file.current);
         setBusy(false);
-        apiFetch("/api/analytics", { method: "POST", body: JSON.stringify({ event: "share", metadata: { channel: "story" } }) }).catch(() => {});
+        trackShare("story", slug);
       }}
     >
       Save the picture for Status and Story

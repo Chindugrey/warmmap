@@ -8,6 +8,7 @@ import {
   type CreatorQuery, type CreatorRow, type CreatorSort, type TimelineItem,
 } from "./growth";
 import type { Virality, WindowKey } from "./growth-load";
+import { TAP_COLUMNS, type ShareTaps } from "./share-taps";
 
 const head = (title: string, sub: string) => signOut + ADMIN_NAV + `<h1>${esc(title)}</h1><p class="sub">${sub}</p>`;
 const def = (s: string) => `<p class="def">${s}</p>`;
@@ -28,6 +29,7 @@ const COLS: [CreatorSort | null, string, (r: CreatorRow) => string][] = [
   ["gold", "Gold", (r) => num(r.gold)],
   ["thankLinks", "Thank-links", (r) => num(r.thankLinks)],
   ["sharesTotal", "Shares (wa/li/cp/st/native)", (r) => `${num(r.sharesTotal)} <small>(${[r.shares.whatsapp, r.shares.linkedin, r.shares.copy, r.shares.story, r.shares.native].join("/")})</small>`],
+  [null, "Share taps, last 30 days", (r) => num(r.shares30d)],
   ["opens", "Opens", (r) => num(r.opens)],
   ["spawnedDirect", "Spawned", (r) => num(r.spawnedDirect)],
   ["spawnedAll", "Spawned, all gens", (r) => esc(capped(r.spawnedAll, r.spawnedAllCapped))],
@@ -62,7 +64,8 @@ export function renderCreators(res: { total: number; pages: number; page: number
       pager +
       def(
         "Lanterns = lanterns the owner lit (the carried one is left out). Cities = distinct cities on the map. Gold = lanterns tied back. " +
-          "Shares = share taps attributed to this map, by channel (share taps are counted without a map today, so this reads 0 until they carry one; see the notes). " +
+          "Shares = share taps attributed to this map, all time, by channel. Share taps, last 30 days = all share taps on this map over the last 30 IST days (today and the 29 before), every channel; the per-day split is on the map's page. " +
+          "Taps made before share taps carried a map are not attributed to any map. " +
           "Opens = visits to this map's public page. Spawned = maps that carry this map's id (made via its share or a thank-you); all gens = every generation below it, " +
           `counted to ${TREE_DEPTH_CAP} levels (a + means the tree goes deeper). ` +
           "A map made from a thank-you keeps a date-only stamp, by design."
@@ -87,7 +90,7 @@ export function renderRanking(rows: CreatorRow[]): string {
       def(
         "Top 100 by warmth; ties broken by newest map. Only maps with a warmth above 0 are listed. " +
           "Caution before using this for outreach: anyone can make a map that names any public map as its inviter (limited per device per hour), " +
-          "so maps spawned, the heaviest weight, can be inflated. Shares read 0 until share taps carry their map (an open decision)."
+          "so maps spawned, the heaviest weight, can be inflated. Shares count only taps that carried a map."
       )
   );
 }
@@ -138,10 +141,22 @@ export function renderVirality(v: Virality): string {
   );
 }
 
-export function renderTimeline(id: string, t: { items: TimelineItem[]; truncated: boolean }): string {
+const TAP_LABEL: Record<string, string> = { whatsapp: "WhatsApp", linkedin: "LinkedIn", copy: "Copy link", native: "Share sheet", story: "Story picture", other: "Other / unknown" };
+
+function shareTapsSection(t: ShareTaps): string {
+  const row = (label: string, c: ShareTaps["totals"]) => [label, ...TAP_COLUMNS.map((k) => c[k]), c.total];
+  return (
+    `<h2>Share taps per day (last ${t.windowDays} days, IST)</h2>` +
+    table(["Day", ...TAP_COLUMNS.map((k) => TAP_LABEL[k]), "Total"], [...t.days.map((d) => row(d.day, d)), row("Total", t.totals)]) +
+    def("Counts of taps on this map's share buttons, per IST day and channel. Not who tapped: no name, device or connection mark is kept with a tap. A tap with no known channel is counted under Other, so the total is every tap. Taps made before share taps carried a map are not here.")
+  );
+}
+
+export function renderTimeline(id: string, t: { items: TimelineItem[]; truncated: boolean; shareTaps?: ShareTaps }): string {
   return page(
     "Map timeline",
     head("Map timeline", `What happened to one map, in order (IST). No names. <a href="/admin/dashboard/map/${encodeURIComponent(id)}?format=json">JSON</a>`) +
+      (t.shareTaps ? shareTapsSection(t.shareTaps) : "") +
       table(["When (IST)", "What", "Detail"], t.items.map((i) => [istStamp(i.at, i.dateOnly) + (i.dateOnly ? " (date only)" : ""), i.what, i.detail])) +
       (t.truncated ? def("Long lists were cut at 1,000 rows each.") : "") +
       def(

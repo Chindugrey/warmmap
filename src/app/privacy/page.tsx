@@ -35,6 +35,12 @@ export default function PrivacyPage() {
         points to. The name in the link sits after the # sign, which browsers never send to us.
       </p>
 
+      {/* PROPOSED wording (not yet approved): says what the per-map share-tap counts are, and are not. */}
+      <p id="share-taps">
+        When you tap a share button (WhatsApp, LinkedIn, copy link, share sheet or Story picture), we add one to a count for your map, for
+        that day and that channel. We do not keep who tapped, any names, or anything about the device.
+      </p>
+
       <h2>When a friend ties it back</h2>
       <p>
         One tap turns your lantern gold. We keep the tap, a fingerprint of the friend&apos;s device (different for every map) and of their

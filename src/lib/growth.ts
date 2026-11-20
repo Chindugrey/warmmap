@@ -269,6 +269,7 @@ export interface CreatorRow {
   thankLinks: number;
   shares: Record<ShareChannel, number>;
   sharesTotal: number;
+  shares30d: number; // share taps, all channels, in the last 30 IST days
   opens: number;
   spawnedDirect: number;
   spawnedAll: number;
@@ -327,6 +328,7 @@ export const CREATOR_CSV_COLUMNS: [string, (r: CreatorRow) => string | number][]
   ["shares_copy", (r) => r.shares.copy],
   ["shares_story", (r) => r.shares.story],
   ["shares_native", (r) => r.shares.native],
+  ["share_taps_last_30_days", (r) => r.shares30d],
   ["opens", (r) => r.opens],
   ["maps_spawned_direct", (r) => r.spawnedDirect],
   ["maps_spawned_all", (r) => capped(r.spawnedAll, r.spawnedAllCapped)],

@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { apiFetch } from "@/lib/device";
+import { trackShare } from "@/lib/track-share";
 import { linkedInShareUrl } from "@/lib/flow";
 
-const track = (channel: string) =>
-  apiFetch("/api/analytics", { method: "POST", body: JSON.stringify({ event: "share", metadata: { channel } }) }).catch(() => {});
-
 /** Secondary "Share on LinkedIn" and tertiary "Copy link", both with the person's own map link. */
-export function ShareRow({ url, onLinkedIn }: { url: string; onLinkedIn?: () => void }) {
+export function ShareRow({ url, slug, onLinkedIn }: { url: string; slug: string; onLinkedIn?: () => void }) {
+  const track = (channel: string) => trackShare(channel, slug);
   const [copied, setCopied] = useState(false);
   async function copy() {
     try {

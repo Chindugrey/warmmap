@@ -4,13 +4,10 @@
 // the post with names, the copy / share buttons and the tag checklist exist only once it is ticked. Everything happens
 // on this phone: the post is built here, copied or handed to the share sheet by the owner, and never sent to us.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { apiFetch } from "@/lib/device";
+import { trackShare } from "@/lib/track-share";
 import { linkedInShareUrl } from "@/lib/flow";
 import { sharePicture } from "@/components/StoryPicture";
 import { KIT_COPY, LINKEDIN_COMPOSE_URL, findProfileUrl, linkedInPost, tagRows, type Friend } from "@/lib/v21a";
-
-const track = (channel: string) =>
-  apiFetch("/api/analytics", { method: "POST", body: JSON.stringify({ event: "share", metadata: { channel } }) }).catch(() => {});
 
 async function copyText(text: string) {
   try {
@@ -37,6 +34,7 @@ interface Props {
 }
 
 export function LinkedInKit({ slug, url, friends, cities, wish, onClose }: Props) {
+  const track = (channel: string) => trackShare(channel, slug);
   const [names, setNames] = useState(false);
   const [consent, setConsent] = useState(false);
   const [edited, setEdited] = useState<string | null>(null);

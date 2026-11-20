@@ -7,6 +7,7 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import { CHANNELS } from "./dashboard";
 import { parseEntries } from "./entries";
 import { mapStats } from "./geo";
+import { shareTaps30dSql } from "./share-taps";
 import { computeKind } from "./kinds";
 import {
   CSV_ROW_CAP, TREE_DEPTH_CAP, WARMTH_WEIGHTS, buildForest, channelFunnel, cohorts, generationCounts, likePattern, timeline, topTrees,
@@ -25,7 +26,7 @@ const SORT_SQL: Record<CreatorSort, string> = {
 interface CreatorSqlRow {
   id: string; first_name: string; homeCity: string; createdAt: Date; arrivedVia: string; kind: string | null; km: number | null;
   entries: unknown; lanterns: bigint; cities: bigint; thank_links: bigint; gold: bigint;
-  sh_whatsapp: bigint; sh_linkedin: bigint; sh_copy: bigint; sh_story: bigint; sh_native: bigint; shares_total: bigint; opens: bigint;
+  sh_whatsapp: bigint; sh_linkedin: bigint; sh_copy: bigint; sh_story: bigint; sh_native: bigint; shares_total: bigint; shares_30d: bigint; opens: bigint;
   spawned_direct: bigint; spawned_all: bigint; spawned_capped: boolean; warmth: bigint; total: bigint;
 }
 
@@ -37,9 +38,10 @@ interface CreatorSqlRow {
 export async function loadCreatorsPage(
   db: PrismaClient,
   cq: Pick<CreatorQuery, "q" | "sort" | "dir">,
-  opts: { limit: number; offset: number; warmOnly?: boolean }
+  opts: { limit: number; offset: number; warmOnly?: boolean; now?: Date }
 ): Promise<{ total: number; rows: CreatorRow[] }> {
   const W = WARMTH_WEIGHTS;
+  const now = opts.now ?? new Date();
   const order = Prisma.raw(`${SORT_SQL[cq.sort]} ${cq.dir === "asc" ? "ASC" : "DESC"}`);
   const search = cq.q ? Prisma.sql`AND (first_name ILIKE ${likePattern(cq.q)} OR "homeCity" ILIKE ${likePattern(cq.q)})` : Prisma.empty;
   const warm = opts.warmOnly ? Prisma.sql`AND warmth > 0` : Prisma.empty;
@@ -60,7 +62,7 @@ export async function loadCreatorsPage(
              e.lanterns, e.cities,
              coalesce(t.c, 0) AS thank_links, coalesce(v.c, 0) AS gold,
              coalesce(s.whatsapp, 0) AS sh_whatsapp, coalesce(s.linkedin, 0) AS sh_linkedin, coalesce(s.copy, 0) AS sh_copy,
-             coalesce(s.story, 0) AS sh_story, coalesce(s.native, 0) AS sh_native, coalesce(s.total, 0) AS shares_total,
+             coalesce(s.story, 0) AS sh_story, coalesce(s.native, 0) AS sh_native, coalesce(s.total, 0) AS shares_total, coalesce(s.d30, 0) AS shares_30d,
              coalesce(o.c, 0) AS opens,
              coalesce(b.direct, 0) AS spawned_direct, coalesce(b.total, 0) AS spawned_all, coalesce(b.deepest, 0) >= ${TREE_DEPTH_CAP} AS spawned_capped
       FROM "Map" m
@@ -77,7 +79,8 @@ export async function loadCreatorsPage(
                count(*) FILTER (WHERE "metadata"->>'channel' = 'copy') AS copy,
                count(*) FILTER (WHERE "metadata"->>'channel' = 'story') AS story,
                count(*) FILTER (WHERE "metadata"->>'channel' = 'native') AS native,
-               count(*) FILTER (WHERE "metadata"->>'channel' IN ('whatsapp', 'linkedin', 'copy', 'story', 'native')) AS total
+               count(*) FILTER (WHERE "metadata"->>'channel' IN ('whatsapp', 'linkedin', 'copy', 'story', 'native')) AS total,
+               ${shareTaps30dSql(now)} AS d30
         FROM "AnalyticsEvent" WHERE "event" = 'share' AND "mapId" IS NOT NULL GROUP BY 1
       ) s ON s."mapId" = m."id"
       LEFT JOIN (SELECT "mapId", count(*) AS c FROM "AnalyticsEvent" WHERE "event" = 'map_view' AND "mapId" IS NOT NULL GROUP BY 1) o ON o."mapId" = m."id"
@@ -107,7 +110,7 @@ export async function loadCreatorsPage(
         id: r.id, firstName: r.first_name, homeCity: r.homeCity, createdAt: r.createdAt.toISOString(), kind: kind ?? "", km,
         lanterns: n(r.lanterns), cities: n(r.cities), gold: n(r.gold), thankLinks: n(r.thank_links), opens: n(r.opens),
         shares: { whatsapp: n(r.sh_whatsapp), linkedin: n(r.sh_linkedin), copy: n(r.sh_copy), story: n(r.sh_story), native: n(r.sh_native) },
-        sharesTotal: n(r.shares_total), spawnedDirect: n(r.spawned_direct), spawnedAll: n(r.spawned_all), spawnedAllCapped: r.spawned_capped,
+        sharesTotal: n(r.shares_total), shares30d: n(r.shares_30d), spawnedDirect: n(r.spawned_direct), spawnedAll: n(r.spawned_all), spawnedAllCapped: r.spawned_capped,
         arrivedVia: r.arrivedVia, warmth: n(r.warmth),
       };
     }),
