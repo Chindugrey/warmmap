@@ -7,29 +7,18 @@ import { prisma } from "@/lib/prisma";
 import { ADMIN_COOKIE, ADMIN_SESSION_MS, adminAuth, makeAdminSession, tokenMatches } from "@/lib/admin";
 import { loadDashboard } from "@/lib/dashboard";
 import { renderDashboard, renderLogin } from "@/lib/dashboard-html";
+import { ADMIN_HEADERS, adminGate, adminHtml, adminNotFound } from "@/lib/admin-route";
 import { limitRequest, HOUR } from "@/lib/limits";
 
 export const dynamic = "force-dynamic";
 
-const headers = {
-  "Cache-Control": "no-store",
-  "X-Robots-Tag": "noindex, nofollow",
-  "Referrer-Policy": "no-referrer",
-  "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
-};
-const html = (body: string, status: number, extra: Record<string, string> = {}) =>
-  new NextResponse(body, { status, headers: { ...headers, "Content-Type": "text/html; charset=utf-8", ...extra } });
-const notFound = () => NextResponse.json({ error: "Not found" }, { status: 404, headers });
+const headers = ADMIN_HEADERS;
+const html = adminHtml;
+const notFound = adminNotFound;
 
 export async function GET(req: NextRequest) {
-  const auth = adminAuth(req);
-  if (auth === "disabled") return notFound();
-  if (!auth) {
-    if (req.nextUrl.searchParams.get("format") === "json") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: { ...headers, "WWW-Authenticate": "Bearer" } });
-    }
-    return html(renderLogin(false), 401);
-  }
+  const denied = adminGate(req);
+  if (denied) return denied;
   const data = await loadDashboard(prisma);
   if (req.nextUrl.searchParams.get("format") === "json") return NextResponse.json(data, { headers });
   return html(renderDashboard(data), 200);

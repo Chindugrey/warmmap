@@ -44,8 +44,8 @@ export function privacyCopy(f: PrivacyFacts) {
     where,
     safeguards,
     counts: f.analyticsRetention
-      ? `Counts with no personal mark: ${f.analyticsRetention}.`
-      : "Counts with no personal mark: kept as plain totals, with nothing that leads back to a person.",
+      ? `Other counts: ${f.analyticsRetention}.`
+      : "Other counts: kept as plain totals.",
     complaint: f.supervisoryAuthority
       ? `If you think we have got something wrong you can complain to ${f.supervisoryAuthority}, or to the data-protection authority in your own country.`
       : "If you think we have got something wrong you can complain to the data-protection authority in your own country.",
