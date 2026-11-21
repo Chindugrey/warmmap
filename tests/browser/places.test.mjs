@@ -20,7 +20,6 @@ async function browser(opts) {
   open.push(b);
   return b;
 }
-const text = (b) => b.eval("document.body.innerText");
 async function clickText(b, label, sel = "button,a") {
   const ok = await b.eval(`(()=>{const el=[...document.querySelectorAll(${JSON.stringify(sel)})].find(e=>e.textContent.trim()===${JSON.stringify(label)});if(!el)return false;el.click();return true})()`);
   assert.ok(ok, `no "${label}" to click`);
@@ -75,8 +74,8 @@ test("home: a bare town (Yellowknife, Carson City) is picked as the town; Prayag
   const b = await browser({ width: 390, height: 844 });
   await toHome(b);
   await type(b, ".wm-fld input", "Prayagraj");
-  await waitFor(b, `[...document.querySelectorAll('.wm-chips.small .wm-chip')].some(e=>e.textContent==='Allahabad')`);
-  assert.equal((await chips(b))[0], "Allahabad");
+  await waitFor(b, `[...document.querySelectorAll('.wm-chips.small .wm-chip')].some(e=>e.textContent==='Prayagraj')`);
+  assert.equal((await chips(b))[0], "Prayagraj");
 });
 
 test("lantern screen: a typed Kasargod and a full county name both light; Did you mean is one tap", { skip }, async () => {
@@ -113,3 +112,25 @@ test("lantern screen: a typed Kasargod and a full county name both light; Did yo
   await b.shot(`${SHOTS}/places-lantern.png`);
   assert.deepEqual(b.errors.filter((e) => !/favicon/.test(e)), []);
 });
+
+for (const [typed, want, shown] of [["Sacremento", "Sacramento", "Sacramento"], ["Idukki", "Idukki district, Kerala", "Idukki district, Kerala"]]) {
+  test(`lantern: ${typed} -> one-tap chip -> Light it lights ${want}`, { skip }, async () => {
+    const b = await browser({ width: 390, height: 844 });
+    await toHome(b);
+    await type(b, ".wm-fld input", "Kochi");
+    await waitFor(b, `[...document.querySelectorAll('.wm-chips.small .wm-chip')].some(e=>e.textContent==='Kochi')`);
+    await clickText(b, "Kochi");
+    await waitFor(b, `/Chapter I/.test(document.body.innerText)`);
+    await type(b, ".wm-flds label:nth-child(1) input", "Taraqx");
+    await type(b, ".wm-flds label:nth-child(2) input", typed);
+    await sleep(2000);
+    await clickText(b, "Light it");
+    await waitFor(b, `!!document.querySelector('[role=group][aria-label="Did you mean"] button')`);
+    assert.match(await b.eval(`document.querySelector('[role=status]').textContent`), /Did you mean/);
+    await clickText(b, shown);
+    await clickText(b, "Light it");
+    await sleep(1200);
+    assert.match(await b.eval(`document.querySelector('.wm-prog').getAttribute('aria-label')`), /^1 of 8/);
+    assert.ok((await b.eval(`localStorage.getItem('wm:draft')`)).includes(want));
+  });
+}

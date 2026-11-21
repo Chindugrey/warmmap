@@ -448,14 +448,15 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
       });
       return;
     }
-    refuse(countryOf(cityText), matchCities(cityText, 3, home).map((n) => ({ name: n, label: n })));
+    // What the suggestion row shows (the full list's answer once it arrived, the curated one before): the near misses.
+    refuse(countryOf(cityText), suggestions.slice(0, 3));
   }
 
   function refuse(country: string | null, near: CityItem[]) {
     setNear(near);
     setHint(
       country ? `Which city in ${withThe(country)}? Tap one.`
-      : near.length ? "Not sure of that one. Did you mean:"
+      : near.length ? `Not sure of that one. Did you mean ${near.map((c) => c.label).join(" or ")}?`
       : "We couldn't place that. Pick the nearest big city."
     );
     cityRef.current?.focus();
@@ -573,7 +574,9 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
             </label>
           </div>
           <div className="wm-chips small" aria-label="Cities">
-            {(suggestions.length ? suggestions : cityPick ? [] : [home, ...recent.filter((c) => c !== home)].slice(0, 4).map((c) => ({ name: c, label: c }))).map((c: CityItem, i) => (
+            {(suggestions.length ? suggestions : cityPick ? [] : [home, ...recent.filter((c) => c !== home)].slice(0, 4).map((c) => ({ name: c, label: c })))
+              .filter((c: CityItem) => !near.some((n) => n.name === c.name)) // the "Did you mean" chips below are not repeated here
+              .map((c: CityItem, i) => (
               <button
                 key={c.name}
                 type="button"
@@ -596,7 +599,7 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
             </p>
           )}
           {hint && near.length > 0 && (
-            <div className="wm-chips small" aria-label="Did you mean">
+            <div className="wm-chips small" role="group" aria-label="Did you mean">
               {near.map((c) => (
                 <button
                   key={c.name}

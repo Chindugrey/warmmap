@@ -5,11 +5,11 @@
 import { CITIES_TSV, COUNTRY_NAMES, CURATED_ALTS_TSV } from "./cities-data";
 import { DISTRICTS_TSV } from "./districts-data";
 import { REGION_CODES } from "./cities-regions";
-import { buildIndex, cities as curated, citiesByName, countryOf, findCity, norm, rank, registerCities, type City } from "./cities";
+import { aliases, buildIndex, cities as curated, citiesByName, countryOf, findCity, norm, rank, registerCities, type City } from "./cities";
 
 const DISTRICT_COUNTRY: Record<string, string> = { IN: "India", US: "USA", CA: "Canada" };
 
-interface Loaded { city: City; base: string; alts: string[] }
+interface Loaded { city: City; base: string; alts: string[]; small?: boolean }
 
 const data: Loaded[] = [];
 for (const line of CITIES_TSV.split("\n")) {
@@ -34,7 +34,7 @@ registerCities([...data, ...districts].map((d) => d.city));
 
 // Alternate names of the curated cities (Bombay for Mumbai) come from GeoNames too.
 const curatedAlts = new Map(CURATED_ALTS_TSV.split("\n").map((l) => l.split("\t") as [string, string]));
-const cityEntries: Loaded[] = [...curated.map((city) => ({ city, base: city.name, alts: curatedAlts.get(city.name)?.split("|") ?? [] })), ...data];
+const cityEntries: Loaded[] = [...curated.map((city) => ({ city, base: city.name, alts: curatedAlts.get(city.name)?.split("|") ?? [] })), ...data.map((d) => ({ ...d, small: true }))];
 const entries: Loaded[] = [...cityEntries, ...districts];
 const index = buildIndex([...cityEntries, ...districts.map((d) => ({ ...d, weak: true }))]);
 
@@ -80,6 +80,9 @@ const inRegion = (c: City, tail: string) => {
   return norm(c.region ?? "") === tail || (!!code && code.toLowerCase() === tail) || norm(c.country) === tail;
 };
 
+/** An alias whose typed form is the name people now use: the chip shows it (the stored name stays the curated one). */
+const SHOWN_AS: Record<string, string> = { prayagraj: "Prayagraj" };
+
 export function searchCities(text: string, limit = 6, home?: string): CitySearch {
   let all = rank(text, home, index).names;
   // "Franklin County, Ohio": the part after the comma narrows to that state / province / country.
@@ -104,7 +107,7 @@ export function searchCities(text: string, limit = 6, home?: string): CitySearch
   const names = (match ? [match, ...all.filter((n) => n !== match)] : all).slice(0, limit);
   const results = names.map((n) => {
     const c = citiesByName[n];
-    return { name: c.name, label: labelOf(c), country: c.country, ...(c.region ? { region: c.region } : {}), lat: c.lat, lon: c.lon };
+    return { name: c.name, label: SHOWN_AS[q] && aliases[q] === c.name ? SHOWN_AS[q] : labelOf(c), country: c.country, ...(c.region ? { region: c.region } : {}), lat: c.lat, lon: c.lon };
   });
   return { results, match, country: countryOf(text, index) };
 }

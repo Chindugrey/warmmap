@@ -207,3 +207,20 @@ test("pins: no place name is shadowed by another, and every district keeps its o
   assert.equal(new Set(rows.map((f) => f[0].toLowerCase())).size, rows.length);
   for (const f of rows) assert.deepEqual([citiesByName[f[0]].lat, citiesByName[f[0]].lon], [Number(f[4]), Number(f[5])], f[0]);
 });
+
+// ── round 3 ──
+
+test("Kotta keeps Kottayam first (a small town's alternate name does not beat a prefix hit); Ottowa finds Ottawa before a county", () => {
+  assert.equal(top("Kotta")[0], "Kottayam");
+  assert.equal(searchCities("Kotta").match, "Kottayam");
+  assert.equal(top("Ottowa")[0], "Ottawa");
+  assert.equal(top("Kannu")[0], "Kannur");
+  for (const [q, want] of [["Trichy", "Tiruchirappalli"], ["Poona", "Pune"], ["Cawnpore", "Kanpur"]]) assert.equal(searchCities(q).match, want, q);
+});
+
+test("an alias chip says the name people typed: Prayagraj (stored as Allahabad)", () => {
+  const r = searchCities("Prayagraj", 3);
+  assert.equal(r.results[0].name, "Allahabad");
+  assert.equal(r.results[0].label, "Prayagraj");
+  assert.equal(searchCities("Bangalore", 3).results[0].label, "Bengaluru");
+});

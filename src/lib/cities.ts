@@ -416,6 +416,8 @@ export const aliases: Record<string, string> = {
   kiev: "Kyiv",
   allahabad: "Allahabad",
   prayagraj: "Allahabad",
+  trichy: "Tiruchirappalli",
+  tiruchi: "Tiruchirappalli",
   kasargod: "Kasaragod",
   kasargode: "Kasaragod",
   kasaragode: "Kasaragod",
@@ -439,15 +441,18 @@ export function registerCities(list: City[]) {
 
 /** What the ranking searches over: names in match order, lower-cased and accent-free, with optional alternate spellings. */
 export interface CityIndex {
-  rows: { name: string; base: string; alts: string[]; weak: boolean }[];
+  rows: { name: string; base: string; alts: string[]; weak: boolean; small: boolean }[];
   countries: Map<string, string>;
 }
-/** `weak` rows (districts, counties, divisions) rank after the cities for everything short of their own full name. */
-export function buildIndex(entries: { city: City; base?: string; alts?: string[]; weak?: boolean }[]): CityIndex {
+/**
+ * `weak` rows (districts, counties, divisions) rank after the cities for everything short of their own full name.
+ * `small` rows (towns beyond the curated list) do not beat a prefix hit with an alternate name alone (Kotta: Kottayam, not a Kota).
+ */
+export function buildIndex(entries: { city: City; base?: string; alts?: string[]; weak?: boolean; small?: boolean }[]): CityIndex {
   const countries = new Map<string, string>();
-  const rows = entries.map(({ city, base, alts, weak }) => {
+  const rows = entries.map(({ city, base, alts, weak, small }) => {
     countries.set(norm(city.country), city.country);
-    return { name: city.name, base: norm(base ?? city.name), alts: (alts ?? []).map(norm), weak: !!weak };
+    return { name: city.name, base: norm(base ?? city.name), alts: (alts ?? []).map(norm), weak: !!weak, small: !!small || !!weak };
   });
   return { rows, countries };
 }
@@ -566,18 +571,19 @@ export function rank(text: string, home?: string, ix: CityIndex = curatedIndex):
   // One pass over the rows; each lands in the best step it reaches. Primary names come before alternate
   // spellings (Calicut for Kozhikode) in every step; within a step the home state / country first, then
   // dataset order (curated, then the full list largest first).
-  // Steps: 0-1 exact, 2-7 plain hits, 8-13 the same for weak rows (districts), 14-17 near misses (strong, then weak).
-  const steps: string[][] = Array.from({ length: 18 }, () => []);
+  // Steps: 0-1 exact, 2-7 plain hits, 8-11 prefix / word hits of weak rows (districts), 14-15 near misses of cities,
+  // then the rest of the weak rows: 16-17 substring hits, 18-19 near misses.
+  const steps: string[][] = Array.from({ length: 20 }, () => []);
   const [sp, hy] = [" " + q, "-" + q];
   const word = (l: string) => l.includes(sp) || l.includes(hy);
   const sub = q.length >= 4;
   const near = q.length >= FUZZY_MIN;
-  for (const { name, base, alts, weak } of ix.rows) {
+  for (const { name, base, alts, weak, small } of ix.rows) {
     if (out.has(name)) continue;
     const a = alts.length > 0;
     let step =
       base === q ? 0
-      : a && alts.includes(q) ? 1
+      : a && alts.includes(q) ? (small ? 3 : 1)
       : base.startsWith(q) ? 2
       : a && alts.some((l) => l.startsWith(q)) ? 3
       : word(base) ? 4
@@ -585,7 +591,7 @@ export function rank(text: string, home?: string, ix: CityIndex = curatedIndex):
       : sub && base.includes(q) ? 6
       : sub && a && alts.some((l) => l.includes(q)) ? 7
       : -1;
-    if (weak && step >= 2) step += 6;
+    if (weak && step >= 2) step += step >= 6 ? 10 : 6;
     if (step >= 0) steps[step].push(name);
   }
   const exact = out.size > 0 || steps[0].length + steps[1].length > 0;
@@ -595,7 +601,7 @@ export function rank(text: string, home?: string, ix: CityIndex = curatedIndex):
     for (const { name, base, alts, weak } of ix.rows) {
       if (out.has(name) || placed.has(name)) continue;
       const step = nearPrefix(q, base) ? 14 : alts.length && alts.some((l) => nearPrefix(q, l)) ? 15 : -1;
-      if (step >= 0) steps[step + (weak ? 2 : 0)].push(name);
+      if (step >= 0) steps[step + (weak ? 4 : 0)].push(name);
     }
   }
   const prefixEnd = out.size + steps[0].length + steps[1].length + steps[2].length + steps[3].length + steps[8].length + steps[9].length;
