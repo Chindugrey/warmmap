@@ -158,7 +158,7 @@ for (const [w, h, mobile] of SIZES) {
     await b.shot(`${SHOTS}/on-kit-consented-${tag}.png`);
 
     // The send path: phones leave through the share sheet with the card picture; desktop opens LinkedIn's composer.
-    await waitFor(b, `performance.getEntriesByType('resource').some((r)=>r.name.includes('/api/og?id=')&&!r.name.includes('dl=1')&&r.responseEnd>0)`, 20000); // the card picture is fetched before the tap
+    await waitFor(b, `performance.getEntriesByType('resource').some((r)=>r.name.includes('/api/og?id=')&&!r.name.includes('dl=1')&&!r.name.includes('f=story')&&r.responseEnd>0)`, 20000); // the card picture is fetched before the tap
     await sleep(400);
     if (mobile) {
       await clickText(b, "Share to LinkedIn");

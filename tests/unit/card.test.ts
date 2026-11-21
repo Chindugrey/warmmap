@@ -42,7 +42,9 @@ test("v21a on: the card says lanterns (the server never sees names, so it cannot
   assert.equal(cardModel(pm, "link", true).nums[0].value, "5");
   assert.equal(cardModel(pm, "link", false).nums[0].label, "people");
   assert.equal(cardModel(pm, "link").nums[0].label, "people", "default follows the flag, off here");
-  assert.ok(!JSON.stringify(cardModel(pm, "story", true)).includes("people'"), "no people count on the flagged card");
+  for (const f of ["link", "story"] as const) {
+    assert.ok(cardModel(pm, f, true).nums.every((n: { label: string }) => !/people|person/.test(n.label)), `no people count on the flagged ${f} card`);
+  }
 });
 
 test("kind short lines (shown on the cards)", () => {

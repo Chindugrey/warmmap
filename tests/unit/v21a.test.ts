@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { QUESTIONS } from "@/lib/questions";
-import { POST_LINES, SUBLINES, V21A, KIT_COPY, cleanWish, distinctPeople, revealPeople, joinNames, linkedInPost, tagRows, type Friend } from "@/lib/v21a";
+import { POST_LINES, SUBLINES, V21A, KIT_COPY, cleanWish, distinctPeople, nameKey, revealPeople, joinNames, linkedInPost, tagRows, type Friend } from "@/lib/v21a";
 
 const friends: Friend[] = [
   { q: 0, name: "Meera", city: "Kochi" },
@@ -72,4 +72,27 @@ test("reveal people: flag off is the lantern count, exactly as at launch", () =>
   assert.deepEqual(revealPeople(["Meera", " meera ", "MEERA", "Kabir", "Tara"], 5, false), { n: 5, label: "people" });
   assert.deepEqual(revealPeople(["Meera"], 1, false), { n: 1, label: "person" });
   assert.equal(revealPeople(["Meera", "meera"], 2).n, 2, "default follows the flag, which is off here");
+});
+
+test("name key: NFC, zero-width, double space, trim, case; no accent folding", () => {
+  assert.equal(nameKey("Ren\u00e9"), nameKey("Rene\u0301"), "composed and decomposed e-acute are one name");
+  assert.equal(nameKey("Me\u200Bera"), nameKey("Meera"), "a zero-width space is ignored");
+  assert.equal(nameKey("Meera\uFEFF"), "meera");
+  assert.equal(nameKey("Meera  Rao"), nameKey(" meera rao "), "a double space collapses");
+  assert.notEqual(nameKey("Rene"), nameKey("Ren\u00e9"), "no accent folding");
+  const f = (name: string): Friend => ({ q: 0, name, city: "x" });
+  assert.equal(distinctPeople([f("Ren\u00e9"), f("Rene\u0301"), f("Rene"), f("Me\u200Bera"), f("meera")]), 3);
+  assert.equal(tagRows([f("Ren\u00e9"), f("Rene\u0301")]).length, 1, "the tag checklist uses the same key");
+});
+
+test("reveal people: a kept inviter counts once, even when also typed in another case", () => {
+  assert.equal(revealPeople(["Inviter", "A", "B", "C", "D", "E"], 6, true).n, 6);
+  assert.equal(revealPeople(["Inviter", "  INVITER", "B", "C", "D", "E"], 6, true).n, 5);
+});
+
+test("post people: the reveal's number wins, so reveal and post always match", () => {
+  const t = linkedInPost({ ...base, names: false, people: 6 });
+  assert.match(t, /6 people who've had my back/);
+  assert.match(linkedInPost({ ...base, names: false, people: 1 }), /1 person who's had my back/);
+  assert.match(linkedInPost({ ...base, names: false }), /3 people who've had my back/, "no number given: the distinct friends");
 });
