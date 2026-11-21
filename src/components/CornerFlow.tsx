@@ -787,6 +787,7 @@ function RevealScreen({ d, setD, onKeepGoing }: { d: Draft; setD: (f: (x: Draft)
           url={url}
           friends={d.answers.map((a) => ({ q: a.q, name: a.name, city: a.city }))}
           cities={stats.cities}
+          people={people.n}
           wish={wish.inPost ? wish.items : []}
           onClose={() => setKit(false)}
         />

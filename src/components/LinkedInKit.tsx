@@ -32,11 +32,12 @@ interface Props {
   url: string; // the owner's map link, no ?s=
   friends: Friend[];
   cities: number;
+  people: number; // the reveal's number, so the post says the same
   wish: string[]; // the 2027 list, already filtered to "add it to my post"
   onClose: () => void;
 }
 
-export function LinkedInKit({ slug, url, friends, cities, wish, onClose }: Props) {
+export function LinkedInKit({ slug, url, friends, cities, people, wish, onClose }: Props) {
   const [names, setNames] = useState(false);
   const [consent, setConsent] = useState(false);
   const [edited, setEdited] = useState<string | null>(null);
@@ -53,7 +54,7 @@ export function LinkedInKit({ slug, url, friends, cities, wish, onClose }: Props
   });
   // Names only ever reach the text after the consent line is ticked.
   const named = names && consent;
-  const generated = useMemo(() => linkedInPost({ friends, cities, names: named, wish, url: `${url}?s=li` }), [friends, cities, named, wish, url]);
+  const generated = useMemo(() => linkedInPost({ friends, cities, people, names: named, wish, url: `${url}?s=li` }), [friends, cities, people, named, wish, url]);
   const post = edited ?? generated;
   // The picture is fetched before the tap: Safari rejects share calls that wait on a network round trip.
   const file = useRef<File | null>(null);

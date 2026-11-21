@@ -62,8 +62,12 @@ export interface Friend {
 /** "A", "A and B", "A, B and C". */
 export const joinNames = (a: readonly string[]) => (a.length <= 1 ? a.join("") : `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`);
 
+/** What makes two typed names the same person: NFC, no zero-width characters, one space, trimmed, lower-case. No accent folding ("Rene" is not "René"). */
+export const nameKey = (name: string) =>
+  name.normalize("NFC").replace(/[\u200B-\u200D\u2060\uFEFF]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+
 /** Distinct friends (the same name, any case, counts once). */
-export const distinctPeople = (friends: readonly Friend[]) => new Set(friends.map((f) => f.name.trim().toLowerCase())).size;
+export const distinctPeople = (friends: readonly Friend[]) => new Set(friends.map((f) => nameKey(f.name))).size;
 
 /** The reveal's "people" number. Flag on: distinct names, counted on the phone (never sent). Flag off: lanterns, as at launch. */
 export function revealPeople(names: readonly string[], lanterns: number, on = V21A) {
@@ -78,9 +82,11 @@ export interface PostInput {
   names: boolean;
   wish: readonly string[];
   url: string;
+  /** The reveal's people number, so the post and the reveal always agree (it also counts a kept inviter). Defaults to the distinct friends. */
+  people?: number;
 }
 
-export function linkedInPost({ friends, cities, names, wish, url }: PostInput): string {
+export function linkedInPost({ friends, cities, names, wish, url, people }: PostInput): string {
   const c = `${cities} ${cities === 1 ? "city" : "cities"}`;
   const out: string[] = [];
   if (names) {
@@ -92,7 +98,7 @@ export function linkedInPost({ friends, cities, names, wish, url }: PostInput): 
     });
     out.push(lines.join("\n"), "Thank you. I don't say it enough.");
   } else {
-    const n = distinctPeople(friends);
+    const n = people ?? distinctPeople(friends);
     out.push(`I made my Warm Map: ${n} ${n === 1 ? "person who's" : "people who've"} had my back, across ${c}. You know who you are. Thank you.`);
   }
   if (wish.length) out.push(`In 2027 I'd love a warm intro to ${joinNames(wish)}. If you know the way in, I'd be grateful.`);
@@ -110,7 +116,7 @@ export interface TagRow {
 export function tagRows(friends: readonly Friend[]): TagRow[] {
   const rows = new Map<string, TagRow>();
   for (const f of friends) {
-    const key = f.name.trim().toLowerCase();
+    const key = nameKey(f.name);
     if (!rows.has(key)) rows.set(key, { key, name: f.name, city: f.city });
   }
   return [...rows.values()];
