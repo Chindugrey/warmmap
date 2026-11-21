@@ -34,18 +34,21 @@ registerCities([...data, ...districts].map((d) => d.city));
 
 // Alternate names of the curated cities (Bombay for Mumbai) come from GeoNames too.
 const curatedAlts = new Map(CURATED_ALTS_TSV.split("\n").map((l) => l.split("\t") as [string, string]));
-const entries: Loaded[] = [...curated.map((city) => ({ city, base: city.name, alts: curatedAlts.get(city.name)?.split("|") ?? [] })), ...data, ...districts];
-const index = buildIndex(entries);
+const cityEntries: Loaded[] = [...curated.map((city) => ({ city, base: city.name, alts: curatedAlts.get(city.name)?.split("|") ?? [] })), ...data];
+const entries: Loaded[] = [...cityEntries, ...districts];
+const index = buildIndex([...cityEntries, ...districts.map((d) => ({ ...d, weak: true }))]);
 
 // "Springfield, IL" / "Hyderabad, India": a name shared by several cities is shown with where it is.
 // Within one country the state tells them apart; across countries, the country.
 const baseGroup = new Map<string, City[]>();
-for (const e of entries) baseGroup.set(norm(e.base), [...(baseGroup.get(norm(e.base)) ?? []), e.city]);
+// Cities only: a district never makes a town share its name (every district name carries its own suffix anyway).
+for (const e of cityEntries) baseGroup.set(norm(e.base), [...(baseGroup.get(norm(e.base)) ?? []), e.city]);
 const qualifier = (c: City, group: City[]) => {
   const oneCountry = group.every((g) => g.country === c.country);
   if (!oneCountry) return c.country;
   return (c.country === "USA" || c.country === "Canada" ? REGION_CODES[c.region ?? ""] ?? c.region : c.region) || c.country;
 };
+const districtNames = new Set(districts.map((d) => d.city.name));
 const baseOf = new Map(entries.map((e) => [e.city.name, e.base]));
 /** A qualified key already carries its place; a bare name gets one only when another city shares it. */
 const labelOf = (c: City) => {
@@ -71,16 +74,38 @@ export interface CitySearch {
   country: string | null;
 }
 
+/** The text after a comma ("Ohio", "OH", "India") names the region or country the place is in. */
+const inRegion = (c: City, tail: string) => {
+  const code = REGION_CODES[c.region ?? ""];
+  return norm(c.region ?? "") === tail || (!!code && code.toLowerCase() === tail) || norm(c.country) === tail;
+};
+
 export function searchCities(text: string, limit = 6, home?: string): CitySearch {
-  const names = rank(text, home, index).names.slice(0, limit);
+  let all = rank(text, home, index).names;
+  // "Franklin County, Ohio": the part after the comma narrows to that state / province / country.
+  const tail = text.includes(",") ? norm(text.slice(text.indexOf(",") + 1)) : "";
+  let narrowed = false;
+  if (tail) {
+    const here = all.filter((n) => inRegion(citiesByName[n], tail));
+    if (here.length) [all, narrowed] = [here, true];
+  }
+  // "Springfield" names several cities: never pick one for the user.
+  const q = norm(text.split(",")[0]);
+  const exact = all.slice(0, limit).filter((n) => norm(baseOf.get(n) ?? n) === q);
+  let match = exact.length > 1 && !text.includes(",") ? null : findCity(text, index, labels)?.name ?? null;
+  if (narrowed) {
+    // The region the user typed decides among same-named places; a half-typed name is not guessed.
+    const same = all.filter((n) => norm(baseOf.get(n) ?? n) === q);
+    match = same.length === 1 ? same[0] : labels[text.trim()] ?? null;
+  }
+  // A district, county or division is only ever picked by typing its own name, never as the guess for a town's prefix.
+  if (match && districtNames.has(match) && q !== norm(baseOf.get(match) ?? match) && norm(text) !== norm(match)) match = null;
+  // The pick is always among the suggestions, and first: the client finds it there.
+  const names = (match ? [match, ...all.filter((n) => n !== match)] : all).slice(0, limit);
   const results = names.map((n) => {
     const c = citiesByName[n];
     return { name: c.name, label: labelOf(c), country: c.country, ...(c.region ? { region: c.region } : {}), lat: c.lat, lon: c.lon };
   });
-  // "Springfield" names several cities: never pick one for the user.
-  const q = norm(text.split(",")[0]);
-  const exact = results.filter((r) => norm(baseOf.get(r.name) ?? r.name) === q);
-  const match = exact.length > 1 && !text.includes(",") ? null : findCity(text, index, labels)?.name ?? null;
   return { results, match, country: countryOf(text, index) };
 }
 

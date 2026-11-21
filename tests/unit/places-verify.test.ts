@@ -9,7 +9,9 @@ const top = (q: string, n = 6) => searchCities(q, n).results.map((r) => r.name);
 
 test("a town comes before its district on a shared prefix (districts load after every city)", () => {
   // Towns from the full list (the curated ones come first anyway).
-  assert.deepEqual(top("Rayag", 2), ["Rayagada", "Rayagada district, Odisha"]);
+  const r = top("Rayag", 4); // Raigarh (alternate name Rayagarh) is a city hit too, and cities come before districts
+  assert.equal(r[0], "Rayagada");
+  assert.ok(r.indexOf("Rayagada district, Odisha") > 0, String(r));
   assert.deepEqual(top("Bhagal", 2), ["Bhagalpur", "Bhagalpur district, Bihar"]);
   assert.equal(searchCities("Tumku", 4).match, "Tumkur");
 });

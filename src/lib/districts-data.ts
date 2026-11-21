@@ -5,7 +5,7 @@ export const DISTRICTS_TSV = `Zunheboto district, Nagaland	Zunheboto district	IN
 Yavatmal district, Maharashtra	Yavatmal district	IN	Maharashtra	20.39	78.13
 Yanam district, Puducherry	Yanam district	IN	Puducherry	16.73	82.22
 Wokha district, Nagaland	Wokha district	IN	Nagaland	26.1	94.26
-West Tripura district, Tripura	West Tripura district	IN	Tripura	23.89	91.4
+West Tripura district, Tripura	West Tripura district	IN	Tripura	23.84	91.28
 West Siang district, Arunachal Pradesh	West Siang district	IN	Arunachal Pradesh	28.17	94.8
 West Kameng district, Arunachal Pradesh	West Kameng district	IN	Arunachal Pradesh	27.4	92.35
 West Godavari district, Andhra Pradesh	West Godavari district	IN	Andhra Pradesh	16.53	81.62
@@ -21,7 +21,7 @@ Vadodara district, Gujarat	Vadodara district	IN	Gujarat	22.3	73.21
 Uttarkashi district, Uttarakhand	Uttarkashi district	IN	Uttarakhand	30.73	78.44
 Uttar Kannada district, Karnataka	Uttar Kannada district	IN	Karnataka	14.88	74.58
 Upper Subansiri district, Arunachal Pradesh	Upper Subansiri district	IN	Arunachal Pradesh	28.3	94
-District Unnao district, Uttar Pradesh	District Unnao district	IN	Uttar Pradesh	26.61	80.56
+Unnao district, Uttar Pradesh	Unnao district	IN	Uttar Pradesh	26.55	80.49
 Ujjain district, Madhya Pradesh	Ujjain district	IN	Madhya Pradesh	23.18	75.78
 Udhampur district, Jammu and Kashmir	Udhampur district	IN	Jammu and Kashmir	32.92	75.14
 Udaipur district, Rajasthan	Udaipur district	IN	Rajasthan	24.59	73.71
@@ -38,14 +38,14 @@ Tehri Garhwal district, Uttarakhand	Tehri Garhwal district	IN	Uttarakhand	30.35	
 Surguja district, Chhattisgarh	Surguja district	IN	Chhattisgarh	23.12	83.2
 Surendranagar district, Gujarat	Surendranagar district	IN	Gujarat	22.73	71.65
 Surat district, Gujarat	Surat district	IN	Gujarat	21.2	72.83
-Sundargarh district, Odisha	Sundargarh district	IN	Odisha	22.25	84.5
-District Sultanpur district, Uttar Pradesh	District Sultanpur district	IN	Uttar Pradesh	26.26	82.19
+Sundargarh district, Odisha	Sundargarh district	IN	Odisha	22.12	84.03
+Sultanpur district, Uttar Pradesh	Sultanpur district	IN	Uttar Pradesh	26.26	82.07
 Srinagar district, Jammu and Kashmir	Srinagar district	IN	Jammu and Kashmir	34.09	74.81
 Srikakulam district, Andhra Pradesh	Srikakulam district	IN	Andhra Pradesh	18.3	83.9
 South Tripura district, Tripura	South Tripura district	IN	Tripura	23.25	91.45
 Namchi district, Sikkim	Namchi district	IN	Sikkim	27.16	88.36
 Sonipat district, Haryana	Sonipat district	IN	Haryana	28.99	77.02
-Solapur district, Maharashtra	Solapur district	IN	Maharashtra	17.75	75.5
+Solapur district, Maharashtra	Solapur district	IN	Maharashtra	17.67	75.91
 Solan district, Himachal Pradesh	Solan district	IN	Himachal Pradesh	30.91	77.11
 Siwan district, Bihar	Siwan district	IN	Bihar	26.22	84.36
 Sitapur district, Uttar Pradesh	Sitapur district	IN	Uttar Pradesh	27.56	80.68
@@ -59,49 +59,49 @@ Sikar district, Rajasthan	Sikar district	IN	Rajasthan	27.61	75.14
 Sidhi district, Madhya Pradesh	Sidhi district	IN	Madhya Pradesh	24.4	81.88
 Sibsagar district, Assam	Sibsagar district	IN	Assam	26.98	94.64
 Shivpuri district, Madhya Pradesh	Shivpuri district	IN	Madhya Pradesh	25.42	77.66
-Shimoga district, Karnataka	Shimoga district	IN	Karnataka	14.05	75.16
+Shimoga district, Karnataka	Shimoga district	IN	Karnataka	13.93	75.57
 Shajapur district, Madhya Pradesh	Shajapur district	IN	Madhya Pradesh	23.43	76.28
-Shajahanpur district, Uttar Pradesh	Shajahanpur district	IN	Uttar Pradesh	27.95	79.82
+Shajahanpur district, Uttar Pradesh	Shajahanpur district	IN	Uttar Pradesh	27.5	79.68
 Shahdol district, Madhya Pradesh	Shahdol district	IN	Madhya Pradesh	23.29	81.36
 Seoni district, Madhya Pradesh	Seoni district	IN	Madhya Pradesh	22.09	79.55
 Sehore district, Madhya Pradesh	Sehore district	IN	Madhya Pradesh	23.2	77.08
 Sawai Madhopur district, Rajasthan	Sawai Madhopur district	IN	Rajasthan	26.02	76.34
 Satna district, Madhya Pradesh	Satna district	IN	Madhya Pradesh	24.58	80.83
-Saran district, Bihar	Saran district	IN	Bihar	25.92	84.75
+Saran district, Bihar	Saran district	IN	Bihar	25.69	85.17
 Sangrur district, Punjab	Sangrur district	IN	Punjab	30.25	75.84
 Sambalpur district, Odisha	Sambalpur district	IN	Odisha	21.47	83.98
 Samastipur district, Bihar	Samastipur district	IN	Bihar	25.86	85.78
 Salem district, Tamil Nadu	Salem district	IN	Tamil Nadu	11.65	78.16
 Saharsa district, Bihar	Saharsa district	IN	Bihar	25.87	86.6
-District Saharanpur district, Uttar Pradesh	District Saharanpur district	IN	Uttar Pradesh	29.95	77.55
-Sagar district, Madhya Pradesh	Sagar district	IN	Madhya Pradesh	23.75	78.75
+Saharanpur district, Uttar Pradesh	Saharanpur district	IN	Uttar Pradesh	29.97	77.55
+Sagar district, Madhya Pradesh	Sagar district	IN	Madhya Pradesh	23.84	78.74
 Sabarkantha district, Gujarat	Sabarkantha district	IN	Gujarat	23.6	72.97
-Rupnagar district, Punjab	Rupnagar district	IN	Punjab	31.04	76.52
+Rupnagar district, Punjab	Rupnagar district	IN	Punjab	30.97	76.53
 Rohtas district, Bihar	Rohtas district	IN	Bihar	24.63	83.92
 Rohtak district, Haryana	Rohtak district	IN	Haryana	28.89	76.59
 Rewa district, Madhya Pradesh	Rewa district	IN	Madhya Pradesh	24.53	81.29
 Ratnagiri district, Maharashtra	Ratnagiri district	IN	Maharashtra	16.99	73.31
 Ratlam district, Madhya Pradesh	Ratlam district	IN	Madhya Pradesh	23.33	75.04
 Ranchi district, Jharkhand	Ranchi district	IN	Jharkhand	23.34	85.31
-District Rampur district, Uttar Pradesh	District Rampur district	IN	Uttar Pradesh	28.83	79.14
+Rampur district, Uttar Pradesh	Rampur district	IN	Uttar Pradesh	28.81	79.03
 Ramanathapuram district, Tamil Nadu	Ramanathapuram district	IN	Tamil Nadu	9.37	78.83
-Raj Nandgaon district, Chhattisgarh	Raj Nandgaon district	IN	Chhattisgarh	21.17	81
+Raj Nandgaon district, Chhattisgarh	Raj Nandgaon district	IN	Chhattisgarh	21.1	81.03
 Rajkot district, Gujarat	Rajkot district	IN	Gujarat	22.29	70.79
 Rajgarh district, Madhya Pradesh	Rajgarh district	IN	Madhya Pradesh	24.01	76.73
-Rajauri district, Jammu and Kashmir	Rajauri district	IN	Jammu and Kashmir	33.25	74.25
+Rajauri district, Jammu and Kashmir	Rajauri district	IN	Jammu and Kashmir	33.38	74.31
 Raisen district, Madhya Pradesh	Raisen district	IN	Madhya Pradesh	23.33	77.78
 Raipur district, Chhattisgarh	Raipur district	IN	Chhattisgarh	21.23	81.63
 Raigarh district, Chhattisgarh	Raigarh district	IN	Chhattisgarh	21.9	83.4
 Raichur district, Karnataka	Raichur district	IN	Karnataka	16.21	77.36
-District Raebareli district, Uttar Pradesh	District Raebareli district	IN	Uttar Pradesh	26.2	81.19
+Raebareli district, Uttar Pradesh	Raebareli district	IN	Uttar Pradesh	26.23	81.23
 Puruliya district, West Bengal	Puruliya district	IN	West Bengal	23.33	86.36
 Purnia district, Bihar	Purnia district	IN	Bihar	25.78	87.47
 Purba Champaran district, Bihar	Purba Champaran district	IN	Bihar	26.58	84.83
 Pudukkottai district, Tamil Nadu	Pudukkottai district	IN	Tamil Nadu	10.38	78.82
-District Pratapgarh district, Uttar Pradesh	District Pratapgarh district	IN	Uttar Pradesh	25.87	81.83
+Pratapgarh district, Uttar Pradesh	Pratapgarh district	IN	Uttar Pradesh	25.9	81.94
 Prakasam district, Andhra Pradesh	Prakasam district	IN	Andhra Pradesh	15.5	79.5
 Pithoragarh district, Uttarakhand	Pithoragarh district	IN	Uttarakhand	29.58	80.21
-District Pilibhit district, Uttar Pradesh	District Pilibhit district	IN	Uttar Pradesh	28.53	79.99
+Pilibhit district, Uttar Pradesh	Pilibhit district	IN	Uttar Pradesh	28.63	79.8
 Phek district, Nagaland	Phek district	IN	Nagaland	25.75	94.5
 Patna district, Bihar	Patna district	IN	Bihar	25.59	85.14
 Patiala district, Punjab	Patiala district	IN	Punjab	30.34	76.39
@@ -111,7 +111,7 @@ Panna district, Madhya Pradesh	Panna district	IN	Madhya Pradesh	24.72	80.19
 Panch Mahals district, Gujarat	Panch Mahals district	IN	Gujarat	22.75	73.6
 Pali district, Rajasthan	Pali district	IN	Rajasthan	25.77	73.32
 Palamu district, Jharkhand	Palamu district	IN	Jharkhand	23.92	84.08
-Osmanabad district, Maharashtra	Osmanabad district	IN	Maharashtra	18.25	76.17
+Osmanabad district, Maharashtra	Osmanabad district	IN	Maharashtra	18.18	76.04
 North Tripura district, Tripura	North Tripura district	IN	Tripura	24.37	92.17
 Mangan district, Sikkim	Mangan district	IN	Sikkim	27.51	88.52
 Dima Hasao district, Assam	Dima Hasao district	IN	Assam	25.5	93
@@ -124,9 +124,9 @@ Narsimhapur district, Madhya Pradesh	Narsimhapur district	IN	Madhya Pradesh	22.9
 Nanded district, Maharashtra	Nanded district	IN	Maharashtra	19.16	77.31
 Nalgonda district, Telangana	Nalgonda district	IN	Telangana	17.05	79.27
 Nalanda district, Bihar	Nalanda district	IN	Bihar	25.25	85.58
-Nainital district, Uttarakhand	Nainital district	IN	Uttarakhand	29.32	79.46
+Nainital district, Uttarakhand	Nainital district	IN	Uttarakhand	29.4	79.45
 Nagaur district, Rajasthan	Nagaur district	IN	Rajasthan	27.2	73.73
-Nadia district, West Bengal	Nadia district	IN	West Bengal	23.48	88.52
+Nadia district, West Bengal	Nadia district	IN	West Bengal	23.41	88.37
 Mysore district, Karnataka	Mysore district	IN	Karnataka	12.3	76.64
 Muzaffarpur district, Bihar	Muzaffarpur district	IN	Bihar	26.12	85.39
 Muzaffarnagar district, Uttar Pradesh	Muzaffarnagar district	IN	Uttar Pradesh	29.47	77.7
@@ -138,7 +138,7 @@ Mokokchung district, Nagaland	Mokokchung district	IN	Nagaland	26.32	94.52
 Mirzapur district, Uttar Pradesh	Mirzapur district	IN	Uttar Pradesh	25.14	82.57
 Meerut district, Uttar Pradesh	Meerut district	IN	Uttar Pradesh	28.98	77.71
 Medak district, Telangana	Medak district	IN	Telangana	18.05	78.26
-Mayurbhanj district, Odisha	Mayurbhanj district	IN	Odisha	21.75	86.5
+Mayurbhanj district, Odisha	Mayurbhanj district	IN	Odisha	21.93	86.73
 Mathura district, Uttar Pradesh	Mathura district	IN	Uttar Pradesh	27.5	77.67
 Mandya district, Karnataka	Mandya district	IN	Karnataka	12.52	76.9
 Mandsaur district, Madhya Pradesh	Mandsaur district	IN	Madhya Pradesh	24.07	75.07
@@ -158,13 +158,13 @@ Lucknow district, Uttar Pradesh	Lucknow district	IN	Uttar Pradesh	26.84	80.92
 Lower Subansiri district, Arunachal Pradesh	Lower Subansiri district	IN	Arunachal Pradesh	27.56	93.79
 Lohit district, Arunachal Pradesh	Lohit district	IN	Arunachal Pradesh	27.99	96.18
 Lalitpur district, Uttar Pradesh	Lalitpur district	IN	Uttar Pradesh	24.69	78.42
-Lakhimpur district, Assam	Lakhimpur district	IN	Assam	27.35	94.25
+Lakhimpur district, Assam	Lakhimpur district	IN	Assam	27.24	94.1
 Lahul and Spiti district, Himachal Pradesh	Lahul and Spiti district	IN	Himachal Pradesh	32.5	77.83
 Leh district, Ladakh	Leh district	IN	Ladakh	34.17	77.58
 Kurukshetra district, Haryana	Kurukshetra district	IN	Haryana	29.97	76.84
 Kurnool district, Andhra Pradesh	Kurnool district	IN	Andhra Pradesh	15.83	78.04
 Kulu district, Himachal Pradesh	Kulu district	IN	Himachal Pradesh	31.96	77.11
-Krishna district, Andhra Pradesh	Krishna district	IN	Andhra Pradesh	16.3	81
+Krishna district, Andhra Pradesh	Krishna district	IN	Andhra Pradesh	16.19	81.14
 Kozhikode district, Kerala	Kozhikode district	IN	Kerala	11.25	75.78
 Kottayam district, Kerala	Kottayam district	IN	Kerala	9.59	76.52
 Kota district, Rajasthan	Kota district	IN	Rajasthan	25.18	75.84
@@ -173,19 +173,19 @@ Kolhapur district, Maharashtra	Kolhapur district	IN	Maharashtra	16.7	74.23
 Kolar district, Karnataka	Kolar district	IN	Karnataka	13.14	78.13
 Kohima district, Nagaland	Kohima district	IN	Nagaland	25.67	94.11
 Kodagu district, Karnataka	Kodagu district	IN	Karnataka	12.4	75.73
-Cooch Behar district, West Bengal	Cooch Behar district	IN	West Bengal	26.29	89.35
+Cooch Behar district, West Bengal	Cooch Behar district	IN	West Bengal	26.33	89.45
 Kinnaur district, Himachal Pradesh	Kinnaur district	IN	Himachal Pradesh	31.58	78.42
 Kheri district, Uttar Pradesh	Kheri district	IN	Uttar Pradesh	27.9	80.8
 Kheda district, Gujarat	Kheda district	IN	Gujarat	22.75	72.69
-East Khasi Hills district, Meghalaya	East Khasi Hills district	IN	Meghalaya	25.38	91.79
+East Khasi Hills district, Meghalaya	East Khasi Hills district	IN	Meghalaya	25.57	91.88
 Khammam district, Telangana	Khammam district	IN	Telangana	17.25	80.14
-Kendujhar district, Odisha	Kendujhar district	IN	Odisha	21.5	85.5
+Kendujhar district, Odisha	Kendujhar district	IN	Odisha	21.63	85.6
 Kathua district, Jammu and Kashmir	Kathua district	IN	Jammu and Kashmir	32.37	75.53
 Karnal district, Haryana	Karnal district	IN	Haryana	29.69	76.98
 Karimnagar district, Telangana	Karimnagar district	IN	Telangana	18.44	79.13
 Karbi Anglong district, Assam	Karbi Anglong district	IN	Assam	26	93.5
 Karaikal district, Puducherry	Karaikal district	IN	Puducherry	10.92	79.83
-Kapurthala district, Punjab	Kapurthala district	IN	Punjab	31.4	75.31
+Kapurthala district, Punjab	Kapurthala district	IN	Punjab	31.38	75.38
 Kanpur district, Uttar Pradesh	Kanpur district	IN	Uttar Pradesh	26.47	80.35
 Kanniyakumari district, Tamil Nadu	Kanniyakumari district	IN	Tamil Nadu	8.09	77.54
 Kangra district, Himachal Pradesh	Kangra district	IN	Himachal Pradesh	32.09	76.26
@@ -196,7 +196,7 @@ Junagadh district, Gujarat	Junagadh district	IN	Gujarat	21.52	70.46
 Jalandhar district, Punjab	Jalandhar district	IN	Punjab	31.33	75.58
 Jodhpur district, Rajasthan	Jodhpur district	IN	Rajasthan	26.27	73.01
 Jind district, Haryana	Jind district	IN	Haryana	29.32	76.32
-Jhunjhunu district, Rajasthan	Jhunjhunu district	IN	Rajasthan	28.09	75.55
+Jhunjhunu district, Rajasthan	Jhunjhunu district	IN	Rajasthan	28.13	75.4
 Jhansi district, Uttar Pradesh	Jhansi district	IN	Uttar Pradesh	25.46	78.58
 Jhalawar district, Rajasthan	Jhalawar district	IN	Rajasthan	24.6	76.16
 Jhabua district, Madhya Pradesh	Jhabua district	IN	Madhya Pradesh	22.77	74.59
@@ -204,12 +204,12 @@ Jaunpur district, Uttar Pradesh	Jaunpur district	IN	Uttar Pradesh	25.75	82.69
 Jamnagar district, Gujarat	Jamnagar district	IN	Gujarat	22.47	70.07
 Jammu district, Jammu and Kashmir	Jammu district	IN	Jammu and Kashmir	32.74	74.86
 Jalpaiguri district, West Bengal	Jalpaiguri district	IN	West Bengal	26.52	88.73
-Jalore district, Rajasthan	Jalore district	IN	Rajasthan	25.08	72.29
+Jalore district, Rajasthan	Jalore district	IN	Rajasthan	25.35	72.62
 Jalgaon district, Maharashtra	Jalgaon district	IN	Maharashtra	21	75.57
-District Jalaun district, Uttar Pradesh	District Jalaun district	IN	Uttar Pradesh	26.09	79.39
+Jalaun district, Uttar Pradesh	Jalaun district	IN	Uttar Pradesh	26.15	79.34
 Jaisalmer district, Rajasthan	Jaisalmer district	IN	Rajasthan	26.92	70.9
 Jaipur district, Rajasthan	Jaipur district	IN	Rajasthan	26.92	75.79
-West Jaintia Hills district, Meghalaya	West Jaintia Hills district	IN	Meghalaya	25.5	92.25
+West Jaintia Hills district, Meghalaya	West Jaintia Hills district	IN	Meghalaya	25.44	92.19
 Jabalpur district, Madhya Pradesh	Jabalpur district	IN	Madhya Pradesh	23.17	79.95
 Indore district, Madhya Pradesh	Indore district	IN	Madhya Pradesh	22.72	75.83
 Idukki district, Kerala	Idukki district	IN	Kerala	9.85	76.97
@@ -218,38 +218,38 @@ Hugli district, West Bengal	Hugli district	IN	West Bengal	22.91	88.4
 Hoshiarpur district, Punjab	Hoshiarpur district	IN	Punjab	31.54	75.91
 Narmadapuram district, Madhya Pradesh	Narmadapuram district	IN	Madhya Pradesh	22.75	77.73
 Hisar district, Haryana	Hisar district	IN	Haryana	29.15	75.72
-Hazaribag district, Jharkhand	Hazaribag district	IN	Jharkhand	24	85.25
+Hazaribag district, Jharkhand	Hazaribag district	IN	Jharkhand	23.99	85.36
 Hassan district, Karnataka	Hassan district	IN	Karnataka	13.01	76.1
 Hardoi district, Uttar Pradesh	Hardoi district	IN	Uttar Pradesh	27.39	80.13
-Haora district, West Bengal	Haora district	IN	West Bengal	22.6	88.25
+Haora district, West Bengal	Haora district	IN	West Bengal	22.58	88.32
 Hamirpur district, Himachal Pradesh	Hamirpur district	IN	Himachal Pradesh	31.68	76.53
-District Hamirpur district, Uttar Pradesh	District Hamirpur district	IN	Uttar Pradesh	25.75	79.87
+Hamirpur district, Uttar Pradesh	Hamirpur district	IN	Uttar Pradesh	25.96	80.15
 Gwalior district, Madhya Pradesh	Gwalior district	IN	Madhya Pradesh	26.23	78.17
 Gurugram district, Haryana	Gurugram district	IN	Haryana	28.46	77.03
 Gurdaspur district, Punjab	Gurdaspur district	IN	Punjab	32.04	75.4
 Guntur district, Andhra Pradesh	Guntur district	IN	Andhra Pradesh	16.3	80.46
 Guna district, Madhya Pradesh	Guna district	IN	Madhya Pradesh	24.65	77.31
-Gulbarga district, Karnataka	Gulbarga district	IN	Karnataka	17.17	77.08
+Gulbarga district, Karnataka	Gulbarga district	IN	Karnataka	17.34	76.84
 Mumbai Suburban district, Maharashtra	Mumbai Suburban district	IN	Maharashtra	19.13	72.85
 Gorakhpur district, Uttar Pradesh	Gorakhpur district	IN	Uttar Pradesh	26.77	83.37
 Gopalganj district, Bihar	Gopalganj district	IN	Bihar	26.47	84.44
-Gonda district, Uttar Pradesh	Gonda district	IN	Uttar Pradesh	27.19	81.97
+Gonda district, Uttar Pradesh	Gonda district	IN	Uttar Pradesh	27.13	81.95
 Goalpara district, Assam	Goalpara district	IN	Assam	26.18	90.63
 Giridih district, Jharkhand	Giridih district	IN	Jharkhand	24.19	86.31
 Ghazipur district, Uttar Pradesh	Ghazipur district	IN	Uttar Pradesh	25.58	83.59
 Ghaziabad district, Uttar Pradesh	Ghaziabad district	IN	Uttar Pradesh	28.67	77.44
 Gaya district, Bihar	Gaya district	IN	Bihar	24.8	85
 East Garo Hills district, Meghalaya	East Garo Hills district	IN	Meghalaya	25.5	90.62
-Garhwal district, Uttarakhand	Garhwal district	IN	Uttarakhand	29.96	78.93
+Garhwal district, Uttarakhand	Garhwal district	IN	Uttarakhand	29.81	78.61
 Ganjam district, Odisha	Ganjam district	IN	Odisha	19.39	85.05
 Ganganagar district, Rajasthan	Ganganagar district	IN	Rajasthan	29.92	73.87
 Gandhinagar district, Gujarat	Gandhinagar district	IN	Gujarat	23.22	72.68
 Firozpur district, Punjab	Firozpur district	IN	Punjab	30.93	74.61
 Fatehpur district, Uttar Pradesh	Fatehpur district	IN	Uttar Pradesh	25.93	80.81
-Ferrukhabad district, Uttar Pradesh	Ferrukhabad district	IN	Uttar Pradesh	27.43	79.46
+Ferrukhabad district, Uttar Pradesh	Ferrukhabad district	IN	Uttar Pradesh	27.39	79.58
 Faridkot district, Punjab	Faridkot district	IN	Punjab	30.67	74.76
 Ayodhya district, Uttar Pradesh	Ayodhya district	IN	Uttar Pradesh	26.8	82.2
-District Etawah district, Uttar Pradesh	District Etawah district	IN	Uttar Pradesh	26.76	79.1
+Etawah district, Uttar Pradesh	Etawah district	IN	Uttar Pradesh	26.78	79.02
 Etah district, Uttar Pradesh	Etah district	IN	Uttar Pradesh	27.56	78.66
 Ernakulam district, Kerala	Ernakulam district	IN	Kerala	9.97	76.29
 East Siang district, Arunachal Pradesh	East Siang district	IN	Arunachal Pradesh	28.01	95.3
@@ -272,17 +272,17 @@ Dewas district, Madhya Pradesh	Dewas district	IN	Madhya Pradesh	22.97	76.06
 Deoria district, Uttar Pradesh	Deoria district	IN	Uttar Pradesh	26.5	83.78
 Datia district, Madhya Pradesh	Datia district	IN	Madhya Pradesh	25.67	78.46
 Darrang district, Assam	Darrang district	IN	Assam	26.51	92.17
-Darjeeling district, West Bengal	Darjeeling district	IN	West Bengal	26.85	88.26
+Darjeeling district, West Bengal	Darjeeling district	IN	West Bengal	27.03	88.27
 Darbhanga district, Bihar	Darbhanga district	IN	Bihar	26.15	85.9
 Damoh district, Madhya Pradesh	Damoh district	IN	Madhya Pradesh	23.83	79.44
 Daman district, Dadra and Nagar Haveli and Daman and Diu	Daman district	IN	Dadra and Nagar Haveli and Daman and Diu	20.41	72.83
 Dakshina Kannada district, Karnataka	Dakshina Kannada district	IN	Karnataka	12.84	75.29
 Cuttack district, Odisha	Cuttack district	IN	Odisha	20.46	85.88
-YSR district, Andhra Pradesh	YSR district	IN	Andhra Pradesh	14.42	78.75
+YSR district, Andhra Pradesh	YSR district	IN	Andhra Pradesh	14.48	78.82
 Coimbatore district, Tamil Nadu	Coimbatore district	IN	Tamil Nadu	11.01	76.97
 Churu district, Rajasthan	Churu district	IN	Rajasthan	28.3	74.97
 Chittoor district, Andhra Pradesh	Chittoor district	IN	Andhra Pradesh	13.21	79.1
-Chittaurgarh district, Rajasthan	Chittaurgarh district	IN	Rajasthan	24.82	74.59
+Chittaurgarh district, Rajasthan	Chittaurgarh district	IN	Rajasthan	24.89	74.62
 Chitradurga district, Karnataka	Chitradurga district	IN	Karnataka	14.22	76.4
 Chikmagalur district, Karnataka	Chikmagalur district	IN	Karnataka	13.32	75.77
 Chhindwara district, Madhya Pradesh	Chhindwara district	IN	Madhya Pradesh	22.06	78.94
@@ -293,16 +293,16 @@ Kannur district, Kerala	Kannur district	IN	Kerala	11.87	75.36
 Kolkata district, West Bengal	Kolkata district	IN	West Bengal	22.56	88.36
 Cachar district, Assam	Cachar district	IN	Assam	24.78	92.86
 Bundi district, Rajasthan	Bundi district	IN	Rajasthan	25.44	75.64
-Buldhana district, Maharashtra	Buldhana district	IN	Maharashtra	20.58	76.42
+Buldhana district, Maharashtra	Buldhana district	IN	Maharashtra	20.53	76.18
 Bulandshahr district, Uttar Pradesh	Bulandshahr district	IN	Uttar Pradesh	28.4	77.86
 Budaun district, Uttar Pradesh	Budaun district	IN	Uttar Pradesh	28.04	79.13
 Birbhum district, West Bengal	Birbhum district	IN	West Bengal	23.95	87.66
-Bid district, Maharashtra	Bid district	IN	Maharashtra	18.83	75.75
+Bid district, Maharashtra	Bid district	IN	Maharashtra	18.99	75.76
 Bilaspur district, Himachal Pradesh	Bilaspur district	IN	Himachal Pradesh	31.33	76.76
 Bilaspur district, Chhattisgarh	Bilaspur district	IN	Chhattisgarh	22.08	82.16
 Bikaner district, Rajasthan	Bikaner district	IN	Rajasthan	28.02	73.31
 Bijnor district, Uttar Pradesh	Bijnor district	IN	Uttar Pradesh	29.37	78.14
-Bijapur district, Karnataka	Bijapur district	IN	Karnataka	16.67	75.92
+Bijapur district, Karnataka	Bijapur district	IN	Karnataka	16.82	75.72
 Bidar district, Karnataka	Bidar district	IN	Karnataka	17.91	77.52
 Bhopal district, Madhya Pradesh	Bhopal district	IN	Madhya Pradesh	23.25	77.4
 Bhojpur district, Bihar	Bhojpur district	IN	Bihar	25.31	84.45
@@ -317,29 +317,29 @@ Bhandara district, Maharashtra	Bhandara district	IN	Maharashtra	21.17	79.65
 Bhagalpur district, Bihar	Bhagalpur district	IN	Bihar	25.24	86.97
 Betul district, Madhya Pradesh	Betul district	IN	Madhya Pradesh	21.9	77.9
 Ballari district, Karnataka	Ballari district	IN	Karnataka	15.14	76.92
-Belgaum district, Karnataka	Belgaum district	IN	Karnataka	16.33	74.75
+Belgaum district, Karnataka	Belgaum district	IN	Karnataka	15.85	74.5
 Begusarai district, Bihar	Begusarai district	IN	Bihar	25.42	86.13
 Basti district, Uttar Pradesh	Basti district	IN	Uttar Pradesh	26.79	82.72
 Bastar district, Chhattisgarh	Bastar district	IN	Chhattisgarh	19.2	81.93
 Barmer district, Rajasthan	Barmer district	IN	Rajasthan	25.75	71.39
 Bareilly district, Uttar Pradesh	Bareilly district	IN	Uttar Pradesh	28.37	79.43
-Purba Bardhaman district, West Bengal	Purba Bardhaman district	IN	West Bengal	23.36	87.95
+Purba Bardhaman district, West Bengal	Purba Bardhaman district	IN	West Bengal	23.26	87.86
 Baramula district, Jammu and Kashmir	Baramula district	IN	Jammu and Kashmir	34.21	74.34
 Bara Banki district, Uttar Pradesh	Bara Banki district	IN	Uttar Pradesh	26.92	81.18
 Banswara district, Rajasthan	Banswara district	IN	Rajasthan	23.54	74.44
 Bankura district, West Bengal	Bankura district	IN	West Bengal	23.23	87.07
-Bangalore Urban district, Karnataka	Bangalore Urban district	IN	Karnataka	13	77.58
+Bangalore Urban district, Karnataka	Bangalore Urban district	IN	Karnataka	12.97	77.59
 Bangalore Rural district, Karnataka	Bangalore Rural district	IN	Karnataka	13.23	77.58
-District Banda district, Uttar Pradesh	District Banda district	IN	Uttar Pradesh	25.47	80.56
+Banda district, Uttar Pradesh	Banda district	IN	Uttar Pradesh	25.48	80.33
 Banas Kantha district, Gujarat	Banas Kantha district	IN	Gujarat	24.25	72.5
 Ballia district, Uttar Pradesh	Ballia district	IN	Uttar Pradesh	25.76	84.15
-Baleshwar district, Odisha	Baleshwar district	IN	Odisha	21.5	86.75
+Baleshwar district, Odisha	Baleshwar district	IN	Odisha	21.49	86.93
 Balangir district, Odisha	Balangir district	IN	Odisha	20.7	83.49
 Balaghat district, Madhya Pradesh	Balaghat district	IN	Madhya Pradesh	21.82	80.19
-Bahraich district, Uttar Pradesh	Bahraich district	IN	Uttar Pradesh	27.8	81.52
+Bahraich district, Uttar Pradesh	Bahraich district	IN	Uttar Pradesh	27.57	81.59
 Azamgarh district, Uttar Pradesh	Azamgarh district	IN	Uttar Pradesh	26.07	83.18
 Aurangabad district, Bihar	Aurangabad district	IN	Bihar	24.75	84.37
-South Andaman district, Andaman and Nicobar	South Andaman district	IN	Andaman and Nicobar	10.76	92.52
+South Andaman district, Andaman and Nicobar	South Andaman district	IN	Andaman and Nicobar	11.67	92.75
 Anantnag district, Jammu and Kashmir	Anantnag district	IN	Jammu and Kashmir	33.73	75.15
 Anantapur district, Andhra Pradesh	Anantapur district	IN	Andhra Pradesh	14.68	77.61
 Amritsar district, Punjab	Amritsar district	IN	Punjab	31.62	74.88
@@ -352,21 +352,21 @@ Prayagraj district, Uttar Pradesh	Prayagraj district	IN	Uttar Pradesh	25.44	81.8
 Aligarh district, Uttar Pradesh	Aligarh district	IN	Uttar Pradesh	27.88	78.07
 Akola district, Maharashtra	Akola district	IN	Maharashtra	20.71	77
 Ajmer district, Rajasthan	Ajmer district	IN	Rajasthan	26.45	74.64
-Ahmadabad district, Gujarat	Ahmadabad district	IN	Gujarat	23.03	72.58
+Ahmadabad district, Gujarat	Ahmadabad district	IN	Gujarat	23.03	72.59
 Agra district, Uttar Pradesh	Agra district	IN	Uttar Pradesh	27.18	78.02
 Adilabad district, Telangana	Adilabad district	IN	Telangana	19.67	78.54
 Namakkal district, Tamil Nadu	Namakkal district	IN	Tamil Nadu	11.22	78.17
 Wayanad district, Kerala	Wayanad district	IN	Kerala	11.61	76.08
 Palakkad district, Kerala	Palakkad district	IN	Kerala	10.77	76.65
-Shrawasti district, Uttar Pradesh	Shrawasti district	IN	Uttar Pradesh	27.51	82
+Shrawasti district, Uttar Pradesh	Shrawasti district	IN	Uttar Pradesh	27.51	82.03
 Siddharthnagar district, Uttar Pradesh	Siddharthnagar district	IN	Uttar Pradesh	27.26	83.01
 Kushinagar district, Uttar Pradesh	Kushinagar district	IN	Uttar Pradesh	26.74	83.89
 Washim district, Maharashtra	Washim district	IN	Maharashtra	20.11	77.13
 Jalna district, Maharashtra	Jalna district	IN	Maharashtra	19.84	75.89
 Hingoli district, Maharashtra	Hingoli district	IN	Maharashtra	19.71	77.14
 Ahmadnagar district, Maharashtra	Ahmadnagar district	IN	Maharashtra	19.4	74.65
-Gondiya district, Maharashtra	Gondiya district	IN	Maharashtra	21.05	80.25
-Gadchiroli district, Maharashtra	Gadchiroli district	IN	Maharashtra	19.8	80.2
+Gondiya district, Maharashtra	Gondiya district	IN	Maharashtra	21.46	80.19
+Gadchiroli district, Maharashtra	Gadchiroli district	IN	Maharashtra	20.18	80.01
 Latur district, Maharashtra	Latur district	IN	Maharashtra	18.4	76.57
 Sindhudurg district, Maharashtra	Sindhudurg district	IN	Maharashtra	16.17	73.7
 Raigarh district, Maharashtra	Raigarh district	IN	Maharashtra	18.57	73.13
@@ -378,7 +378,7 @@ Aizawl district, Mizoram	Aizawl district	IN	Mizoram	23.73	92.72
 Lunglei district, Mizoram	Lunglei district	IN	Mizoram	22.91	92.76
 Rangareddi district, Telangana	Rangareddi district	IN	Telangana	17.28	78.17
 Vizianagaram district, Andhra Pradesh	Vizianagaram district	IN	Andhra Pradesh	18.12	83.41
-Thoothukkudi district, Tamil Nadu	Thoothukkudi district	IN	Tamil Nadu	8.84	77.96
+Thoothukkudi district, Tamil Nadu	Thoothukkudi district	IN	Tamil Nadu	8.77	78.13
 Perambalur district, Tamil Nadu	Perambalur district	IN	Tamil Nadu	11.23	78.88
 Nagapattinam district, Tamil Nadu	Nagapattinam district	IN	Tamil Nadu	10.76	79.84
 Barpeta district, Assam	Barpeta district	IN	Assam	26.32	91.01
@@ -394,7 +394,7 @@ Nalbari district, Assam	Nalbari district	IN	Assam	26.44	91.44
 Tinsukia district, Assam	Tinsukia district	IN	Assam	27.49	95.36
 Korba district, Chhattisgarh	Korba district	IN	Chhattisgarh	22.35	82.7
 Dhamtari district, Chhattisgarh	Dhamtari district	IN	Chhattisgarh	20.71	81.55
-Uttar Bastar Kanker district, Chhattisgarh	Uttar Bastar Kanker district	IN	Chhattisgarh	20.2	81.1
+Uttar Bastar Kanker district, Chhattisgarh	Uttar Bastar Kanker district	IN	Chhattisgarh	20.27	81.49
 Simdega district, Jharkhand	Simdega district	IN	Jharkhand	22.62	84.5
 Godda district, Jharkhand	Godda district	IN	Jharkhand	24.83	87.21
 Dumka district, Jharkhand	Dumka district	IN	Jharkhand	24.27	87.25
@@ -403,10 +403,10 @@ Lohardaga district, Jharkhand	Lohardaga district	IN	Jharkhand	23.43	84.68
 Dindori district, Madhya Pradesh	Dindori district	IN	Madhya Pradesh	22.94	81.08
 Jharsuguda district, Odisha	Jharsuguda district	IN	Odisha	21.86	84.01
 Kandhamal district, Odisha	Kandhamal district	IN	Odisha	20.3	84
-Malkangiri district, Odisha	Malkangiri district	IN	Odisha	18.25	81.95
+Malkangiri district, Odisha	Malkangiri district	IN	Odisha	18.36	81.89
 Rayagada district, Odisha	Rayagada district	IN	Odisha	19.17	83.41
 Anand district, Gujarat	Anand district	IN	Gujarat	22.55	72.96
-Jehanabad district, Bihar	Jehanabad district	IN	Bihar	25.21	85
+Jehanabad district, Bihar	Jehanabad district	IN	Bihar	25.21	84.99
 Buxar district, Bihar	Buxar district	IN	Bihar	25.58	83.98
 Janjgir-Champa district, Chhattisgarh	Janjgir-Champa district	IN	Chhattisgarh	21.9	82.7
 Dohad district, Gujarat	Dohad district	IN	Gujarat	22.83	74.26
@@ -416,29 +416,29 @@ Kabeerdham district, Chhattisgarh	Kabeerdham district	IN	Chhattisgarh	22.01	81.2
 Khagaria district, Bihar	Khagaria district	IN	Bihar	25.5	86.47
 Kishanganj district, Bihar	Kishanganj district	IN	Bihar	26.1	87.96
 Koppal district, Karnataka	Koppal district	IN	Karnataka	15.35	76.15
-Lakhisarai district, Bihar	Lakhisarai district	IN	Bihar	25.2	86.2
+Lakhisarai district, Bihar	Lakhisarai district	IN	Bihar	25.18	86.09
 Mahasamund district, Chhattisgarh	Mahasamund district	IN	Chhattisgarh	21.11	82.09
 Murshidabad district, West Bengal	Murshidabad district	IN	West Bengal	24.18	88.27
 Patan district, Gujarat	Patan district	IN	Gujarat	23.85	72.13
 Sheohar district, Bihar	Sheohar district	IN	Bihar	26.51	85.29
 Sheopur district, Madhya Pradesh	Sheopur district	IN	Madhya Pradesh	25.66	76.7
-Thiruvallur district, Tamil Nadu	Thiruvallur district	IN	Tamil Nadu	13.25	80
+Thiruvallur district, Tamil Nadu	Thiruvallur district	IN	Tamil Nadu	13.14	79.91
 Bhadrak district, Odisha	Bhadrak district	IN	Odisha	21.05	86.52
-Jagatsinghpur district, Odisha	Jagatsinghpur district	IN	Odisha	20.2	86.3
-Kendrapara district, Odisha	Kendrapara district	IN	Odisha	20.5	86.5
+Jagatsinghpur district, Odisha	Jagatsinghpur district	IN	Odisha	20.26	86.17
+Kendrapara district, Odisha	Kendrapara district	IN	Odisha	20.5	86.42
 Khordha district, Odisha	Khordha district	IN	Odisha	20.18	85.62
 Puri district, Odisha	Puri district	IN	Odisha	19.8	85.82
 Chennai district, Tamil Nadu	Chennai district	IN	Tamil Nadu	13.09	80.28
 Vellore district, Tamil Nadu	Vellore district	IN	Tamil Nadu	12.92	79.13
 Tiruvannamalai district, Tamil Nadu	Tiruvannamalai district	IN	Tamil Nadu	12.23	79.07
-Kancheepuram district, Tamil Nadu	Kancheepuram district	IN	Tamil Nadu	12.83	79.78
+Kancheepuram district, Tamil Nadu	Kancheepuram district	IN	Tamil Nadu	12.84	79.7
 Villupuram district, Tamil Nadu	Villupuram district	IN	Tamil Nadu	11.94	79.49
 Cuddalore district, Tamil Nadu	Cuddalore district	IN	Tamil Nadu	11.76	79.77
 Sivaganga district, Tamil Nadu	Sivaganga district	IN	Tamil Nadu	9.85	78.48
-Theni district, Tamil Nadu	Theni district	IN	Tamil Nadu	9.85	77.42
+Theni district, Tamil Nadu	Theni district	IN	Tamil Nadu	10.01	77.48
 Virudhunagar district, Tamil Nadu	Virudhunagar district	IN	Tamil Nadu	9.45	77.92
 Thiruvarur district, Tamil Nadu	Thiruvarur district	IN	Tamil Nadu	10.77	79.64
-Davanagere district, Karnataka	Davanagere district	IN	Karnataka	14.43	75.9
+Davanagere district, Karnataka	Davanagere district	IN	Karnataka	14.47	75.93
 Dausa district, Rajasthan	Dausa district	IN	Rajasthan	26.89	76.34
 Dhaulpur district, Rajasthan	Dhaulpur district	IN	Rajasthan	26.69	77.88
 Karauli district, Rajasthan	Karauli district	IN	Rajasthan	26.5	77.03
@@ -454,7 +454,7 @@ Bageshwar district, Uttarakhand	Bageshwar district	IN	Uttarakhand	29.84	79.77
 Champawat district, Uttarakhand	Champawat district	IN	Uttarakhand	29.34	80.08
 Udham Singh Nagar district, Uttarakhand	Udham Singh Nagar district	IN	Uttarakhand	29.03	79.52
 Koriya district, Chhattisgarh	Koriya district	IN	Chhattisgarh	23.43	82.52
-Jashpur district, Chhattisgarh	Jashpur district	IN	Chhattisgarh	22.78	83.85
+Jashpur district, Chhattisgarh	Jashpur district	IN	Chhattisgarh	22.89	84.14
 Saraikela district, Jharkhand	Saraikela district	IN	Jharkhand	22.7	85.93
 Sahibganj district, Jharkhand	Sahibganj district	IN	Jharkhand	25.24	87.63
 Pakur district, Jharkhand	Pakur district	IN	Jharkhand	24.64	87.84
@@ -468,7 +468,7 @@ Kanpur Dehat district, Uttar Pradesh	Kanpur Dehat district	IN	Uttar Pradesh	26.4
 Maharajganj district, Uttar Pradesh	Maharajganj district	IN	Uttar Pradesh	27.06	83.73
 Mau district, Uttar Pradesh	Mau district	IN	Uttar Pradesh	25.94	83.56
 Bhadohi district, Uttar Pradesh	Bhadohi district	IN	Uttar Pradesh	25.4	82.57
-Pattanamtitta district, Kerala	Pattanamtitta district	IN	Kerala	9.28	76.87
+Pattanamtitta district, Kerala	Pattanamtitta district	IN	Kerala	9.27	76.78
 Tirunelveli Kattabo district, Tamil Nadu	Tirunelveli Kattabo district	IN	Tamil Nadu	8.73	77.68
 Firozabad district, Uttar Pradesh	Firozabad district	IN	Uttar Pradesh	27.15	78.4
 Kannauj district, Uttar Pradesh	Kannauj district	IN	Uttar Pradesh	27.06	79.92
@@ -479,12 +479,7 @@ Haveri district, Karnataka	Haveri district	IN	Karnataka	14.79	75.4
 Gadag district, Karnataka	Gadag district	IN	Karnataka	15.43	75.63
 Fatehgarh Sahib district, Punjab	Fatehgarh Sahib district	IN	Punjab	30.64	76.35
 Muktsar district, Punjab	Muktsar district	IN	Punjab	30.47	74.52
-Amravati Division district, Maharashtra	Amravati Division district	IN	Maharashtra	20.93	77.75
 Aurangabad district, Maharashtra	Aurangabad district	IN	Maharashtra	19.88	75.34
-Nagpur Division district, Maharashtra	Nagpur Division district	IN	Maharashtra	21.15	79.08
-Nashik Division district, Maharashtra	Nashik Division district	IN	Maharashtra	20	73.79
-Satara Division district, Maharashtra	Satara Division district	IN	Maharashtra	17.73	74.06
-Pune Division district, Maharashtra	Pune Division district	IN	Maharashtra	18.75	73.75
 Thrissur district, Kerala	Thrissur district	IN	Kerala	10.52	76.22
 Ariyalur district, Tamil Nadu	Ariyalur district	IN	Tamil Nadu	11.14	79.08
 Krishnagiri district, Tamil Nadu	Krishnagiri district	IN	Tamil Nadu	12.52	78.21
@@ -500,7 +495,7 @@ Yadgir district, Karnataka	Yadgir district	IN	Karnataka	16.77	77.14
 Pratapgarh district, Rajasthan	Pratapgarh district	IN	Rajasthan	24.03	74.78
 Kolasib district, Mizoram	Kolasib district	IN	Mizoram	24.22	92.68
 Dakshin Dinajpur district, West Bengal	Dakshin Dinajpur district	IN	West Bengal	25.22	88.76
-Peren district, Nagaland	Peren district	IN	Nagaland	25.51	93.74
+Peren district, Nagaland	Peren district	IN	Nagaland	25.57	93.76
 South 24 Parganas district, West Bengal	South 24 Parganas district	IN	West Bengal	22.16	88.43
 Paschim Medinipur district, West Bengal	Paschim Medinipur district	IN	West Bengal	22.41	87.38
 Purba Medinipur district, West Bengal	Purba Medinipur district	IN	West Bengal	21.94	87.78
@@ -521,8 +516,8 @@ Mansa district, Punjab	Mansa district	IN	Punjab	29.99	75.4
 Moga district, Punjab	Moga district	IN	Punjab	30.81	75.17
 Barnala district, Punjab	Barnala district	IN	Punjab	30.37	75.55
 Fazilka district, Punjab	Fazilka district	IN	Punjab	30.4	74.03
-Ajitgarh district, Punjab	Ajitgarh district	IN	Punjab	30.65	76.7
-Shahid Bhagat Singh Nagar district, Punjab	Shahid Bhagat Singh Nagar district	IN	Punjab	31.13	76.13
+Ajitgarh district, Punjab	Ajitgarh district	IN	Punjab	30.68	76.72
+Shahid Bhagat Singh Nagar district, Punjab	Shahid Bhagat Singh Nagar district	IN	Punjab	31.12	76.12
 Pathankot district, Punjab	Pathankot district	IN	Punjab	32.27	75.65
 Tarn Taran district, Punjab	Tarn Taran district	IN	Punjab	31.45	74.93
 Nuapada district, Odisha	Nuapada district	IN	Odisha	20.82	82.53
@@ -556,8 +551,8 @@ Baksa district, Assam	Baksa district	IN	Assam	26.58	91.43
 Angul district, Odisha	Angul district	IN	Odisha	20.84	85.1
 West Garo Hills district, Meghalaya	West Garo Hills district	IN	Meghalaya	25.57	90.22
 Nayagarh district, Odisha	Nayagarh district	IN	Odisha	20.13	85.1
-Baudh district, Odisha	Baudh district	IN	Odisha	20.83	84.33
-Deogarh district, Jharkhand	Deogarh district	IN	Jharkhand	24.44	86.73
+Baudh district, Odisha	Baudh district	IN	Odisha	20.84	84.33
+Deogarh district, Jharkhand	Deogarh district	IN	Jharkhand	24.49	86.7
 Kaushambi district, Uttar Pradesh	Kaushambi district	IN	Uttar Pradesh	25.53	81.38
 Umaria district, Madhya Pradesh	Umaria district	IN	Madhya Pradesh	23.52	80.84
 Porbandar district, Gujarat	Porbandar district	IN	Gujarat	21.64	69.61
@@ -565,7 +560,7 @@ Baghpat district, Uttar Pradesh	Baghpat district	IN	Uttar Pradesh	28.94	77.22
 Amroha district, Uttar Pradesh	Amroha district	IN	Uttar Pradesh	28.9	78.47
 Gautam Buddha Nagar district, Uttar Pradesh	Gautam Buddha Nagar district	IN	Uttar Pradesh	28.36	77.55
 Mahoba district, Uttar Pradesh	Mahoba district	IN	Uttar Pradesh	25.29	79.88
-Chitrakoot district, Uttar Pradesh	Chitrakoot district	IN	Uttar Pradesh	25.21	81.09
+Chitrakoot district, Uttar Pradesh	Chitrakoot district	IN	Uttar Pradesh	25.21	80.92
 Chandauli district, Uttar Pradesh	Chandauli district	IN	Uttar Pradesh	25.26	83.27
 Tapi district, Gujarat	Tapi district	IN	Gujarat	21.12	73.4
 Navsari district, Gujarat	Navsari district	IN	Gujarat	20.94	72.92
@@ -574,20 +569,20 @@ Faridabad district, Haryana	Faridabad district	IN	Haryana	28.41	77.31
 Rewari district, Haryana	Rewari district	IN	Haryana	28.2	76.62
 Fatehabad district, Haryana	Fatehabad district	IN	Haryana	29.52	75.46
 Narmada district, Gujarat	Narmada district	IN	Gujarat	21.87	73.5
-Champhai district, Mizoram	Champhai district	IN	Mizoram	23.47	93.33
+Champhai district, Mizoram	Champhai district	IN	Mizoram	23.54	93.37
 Churachandpur district, Manipur	Churachandpur district	IN	Manipur	24.33	93.67
 Lawngtlai district, Mizoram	Lawngtlai district	IN	Mizoram	22.53	92.9
-North Goa district, Goa	North Goa district	IN	Goa	15.63	73.89
+North Goa district, Goa	North Goa district	IN	Goa	15.5	73.83
 South Goa district, Goa	South Goa district	IN	Goa	15.2	74.17
 Jajpur district, Odisha	Jajpur district	IN	Odisha	20.85	86.34
 Alirajpur district, Madhya Pradesh	Alirajpur district	IN	Madhya Pradesh	22.3	74.36
 Doda district, Jammu and Kashmir	Doda district	IN	Jammu and Kashmir	33.15	75.55
 Anuppur district, Madhya Pradesh	Anuppur district	IN	Madhya Pradesh	23.1	81.69
-Bandipore district, Jammu and Kashmir	Bandipore district	IN	Jammu and Kashmir	34.5	74.83
+Bandipore district, Jammu and Kashmir	Bandipore district	IN	Jammu and Kashmir	34.42	74.64
 Badgam district, Jammu and Kashmir	Badgam district	IN	Jammu and Kashmir	34.02	74.72
 Kishtwar district, Jammu and Kashmir	Kishtwar district	IN	Jammu and Kashmir	33.31	75.77
 Bijapur district, Chhattisgarh	Bijapur district	IN	Chhattisgarh	18.79	80.82
-Chandrapur district, Maharashtra	Chandrapur district	IN	Maharashtra	20.12	79.44
+Chandrapur district, Maharashtra	Chandrapur district	IN	Maharashtra	19.95	79.3
 Changlang district, Arunachal Pradesh	Changlang district	IN	Arunachal Pradesh	27.13	95.73
 Chatra district, Jharkhand	Chatra district	IN	Jharkhand	24.21	84.87
 Anjaw district, Arunachal Pradesh	Anjaw district	IN	Arunachal Pradesh	27.89	96.8
@@ -598,32 +593,32 @@ Dadra & Nagar Haveli district, Dadra and Nagar Haveli and Daman and Diu	Dadra & 
 Kulgam district, Jammu and Kashmir	Kulgam district	IN	Jammu and Kashmir	33.64	75.02
 Samba district, Jammu and Kashmir	Samba district	IN	Jammu and Kashmir	32.56	75.12
 Sangli district, Maharashtra	Sangli district	IN	Maharashtra	16.85	74.56
-Debagarh district, Odisha	Debagarh district	IN	Odisha	21.47	84.8
+Debagarh district, Odisha	Debagarh district	IN	Odisha	21.54	84.73
 Dhalai district, Tripura	Dhalai district	IN	Tripura	23.84	91.93
 Dimapur district, Nagaland	Dimapur district	IN	Nagaland	25.91	93.72
 Hathras district, Uttar Pradesh	Hathras district	IN	Uttar Pradesh	27.6	78.05
-Imphal East district, Manipur	Imphal East district	IN	Manipur	24.82	93.94
+Imphal East district, Manipur	Imphal East district	IN	Manipur	24.81	93.94
 Imphal West district, Manipur	Imphal West district	IN	Manipur	24.79	93.87
 Longleng district, Nagaland	Longleng district	IN	Nagaland	26.49	94.82
 Jhajjar district, Haryana	Jhajjar district	IN	Haryana	28.61	76.66
 Kaithal district, Haryana	Kaithal district	IN	Haryana	29.8	76.4
-Kamrup Metropolitan district, Assam	Kamrup Metropolitan district	IN	Assam	26.05	92.01
+Kamrup Metropolitan district, Assam	Kamrup Metropolitan district	IN	Assam	26.14	91.8
 Palwal district, Haryana	Palwal district	IN	Haryana	28.14	77.33
 Pulwama district, Jammu and Kashmir	Pulwama district	IN	Jammu and Kashmir	33.87	74.9
 Punch district, Jammu and Kashmir	Punch district	IN	Jammu and Kashmir	33.77	74.09
 Kasganj district, Uttar Pradesh	Kasganj district	IN	Uttar Pradesh	27.81	78.65
 Ramban district, Jammu and Kashmir	Ramban district	IN	Jammu and Kashmir	33.24	75.24
-Reasi district, Jammu and Kashmir	Reasi district	IN	Jammu and Kashmir	33.21	74.82
+Reasi district, Jammu and Kashmir	Reasi district	IN	Jammu and Kashmir	33.08	74.83
 Mumbai district, Maharashtra	Mumbai district	IN	Maharashtra	18.96	72.85
 Panipat district, Haryana	Panipat district	IN	Haryana	29.39	76.97
 Kargil district, Ladakh	Kargil district	IN	Ladakh	34.56	76.13
 Khunti district, Jharkhand	Khunti district	IN	Jharkhand	23.08	85.28
 Kiphire district, Nagaland	Kiphire district	IN	Nagaland	25.87	94.79
 Kurung Kumey district, Arunachal Pradesh	Kurung Kumey district	IN	Arunachal Pradesh	28	93.39
-Shupiyan district, Jammu and Kashmir	Shupiyan district	IN	Jammu and Kashmir	33.73	74.82
+Shupiyan district, Jammu and Kashmir	Shupiyan district	IN	Jammu and Kashmir	33.72	74.83
 Singrauli district, Madhya Pradesh	Singrauli district	IN	Madhya Pradesh	24.2	82.68
 Lower Dibang Valley district, Arunachal Pradesh	Lower Dibang Valley district	IN	Arunachal Pradesh	28.37	95.88
-Sonbhadra district, Uttar Pradesh	Sonbhadra district	IN	Uttar Pradesh	24.4	83.05
+Sonbhadra district, Uttar Pradesh	Sonbhadra district	IN	Uttar Pradesh	24.69	83.07
 South Garo Hills district, Meghalaya	South Garo Hills district	IN	Meghalaya	25.3	90.59
 Nuh district, Haryana	Nuh district	IN	Haryana	28.1	77
 North  & Middle Andaman district, Andaman and Nicobar	North  & Middle Andaman district	IN	Andaman and Nicobar	12.84	92.87
@@ -633,13 +628,13 @@ Papum Pare district, Arunachal Pradesh	Papum Pare district	IN	Arunachal Pradesh	
 Ramgarh district, Jharkhand	Ramgarh district	IN	Jharkhand	23.63	85.52
 Saiha district, Mizoram	Saiha district	IN	Mizoram	22.49	92.98
 Sant Kabir Nagar district, Uttar Pradesh	Sant Kabir Nagar district	IN	Uttar Pradesh	26.79	83.03
-Subarnapur district, Odisha	Subarnapur district	IN	Odisha	20.93	83.82
-Tawang district, Arunachal Pradesh	Tawang district	IN	Arunachal Pradesh	27.66	91.95
+Subarnapur district, Odisha	Subarnapur district	IN	Odisha	20.83	83.92
+Tawang district, Arunachal Pradesh	Tawang district	IN	Arunachal Pradesh	27.57	91.8
 Upper Siang district, Arunachal Pradesh	Upper Siang district	IN	Arunachal Pradesh	28.83	94.92
-Yamunanagar district, Haryana	Yamunanagar district	IN	Haryana	30.24	77.3
+Yamunanagar district, Haryana	Yamunanagar district	IN	Haryana	30.13	77.28
 Arwal district, Bihar	Arwal district	IN	Bihar	25.24	84.67
 Ganderbal district, Jammu and Kashmir	Ganderbal district	IN	Jammu and Kashmir	34.23	74.77
-Kupwara district, Jammu and Kashmir	Kupwara district	IN	Jammu and Kashmir	34.53	74.27
+Kupwara district, Jammu and Kashmir	Kupwara district	IN	Jammu and Kashmir	34.53	74.26
 Biswanath district, Assam	Biswanath district	IN	Assam	26.73	93.15
 Namsai district, Arunachal Pradesh	Namsai district	IN	Arunachal Pradesh	27.67	95.86
 Kra Daadi district, Arunachal Pradesh	Kra Daadi district	IN	Arunachal Pradesh	27.69	93.63
@@ -719,21 +714,21 @@ Lower Siang district, Arunachal Pradesh	Lower Siang district	IN	Arunachal Prades
 Chengalpattu district, Tamil Nadu	Chengalpattu district	IN	Tamil Nadu	12.69	79.98
 Kallakurichi district, Tamil Nadu	Kallakurichi district	IN	Tamil Nadu	11.73	78.96
 Ranipet district, Tamil Nadu	Ranipet district	IN	Tamil Nadu	12.92	79.33
-Tenkasi district, Tamil Nadu	Tenkasi district	IN	Tamil Nadu	8.95	77.32
+Tenkasi district, Tamil Nadu	Tenkasi district	IN	Tamil Nadu	8.96	77.32
 Tirupattur district, Tamil Nadu	Tirupattur district	IN	Tamil Nadu	12.49	78.57
 Mayiladuthurai district, Tamil Nadu	Mayiladuthurai district	IN	Tamil Nadu	11.1	79.66
 Shi Yomi district, Arunachal Pradesh	Shi Yomi district	IN	Arunachal Pradesh	28.53	94.37
 Pakke Kessang district, Arunachal Pradesh	Pakke Kessang district	IN	Arunachal Pradesh	27.11	93.04
 Narayanpet district, Telangana	Narayanpet district	IN	Telangana	16.75	77.5
 Mulugu district, Telangana	Mulugu district	IN	Telangana	18.19	79.94
-Niwari district, Madhya Pradesh	Niwari district	IN	Madhya Pradesh	25.28	78.75
+Niwari district, Madhya Pradesh	Niwari district	IN	Madhya Pradesh	25.35	78.8
 Kamle district, Arunachal Pradesh	Kamle district	IN	Arunachal Pradesh	27.8	94.07
 Lepa Rada district, Arunachal Pradesh	Lepa Rada district	IN	Arunachal Pradesh	27.99	94.69
 Saitual district, Mizoram	Saitual district	IN	Mizoram	23.68	92.97
 Khawzawl district, Mizoram	Khawzawl district	IN	Mizoram	23.52	93.19
 Hnahthial district, Mizoram	Hnahthial district	IN	Mizoram	22.97	92.93
 Alluri Sitharama Raju district, Andhra Pradesh	Alluri Sitharama Raju district	IN	Andhra Pradesh	17.89	82.21
-Anakapalli district, Andhra Pradesh	Anakapalli district	IN	Andhra Pradesh	17.68	82.79
+Anakapalli district, Andhra Pradesh	Anakapalli district	IN	Andhra Pradesh	17.69	83
 Annamayya district, Andhra Pradesh	Annamayya district	IN	Andhra Pradesh	13.91	78.65
 Bajali district, Assam	Bajali district	IN	Assam	26.53	91.17
 Bapatla district, Andhra Pradesh	Bapatla district	IN	Andhra Pradesh	15.9	80.47
@@ -743,7 +738,7 @@ Eluru district, Andhra Pradesh	Eluru district	IN	Andhra Pradesh	16.71	81.1
 Gaurella Pendra Marwahi district, Chhattisgarh	Gaurella Pendra Marwahi district	IN	Chhattisgarh	22.83	81.96
 Khairgarh Chhuikhadan Gandai district, Chhattisgarh	Khairgarh Chhuikhadan Gandai district	IN	Chhattisgarh	21.53	80.95
 Konaseema district, Andhra Pradesh	Konaseema district	IN	Andhra Pradesh	16.64	82.08
-Malerkotla district, Punjab	Malerkotla district	IN	Punjab	30.53	75.91
+Malerkotla district, Punjab	Malerkotla district	IN	Punjab	30.53	75.88
 Manendragarh Chirimiri Bharatpur district, Chhattisgarh	Manendragarh Chirimiri Bharatpur district	IN	Chhattisgarh	23.43	82.18
 Mohla Manpur Ambagarh Chouki district, Chhattisgarh	Mohla Manpur Ambagarh Chouki district	IN	Chhattisgarh	20.49	80.8
 Nandyal district, Andhra Pradesh	Nandyal district	IN	Andhra Pradesh	15.48	78.48
@@ -3432,7 +3427,6 @@ Taos County, New Mexico	Taos County	US	New Mexico	36.58	-105.63
 Torrance County, New Mexico	Torrance County	US	New Mexico	34.64	-105.85
 Union County, New Mexico	Union County	US	New Mexico	36.48	-103.47
 Valencia County, New Mexico	Valencia County	US	New Mexico	34.72	-106.81
-Carson City, Nevada	Carson City	US	Nevada	39.16	-119.78
 Churchill County, Nevada	Churchill County	US	Nevada	39.58	-118.34
 Clark County, Nevada	Clark County	US	Nevada	36.22	-115.01
 Douglas County, Nevada	Douglas County	US	Nevada	38.91	-119.62
@@ -3904,115 +3898,74 @@ South Central Connecticut Planning Region, Connecticut	South Central Connecticut
 Southeastern Connecticut Planning Region, Connecticut	Southeastern Connecticut Planning Region	US	Connecticut	41.5	-72.1
 Northeastern Connecticut Planning Region, Connecticut	Northeastern Connecticut Planning Region	US	Connecticut	41.83	-71.98
 Northwest Hills Planning Region, Connecticut	Northwest Hills Planning Region	US	Connecticut	41.85	-73.22
-Abitibi-Temiscamingue, Quebec	Abitibi-Temiscamingue	CA	Quebec	48.1	-77.78
+Abitibi-Temiscamingue division, Quebec	Abitibi-Temiscamingue division	CA	Quebec	48.1	-77.78
 Albert County, New Brunswick	Albert County	CA	New Brunswick	45.83	-64.92
-Alexander, Manitoba	Alexander	CA	Manitoba	50.48	-96.05
-Algoma, Ontario	Algoma	CA	Ontario	47.88	-84.42
-Alonsa, Manitoba	Alonsa	CA	Manitoba	50.98	-99.05
+Algoma division, Ontario	Algoma division	CA	Ontario	47.88	-84.42
 Annapolis County, Nova Scotia	Annapolis County	CA	Nova Scotia	44.58	-65.17
 Antigonish County, Nova Scotia	Antigonish County	CA	Nova Scotia	45.67	-61.92
-Argyle, Manitoba	Argyle	CA	Manitoba	49.35	-99.25
-Armstrong, Manitoba	Armstrong	CA	Manitoba	50.67	-97.45
-Brant, Ontario	Brant	CA	Ontario	43.17	-80.33
-Brokenhead, Manitoba	Brokenhead	CA	Manitoba	50.08	-96.5
+Brant division, Ontario	Brant division	CA	Ontario	43.17	-80.33
 Bruce County, Ontario	Bruce County	CA	Ontario	44.5	-81.25
 Cape Breton County, Nova Scotia	Cape Breton County	CA	Nova Scotia	46	-60.32
 Capital Regional District, British Columbia	Capital Regional District	CA	British Columbia	48.42	-123.59
 Cariboo Regional District, British Columbia	Cariboo Regional District	CA	British Columbia	52.33	-123.17
 Carleton County, New Brunswick	Carleton County	CA	New Brunswick	46.33	-67.42
-Cartier, Manitoba	Cartier	CA	Manitoba	49.88	-97.68
 Central Coast Regional District, British Columbia	Central Coast Regional District	CA	British Columbia	52.17	-127
 Charlotte County, New Brunswick	Charlotte County	CA	New Brunswick	45.17	-66.83
-Chatham-Kent, Ontario	Chatham-Kent	CA	Ontario	42.4	-82.18
+Chatham-Kent division, Ontario	Chatham-Kent division	CA	Ontario	42.4	-82.18
 Cochrane District, Ontario	Cochrane District	CA	Ontario	50	-83
-Colchester, Nova Scotia	Colchester	CA	Nova Scotia	45.33	-63.25
-Coldwell, Manitoba	Coldwell	CA	Manitoba	50.65	-97.9
+Colchester division, Nova Scotia	Colchester division	CA	Nova Scotia	45.33	-63.25
 Columbia-Shuswap Regional District, British Columbia	Columbia-Shuswap Regional District	CA	British Columbia	51.42	-117.67
-Cornwallis, Manitoba	Cornwallis	CA	Manitoba	49.8	-99.85
-Cote-Nord, Quebec	Cote-Nord	CA	Quebec	50.87	-65.82
+Cote-Nord division, Quebec	Cote-Nord division	CA	Quebec	50.87	-65.82
 Cowichan Valley Regional District, British Columbia	Cowichan Valley Regional District	CA	British Columbia	48.83	-124.22
 Cumberland County, Nova Scotia	Cumberland County	CA	Nova Scotia	45.75	-64.17
-Dauphin, Manitoba	Dauphin	CA	Manitoba	51.2	-100.06
-De Salaberry, Manitoba	De Salaberry	CA	Manitoba	49.4	-97.01
 Digby County, Nova Scotia	Digby County	CA	Nova Scotia	44.37	-65.7
 Dufferin County, Ontario	Dufferin County	CA	Ontario	44.08	-80.25
-Dufferin, Manitoba	Dufferin	CA	Manitoba	49.53	-98.07
-Durham, Ontario	Durham	CA	Ontario	44.2	-79
-East St. Paul, Manitoba	East St. Paul	CA	Manitoba	49.98	-97.01
+Durham division, Ontario	Durham division	CA	Ontario	44.2	-79
 Elgin County, Ontario	Elgin County	CA	Ontario	42.5	-81.67
-Elton, Manitoba	Elton	CA	Manitoba	49.97	-99.84
 Essex County, Ontario	Essex County	CA	Ontario	42.17	-82.83
-Estrie, Quebec	Estrie	CA	Quebec	45.48	-71.67
-Ethelbert, Manitoba	Ethelbert	CA	Manitoba	51.53	-100.49
-Fisher, Manitoba	Fisher	CA	Manitoba	51.08	-97.58
+Estrie division, Quebec	Estrie division	CA	Quebec	45.48	-71.67
 Fraser Valley Regional District, British Columbia	Fraser Valley Regional District	CA	British Columbia	49.58	-121.84
 Frontenac County, Ontario	Frontenac County	CA	Ontario	44.67	-76.75
-Gilbert Plains, Manitoba	Gilbert Plains	CA	Manitoba	51.18	-100.42
-Gimli, Manitoba	Gimli	CA	Manitoba	50.67	-97.05
-Grahamdale, Manitoba	Grahamdale	CA	Manitoba	51.38	-98.54
-Grandview, Manitoba	Grandview	CA	Manitoba	51.2	-100.81
 Metro Vancouver Regional District, British Columbia	Metro Vancouver Regional District	CA	British Columbia	49.33	-123
 Grey County, Ontario	Grey County	CA	Ontario	44.33	-80.75
-Grey, Manitoba	Grey	CA	Manitoba	49.71	-98.08
 Guysborough County, Nova Scotia	Guysborough County	CA	Nova Scotia	45.38	-61.5
 Haldimand County, Ontario	Haldimand County	CA	Ontario	42.98	-79.87
 Haliburton County, Ontario	Haliburton County	CA	Ontario	45.17	-78.5
 Halifax Regional Municipality, Nova Scotia	Halifax Regional Municipality	CA	Nova Scotia	44.87	-63.72
-Halton, Ontario	Halton	CA	Ontario	43.5	-79.88
-Hamilton, Ontario	Hamilton	CA	Ontario	43.26	-79.93
-Hamiota, Manitoba	Hamiota	CA	Manitoba	50.17	-100.6
-Hanover, Manitoba	Hanover	CA	Manitoba	49.47	-96.83
-Hants, Nova Scotia	Hants	CA	Nova Scotia	45.03	-63.87
+Halton division, Ontario	Halton division	CA	Ontario	43.5	-79.88
+Hants division, Nova Scotia	Hants division	CA	Nova Scotia	45.03	-63.87
 Hastings County, Ontario	Hastings County	CA	Ontario	44.75	-77.67
-Headingley, Manitoba	Headingley	CA	Manitoba	49.87	-97.39
 Huron County, Ontario	Huron County	CA	Ontario	43.67	-81.5
 Inverness County, Nova Scotia	Inverness County	CA	Nova Scotia	46.33	-61.08
-Kawartha Lakes, Ontario	Kawartha Lakes	CA	Ontario	44.58	-78.83
-Kelsey, Manitoba	Kelsey	CA	Manitoba	54.16	-101.38
+Kawartha Lakes division, Ontario	Kawartha Lakes division	CA	Ontario	44.58	-78.83
 Kenora District, Ontario	Kenora District	CA	Ontario	54	-88
 Kent County, New Brunswick	Kent County	CA	New Brunswick	46.58	-65.25
 Kings County, Prince Edward Island	Kings County	CA	Prince Edward Island	46.25	-62.5
 Kings County, Nova Scotia	Kings County	CA	Nova Scotia	45.03	-64.67
 Kings County, New Brunswick	Kings County	CA	New Brunswick	45.67	-65.75
-La Broquerie, Manitoba	La Broquerie	CA	Manitoba	49.49	-96.52
-Lac du Bonnet, Manitoba	Lac du Bonnet	CA	Manitoba	50.25	-96.17
 Lambton County, Ontario	Lambton County	CA	Ontario	42.75	-82.08
 Lanark County, Ontario	Lanark County	CA	Ontario	45.08	-76.33
-Lanaudiere, Quebec	Lanaudiere	CA	Quebec	46.77	-73.83
-Laurentides, Quebec	Laurentides	CA	Quebec	46.43	-74.98
-Laval, Quebec	Laval	CA	Quebec	45.58	-73.75
+Lanaudiere division, Quebec	Lanaudiere division	CA	Quebec	46.77	-73.83
+Laurentides division, Quebec	Laurentides division	CA	Quebec	46.43	-74.98
 Lennox and Addington County, Ontario	Lennox and Addington County	CA	Ontario	44.5	-77
-Lorne, Manitoba	Lorne	CA	Manitoba	49.42	-98.75
-Louise, Manitoba	Louise	CA	Manitoba	49.16	-98.9
 Lunenburg County, Nova Scotia	Lunenburg County	CA	Nova Scotia	44.43	-64.6
-Macdonald, Manitoba	Macdonald	CA	Manitoba	49.67	-97.5
 Manitoulin District, Ontario	Manitoulin District	CA	Ontario	45.75	-82.5
-Mauricie, Quebec	Mauricie	CA	Quebec	47.55	-73.42
-McCreary, Manitoba	McCreary	CA	Manitoba	50.75	-99.33
+Mauricie division, Quebec	Mauricie division	CA	Quebec	47.55	-73.42
 Middlesex County, Ontario	Middlesex County	CA	Ontario	43	-81.42
-Montcalm, Manitoba	Montcalm	CA	Manitoba	49.16	-97.34
-Monteregie, Quebec	Monteregie	CA	Quebec	45.38	-73.1
-Montreal, Quebec	Montreal	CA	Quebec	45.5	-73.68
-Morris, Manitoba	Morris	CA	Manitoba	49.4	-97.46
-Mossey River, Manitoba	Mossey River	CA	Manitoba	51.67	-100
+Monteregie division, Quebec	Monteregie division	CA	Quebec	45.38	-73.1
 District Municipality of Muskoka, Ontario	District Municipality of Muskoka	CA	Ontario	45.17	-79.5
 Regional Municipality of Niagara, Ontario	Regional Municipality of Niagara	CA	Ontario	43	-79.25
 Nipissing District, Ontario	Nipissing District	CA	Ontario	46	-79
-North Norfolk, Manitoba	North Norfolk	CA	Manitoba	49.92	-98.84
 Northumberland County, New Brunswick	Northumberland County	CA	New Brunswick	46.92	-66
 Northumberland County, Ontario	Northumberland County	CA	Ontario	44.17	-78
-Outaouais, Quebec	Outaouais	CA	Quebec	46.27	-76.32
+Outaouais division, Quebec	Outaouais division	CA	Quebec	46.27	-76.32
 Oxford County, Ontario	Oxford County	CA	Ontario	43.13	-80.83
 Parry Sound District, Ontario	Parry Sound District	CA	Ontario	45.75	-79.83
 Peace River Regional District, British Columbia	Peace River Regional District	CA	British Columbia	56.67	-122.75
-Peel, Ontario	Peel	CA	Ontario	43.75	-79.78
-Pembina, Manitoba	Pembina	CA	Manitoba	49.17	-98.49
+Peel division, Ontario	Peel division	CA	Ontario	43.75	-79.78
 Perth County, Ontario	Perth County	CA	Ontario	43.5	-81.08
 Peterborough County, Ontario	Peterborough County	CA	Ontario	44.55	-78.25
 Pictou County, Nova Scotia	Pictou County	CA	Nova Scotia	45.5	-62.58
-Piney, Manitoba	Piney	CA	Manitoba	49.22	-95.92
-Pipestone, Manitoba	Pipestone	CA	Manitoba	49.67	-101.17
-Portage la Prairie, Manitoba	Portage la Prairie	CA	Manitoba	49.99	-98.27
 Powell River Regional District, British Columbia	Powell River Regional District	CA	British Columbia	50	-124.5
 Prince County, Prince Edward Island	Prince County	CA	Prince Edward Island	46.75	-64.08
 Prince Edward County, Ontario	Prince Edward County	CA	Ontario	44	-77.25
@@ -4033,117 +3986,72 @@ Regional District of Nanaimo, British Columbia	Regional District of Nanaimo	CA	B
 Regional District of North Okanagan, British Columbia	Regional District of North Okanagan	CA	British Columbia	50.42	-118.75
 Regional District of Okanagan-Similkameen, British Columbia	Regional District of Okanagan-Similkameen	CA	British Columbia	49.42	-120
 Renfrew County, Ontario	Renfrew County	CA	Ontario	45.5	-77.08
-Reynolds, Manitoba	Reynolds	CA	Manitoba	49.71	-95.93
-Rhineland, Manitoba	Rhineland	CA	Manitoba	49.16	-97.66
-Richmond County, Nova Scotia	Richmond County	CA	Nova Scotia	45.65	-60.77
-Ritchot, Manitoba	Ritchot	CA	Manitoba	49.7	-97.09
-Cartwright-Roblin, Manitoba	Cartwright-Roblin	CA	Manitoba	49.1	-99.29
-Rockwood, Manitoba	Rockwood	CA	Manitoba	50.25	-97.33
-Roland, Manitoba	Roland	CA	Manitoba	49.34	-97.91
-Rosedale, Manitoba	Rosedale	CA	Manitoba	50.33	-99.51
-Rossburn, Manitoba	Rossburn	CA	Manitoba	50.73	-100.74
-Rosser, Manitoba	Rosser	CA	Manitoba	49.98	-97.44
-Saguenay/Lac-Saint-Jean, Quebec	Saguenay/Lac-Saint-Jean	CA	Quebec	49.87	-71.75
+Saguenay/Lac-Saint-Jean division, Quebec	Saguenay/Lac-Saint-Jean division	CA	Quebec	49.87	-71.75
 Saint John County, New Brunswick	Saint John County	CA	New Brunswick	45.33	-65.83
 Shelburne County, Nova Scotia	Shelburne County	CA	Nova Scotia	43.85	-65.28
-Sifton, Manitoba	Sifton	CA	Manitoba	49.67	-100.66
 Simcoe County, Ontario	Simcoe County	CA	Ontario	44.42	-79.83
 North Coast Regional District, British Columbia	North Coast Regional District	CA	British Columbia	53.75	-132
-Springfield, Manitoba	Springfield	CA	Manitoba	49.92	-96.75
 Squamish-Lillooet Regional District, British Columbia	Squamish-Lillooet Regional District	CA	British Columbia	50.5	-123
-St. Andrews, Manitoba	St. Andrews	CA	Manitoba	50.25	-97
-Stanley, Manitoba	Stanley	CA	Manitoba	49.17	-98.09
-St. Clements, Manitoba	St. Clements	CA	Manitoba	50.16	-96.75
-Ste. Anne, Manitoba	Ste. Anne	CA	Manitoba	49.58	-96.5
-Ste. Rose, Manitoba	Ste. Rose	CA	Manitoba	51	-99.42
-St. Francois Xavier, Manitoba	St. Francois Xavier	CA	Manitoba	49.93	-97.54
-St. Laurent, Manitoba	St. Laurent	CA	Manitoba	50.33	-97.83
-Stuartburn, Manitoba	Stuartburn	CA	Manitoba	49.13	-96.52
-Sudbury, Ontario	Sudbury	CA	Ontario	47.17	-82
-Greater Sudbury, Ontario	Greater Sudbury	CA	Ontario	46.5	-81
+Sudbury division, Ontario	Sudbury division	CA	Ontario	47.17	-82
 Sunbury County, New Brunswick	Sunbury County	CA	New Brunswick	45.92	-66.33
 Sunshine Coast Regional District, British Columbia	Sunshine Coast Regional District	CA	British Columbia	50	-123.75
-Tache, Manitoba	Tache	CA	Manitoba	49.75	-96.85
-Thompson, Manitoba	Thompson	CA	Manitoba	49.33	-98.25
 Thompson-Nicola Regional District, British Columbia	Thompson-Nicola Regional District	CA	British Columbia	51	-120.5
-Thunder Bay District, Ontario	Thunder Bay District	CA	Ontario	49.5	-88.5
 Timiskaming District, Ontario	Timiskaming District	CA	Ontario	47.75	-80.33
-Killarney-Turtle Mountain, Manitoba	Killarney-Turtle Mountain	CA	Manitoba	49.17	-99.67
-United Counties of Leeds and Grenville, Ontario	United Counties of Leeds and Grenville	CA	Ontario	44.83	-75.67
-Comtes unis de Prescott et Russell, Ontario	Comtes unis de Prescott et Russell	CA	Ontario	45.42	-75.25
-United Counties of Stormont, Dundas and Glengarry, Ontario	United Counties of Stormont, Dundas and Glengarry	CA	Ontario	45.25	-74.67
-Victoria County, Nova Scotia	Victoria County	CA	Nova Scotia	46.5	-60.58
-Victoria, Manitoba	Victoria	CA	Manitoba	49.66	-98.9
-Victoria Beach, Manitoba	Victoria Beach	CA	Manitoba	50.71	-96.54
+United Counties of Leeds and Grenville division, Ontario	United Counties of Leeds and Grenville division	CA	Ontario	44.83	-75.67
+Comtes unis de Prescott et Russell division, Ontario	Comtes unis de Prescott et Russell division	CA	Ontario	45.42	-75.25
+United Counties of Stormont, Dundas and Glengarry division, Ontario	United Counties of Stormont, Dundas and Glengarry division	CA	Ontario	45.25	-74.67
 Regional Municipality of Waterloo, Ontario	Regional Municipality of Waterloo	CA	Ontario	43.5	-80.5
 Wellington County, Ontario	Wellington County	CA	Ontario	43.83	-80.5
 Westmorland County, New Brunswick	Westmorland County	CA	New Brunswick	46	-64.67
-West St. Paul, Manitoba	West St. Paul	CA	Manitoba	50	-97.16
-Whitehead, Manitoba	Whitehead	CA	Manitoba	49.78	-100.23
-Whitemouth, Manitoba	Whitemouth	CA	Manitoba	49.97	-95.96
-Woodlands, Manitoba	Woodlands	CA	Manitoba	50.17	-97.75
 Yarmouth County, Nova Scotia	Yarmouth County	CA	Nova Scotia	43.95	-66.03
 York County, New Brunswick	York County	CA	New Brunswick	46.17	-67
-York, Ontario	York	CA	Ontario	44	-79.47
-Bas-Saint-Laurent, Quebec	Bas-Saint-Laurent	CA	Quebec	48.05	-68.02
-Capitale-Nationale, Quebec	Capitale-Nationale	CA	Quebec	47.38	-71.12
-Nord-du-Quebec, Quebec	Nord-du-Quebec	CA	Quebec	51.96	-74.9
-Gaspesie-Iles-de-la-Madeleine, Quebec	Gaspesie-Iles-de-la-Madeleine	CA	Quebec	48.88	-65.41
-Chaudiere-Appalaches, Quebec	Chaudiere-Appalaches	CA	Quebec	46.56	-70.83
-Restigouche, New Brunswick	Restigouche	CA	New Brunswick	47.74	-67.04
-Toronto county, Ontario	Toronto county	CA	Ontario	43.7	-79.43
-Centre-du-Quebec, Quebec	Centre-du-Quebec	CA	Quebec	46.02	-71.98
-Ottawa, Ontario	Ottawa	CA	Ontario	45.42	-75.7
+York division, Ontario	York division	CA	Ontario	44	-79.47
+Bas-Saint-Laurent division, Quebec	Bas-Saint-Laurent division	CA	Quebec	48.05	-68.02
+Capitale-Nationale division, Quebec	Capitale-Nationale division	CA	Quebec	47.38	-71.12
+Nord-du-Quebec division, Quebec	Nord-du-Quebec division	CA	Quebec	51.96	-74.9
+Gaspesie-Iles-de-la-Madeleine division, Quebec	Gaspesie-Iles-de-la-Madeleine division	CA	Quebec	48.88	-65.41
+Chaudiere-Appalaches division, Quebec	Chaudiere-Appalaches division	CA	Quebec	46.56	-70.83
+Restigouche division, New Brunswick	Restigouche division	CA	New Brunswick	47.74	-67.04
+Centre-du-Quebec division, Quebec	Centre-du-Quebec division	CA	Quebec	46.02	-71.98
 Comox Valley Regional District, British Columbia	Comox Valley Regional District	CA	British Columbia	49.69	-124.98
 Northern Rockies Regional Municipality, British Columbia	Northern Rockies Regional Municipality	CA	British Columbia	59	-123.75
 Stikine Region, British Columbia	Stikine Region	CA	British Columbia	58.86	-128.76
 Strathcona Regional District, British Columbia	Strathcona Regional District	CA	British Columbia	50.21	-125.51
-Gloucester County, New Brunswick	Gloucester County	CA	New Brunswick	47.65	-65.25
 Madawaska County, New Brunswick	Madawaska County	CA	New Brunswick	47.43	-68.21
-Victoria County, New Brunswick	Victoria County	CA	New Brunswick	47.07	-67.41
-Yellowhead, Manitoba	Yellowhead	CA	Manitoba	50.48	-100.48
 Inuvik Region, Northwest Territories	Inuvik Region	CA	Northwest Territories	68.36	-133.71
 North Slave Region, Northwest Territories	North Slave Region	CA	Northwest Territories	62.8	-116.04
 Sahtu Region, Northwest Territories	Sahtu Region	CA	Northwest Territories	65.28	-126.85
 South Slave Region, Northwest Territories	South Slave Region	CA	Northwest Territories	60	-111.89
 Dehcho Region, Northwest Territories	Dehcho Region	CA	Northwest Territories	61.86	-121.35
-Ellice-Archie, Manitoba	Ellice-Archie	CA	Manitoba	50.46	-101.28
-Wallace-Woodworth, Manitoba	Wallace-Woodworth	CA	Manitoba	49.98	-101.2
-Lakeshore, Manitoba	Lakeshore	CA	Manitoba	51.08	-99.7
-Prairie Lakes, Manitoba	Prairie Lakes	CA	Manitoba	49.46	-99.66
-Oakview, Manitoba	Oakview	CA	Manitoba	50.15	-100.06
-Riding Mountain West, Manitoba	Riding Mountain West	CA	Manitoba	50.84	-101.17
-Terres-Cries-de-la-Baie-James, Quebec	Terres-Cries-de-la-Baie-James	CA	Quebec	53.06	-78.68
-Teslin, Yukon	Teslin	CA	Yukon	60.22	-132.77
-Faro, Yukon	Faro	CA	Yukon	62.21	-133.36
-Village of Teslin, Yukon	Village of Teslin	CA	Yukon	60.17	-132.72
-Watson Lake, Yukon	Watson Lake	CA	Yukon	60.07	-128.75
-Whitehorse, Yukon	Whitehorse	CA	Yukon	60.7	-135.07
-Haines Junction, Yukon	Haines Junction	CA	Yukon	60.77	-137.51
-Carmacks, Yukon	Carmacks	CA	Yukon	62.1	-136.26
-Mayo, Yukon	Mayo	CA	Yukon	63.6	-135.9
-Dawson, Yukon	Dawson	CA	Yukon	64.05	-139.39
-Tulita, Northwest Territories	Tulita	CA	Northwest Territories	64.92	-125.46
-Norman Wells, Northwest Territories	Norman Wells	CA	Northwest Territories	65.29	-126.76
-Paulatuk, Northwest Territories	Paulatuk	CA	Northwest Territories	69.32	-123.99
-Whati, Northwest Territories	Whati	CA	Northwest Territories	63.16	-117.18
-Aklavik, Northwest Territories	Aklavik	CA	Northwest Territories	68.23	-135.07
-Tuktoyaktuk, Northwest Territories	Tuktoyaktuk	CA	Northwest Territories	69.43	-133
-Sachs Harbour, Northwest Territories	Sachs Harbour	CA	Northwest Territories	72.02	-125.24
-Fort Simpson, Northwest Territories	Fort Simpson	CA	Northwest Territories	61.81	-121.32
-Fort Good Hope, Northwest Territories	Fort Good Hope	CA	Northwest Territories	66.27	-128.58
-Tsiigehtchic, Northwest Territories	Tsiigehtchic	CA	Northwest Territories	67.43	-133.69
-Hay River, Northwest Territories	Hay River	CA	Northwest Territories	60.76	-115.89
-Fort McPherson, Northwest Territories	Fort McPherson	CA	Northwest Territories	67.43	-134.83
-Behchoko, Northwest Territories	Behchoko	CA	Northwest Territories	62.82	-115.99
-Gameti, Northwest Territories	Gameti	CA	Northwest Territories	64.11	-117.31
-Yellowknife, Northwest Territories	Yellowknife	CA	Northwest Territories	62.47	-114.41
-Wekweeti, Northwest Territories	Wekweeti	CA	Northwest Territories	64.19	-114.19
-Fort Liard, Northwest Territories	Fort Liard	CA	Northwest Territories	60.26	-123.38
-Fort Providence, Northwest Territories	Fort Providence	CA	Northwest Territories	61.42	-117.62
-Fort Resolution, Northwest Territories	Fort Resolution	CA	Northwest Territories	61.05	-113.69
-Inuvik, Northwest Territories	Inuvik	CA	Northwest Territories	68.34	-133.61
-Ulukhaktok, Northwest Territories	Ulukhaktok	CA	Northwest Territories	70.76	-117.74
-Deline, Northwest Territories	Deline	CA	Northwest Territories	65.21	-123.43
-Enterprise, Northwest Territories	Enterprise	CA	Northwest Territories	60.56	-116.2
-Fort Smith, Northwest Territories	Fort Smith	CA	Northwest Territories	60.03	-112.08`;
+Terres-Cries-de-la-Baie-James division, Quebec	Terres-Cries-de-la-Baie-James division	CA	Quebec	53.06	-78.68
+Teslin division, Yukon	Teslin division	CA	Yukon	60.22	-132.77
+Faro division, Yukon	Faro division	CA	Yukon	62.21	-133.36
+Village of Teslin division, Yukon	Village of Teslin division	CA	Yukon	60.17	-132.72
+Watson Lake division, Yukon	Watson Lake division	CA	Yukon	60.07	-128.75
+Haines Junction division, Yukon	Haines Junction division	CA	Yukon	60.77	-137.51
+Carmacks division, Yukon	Carmacks division	CA	Yukon	62.1	-136.26
+Mayo division, Yukon	Mayo division	CA	Yukon	63.6	-135.9
+Dawson division, Yukon	Dawson division	CA	Yukon	64.05	-139.39
+Tulita division, Northwest Territories	Tulita division	CA	Northwest Territories	64.92	-125.46
+Norman Wells division, Northwest Territories	Norman Wells division	CA	Northwest Territories	65.29	-126.76
+Paulatuk division, Northwest Territories	Paulatuk division	CA	Northwest Territories	69.32	-123.99
+Whati division, Northwest Territories	Whati division	CA	Northwest Territories	63.16	-117.18
+Aklavik division, Northwest Territories	Aklavik division	CA	Northwest Territories	68.23	-135.07
+Tuktoyaktuk division, Northwest Territories	Tuktoyaktuk division	CA	Northwest Territories	69.43	-133
+Sachs Harbour division, Northwest Territories	Sachs Harbour division	CA	Northwest Territories	72.02	-125.24
+Fort Simpson division, Northwest Territories	Fort Simpson division	CA	Northwest Territories	61.81	-121.32
+Fort Good Hope division, Northwest Territories	Fort Good Hope division	CA	Northwest Territories	66.27	-128.58
+Tsiigehtchic division, Northwest Territories	Tsiigehtchic division	CA	Northwest Territories	67.43	-133.69
+Hay River division, Northwest Territories	Hay River division	CA	Northwest Territories	60.76	-115.89
+Fort McPherson division, Northwest Territories	Fort McPherson division	CA	Northwest Territories	67.43	-134.83
+Behchoko division, Northwest Territories	Behchoko division	CA	Northwest Territories	62.82	-115.99
+Gameti division, Northwest Territories	Gameti division	CA	Northwest Territories	64.11	-117.31
+Wekweeti division, Northwest Territories	Wekweeti division	CA	Northwest Territories	64.19	-114.19
+Fort Liard division, Northwest Territories	Fort Liard division	CA	Northwest Territories	60.26	-123.38
+Fort Providence division, Northwest Territories	Fort Providence division	CA	Northwest Territories	61.42	-117.62
+Fort Resolution division, Northwest Territories	Fort Resolution division	CA	Northwest Territories	61.05	-113.69
+Inuvik division, Northwest Territories	Inuvik division	CA	Northwest Territories	68.34	-133.61
+Ulukhaktok division, Northwest Territories	Ulukhaktok division	CA	Northwest Territories	70.76	-117.74
+Deline division, Northwest Territories	Deline division	CA	Northwest Territories	65.21	-123.43
+Enterprise division, Northwest Territories	Enterprise division	CA	Northwest Territories	60.56	-116.2
+Fort Smith division, Northwest Territories	Fort Smith division	CA	Northwest Territories	60.03	-112.08`;
