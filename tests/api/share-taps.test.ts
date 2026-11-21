@@ -126,8 +126,9 @@ test("creators list: per-map 30-day column, labelled; no tapper identity", async
 
 test("the privacy page says what is counted and what is not", async () => {
   const html = await (await fetch(`${BASE}/privacy`)).text();
-  assert.match(html, /tap a share button for your map[^<]*thank-you\s+on WhatsApp, we add one to a count for your map, for that day and that channel/);
-  assert.match(html, /no record of who tapped, no names, and\s+nothing about your device with the count/);
+  const text = html.replace(/<[^>]+>/g, "").replace(/&#x27;|&apos;/g, "'").replace(/\s+/g, " ");
+  assert.match(text, /share button for your map from your own phone \(LinkedIn, copy link, the share sheet or the Story picture\), or send a thank-you on WhatsApp, we add one to a count for your map, for that day and that channel, up to 200 a day/);
+  assert.match(text, /We don't record which person or device tapped, and no names are kept with the count/);
   assert.match(html, /how many times its share buttons were tapped/);
   assert.match(html, /how often its share buttons were tapped \(per day, per channel\)/);
 });
@@ -267,9 +268,42 @@ test("the daily cap is per IST day: 200 taps yesterday do not hold back today's"
 });
 
 // The cap is a count followed by an insert, so taps that arrive together all see a count under 200 and all land.
-test("parallel taps never push a map past 200 in a day", { todo: "the cap is count-then-insert, not atomic (verifier finding)" }, async () => {
+test("parallel taps never push a map past 200 in a day", async () => {
   const m = await makeMap();
   await db.analyticsEvent.createMany({ data: Array.from({ length: 190 }, () => ({ event: "share", mapId: m.id, createdAt: istDayStart(new Date()), metadata: { channel: "copy" } })) });
   await Promise.all(Array.from({ length: 40 }, () => post({ event: "share", map: m.shortSlug, metadata: { channel: "copy" } })));
-  assert.ok((await db.analyticsEvent.count({ where: { mapId: m.id } })) <= 200);
+  assert.equal(await db.analyticsEvent.count({ where: { mapId: m.id } }), 200, "exactly the cap, never more");
+  assert.equal(await db.analyticsEvent.count({ where: { event: "share", mapId: null, createdAt: istDayStart(new Date()) } }) >= 30, true, "the rest still counted, against no map");
+});
+
+test("virality windows: a share on the oldest day of d7 is counted along with its open", async () => {
+  const { loadVirality } = await import("@/lib/growth-load");
+  const now = new Date("2026-11-20T06:30:00Z"); // 12:00 IST
+  const oldest = istDayStart(new Date(now.getTime() - 7 * 86_400_000)); // 00:00 IST, 7 days back: before a rolling now-7d bound
+  const before = await loadVirality(db, "d7", now);
+  const rows = [
+    { event: "share", createdAt: oldest, metadata: { channel: "linkedin" } },
+    { event: "map_view", mapId: null, createdAt: new Date(oldest.getTime() + 20 * 3_600_000), metadata: { s: "li" } }, // 20:00 IST same day: inside the rolling bound
+  ];
+  const made = await Promise.all(rows.map((data) => db.analyticsEvent.create({ data: data as any })));
+  try {
+    for (const zone of ["UTC", "Asia/Kolkata"]) {
+      const after = await db.$transaction(async (tx) => {
+        await tx.$executeRawUnsafe(`SET LOCAL TimeZone = '${zone}'`);
+        return loadVirality(tx as any, "d7", now);
+      });
+      const li = (v: typeof after) => v.funnel.rows.find((r) => r.channel === "li")!;
+      assert.equal(li(after).shares - li(before).shares, 1, `share on the oldest day, ${zone}`);
+      assert.equal(li(after).opens - li(before).opens, 1, `its open, ${zone}`);
+    }
+  } finally {
+    await db.analyticsEvent.deleteMany({ where: { id: { in: made.map((x) => x.id) } } });
+  }
+});
+
+test("recent activity leaves share taps out on purpose, and says so", async () => {
+  const html = await (await fetch(`${BASE}/admin/dashboard`, { headers: bearer })).text();
+  assert.match(html, /Page views and share taps are left out/);
+  const j = await (await fetch(`${BASE}/admin/dashboard?format=json`, { headers: bearer })).json();
+  assert.ok(!j.recent.some((r: any) => r.event === "share"));
 });

@@ -37,9 +37,9 @@ export default function PrivacyPage() {
 
       {/* PROPOSED wording (not yet approved): what the per-map share-tap counts are, and are not. */}
       <p id="share-taps">
-        When you tap a share button for your map (WhatsApp, LinkedIn, copy link, the share sheet or the Story picture), or send a thank-you
-        on WhatsApp, we add one to a count for your map, for that day and that channel. We keep no record of who tapped, no names, and
-        nothing about your device with the count (the limit counters described below are separate).
+        When you tap a share button for your map from your own phone (LinkedIn, copy link, the share sheet or the Story picture), or send a
+        thank-you on WhatsApp, we add one to a count for your map, for that day and that channel, up to 200 a day. We don&apos;t record
+        which person or device tapped, and no names are kept with the count (the limit counters described below are separate).
       </p>
 
       <h2>When a friend ties it back</h2>

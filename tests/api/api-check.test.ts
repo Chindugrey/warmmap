@@ -240,9 +240,14 @@ test("live counter: exact lantern total from the first lantern", async () => {
 
 test("analytics: allow-listed events; free text dropped", async () => {
   assert.equal((await api("/api/analytics", { method: "POST", body: { event: "anything" } })).status, 400);
+  // Share rows carry a day stamp and a random id, so "the latest" is meaningless: find the new row by the ids that appeared.
+  const ids = async () => new Set((await db.analyticsEvent.findMany({ where: { event: "share" }, select: { id: true } })).map((x) => x.id));
+  const seen = await ids();
   const r = await api("/api/analytics", { method: "POST", body: { event: "share", metadata: { channel: "whatsapp", name: FRIEND, url: "/t/x#Meera" } } });
   assert.equal(r.status, 200);
-  const ev = await db.analyticsEvent.findFirst({ where: { event: "share" }, orderBy: { createdAt: "desc" } });
+  const fresh = [...(await ids())].filter((id) => !seen.has(id));
+  assert.equal(fresh.length, 1);
+  const ev = await db.analyticsEvent.findUnique({ where: { id: fresh[0] } });
   assert.deepEqual(ev!.metadata, { channel: "whatsapp" });
 });
 

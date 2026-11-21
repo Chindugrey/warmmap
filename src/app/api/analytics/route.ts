@@ -1,9 +1,7 @@
 // POST /api/analytics: allow-listed client events only, small payloads.
 import { NextRequest, NextResponse } from "next/server";
 import { CLIENT_EVENTS, trackEvent } from "@/lib/analytics";
-import { prisma } from "@/lib/prisma";
 import { findMap, keyMatches } from "@/lib/owner";
-import { istDayStart } from "@/lib/dashboard";
 import { limitRequest, HOUR } from "@/lib/limits";
 
 /** Share taps counted against one map per IST day; more still count globally, against no map. */
@@ -30,11 +28,8 @@ export async function POST(req: NextRequest) {
   let mapId: string | null = null;
   if (body.event === "share" && typeof body.map === "string") {
     const map = await findMap(body.map);
-    if (map && keyMatches(map, req.headers.get("x-owner-key"))) {
-      const today = await prisma.analyticsEvent.count({ where: { mapId: map.id, event: "share", createdAt: { gte: istDayStart(new Date()) } } });
-      if (today < MAP_SHARE_DAILY_CAP) mapId = map.id;
-    }
+    if (map && keyMatches(map, req.headers.get("x-owner-key"))) mapId = map.id; // the cap is applied inside trackEvent
   }
-  await trackEvent(body.event as (typeof CLIENT_EVENTS)[number], mapId, body.metadata);
+  await trackEvent(body.event as (typeof CLIENT_EVENTS)[number], mapId, body.metadata, MAP_SHARE_DAILY_CAP);
   return NextResponse.json({ ok: true });
 }

@@ -7,6 +7,7 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import { CHANNELS } from "./dashboard";
 import { parseEntries } from "./entries";
 import { mapStats } from "./geo";
+import { istDayStart } from "./dashboard";
 import { shareTaps30dSql } from "./share-taps";
 import { computeKind } from "./kinds";
 import {
@@ -149,11 +150,14 @@ export const parseWindow = (v: string | null): WindowKey => (v === "d30" || v ==
 export async function loadVirality(db: PrismaClient, window: WindowKey = "all", now = new Date()) {
   const days = WINDOWS[window];
   const since = days ? new Date(now.getTime() - days * 86_400_000) : new Date(0);
+  // Share taps are stamped 00:00 IST of their day, so their window starts at an IST midnight: a rolling bound would drop
+  // the oldest partial day's taps. (UTC-converted, so the session time zone does not move it.)
+  const shareSince = Prisma.sql`(${days ? istDayStart(since) : since} AT TIME ZONE 'UTC')`;
   const [nodes, shareRows, openRows, myRows] = await Promise.all([
     loadNodes(db),
     db.$queryRaw<{ k: string | null; c: bigint }[]>`
       SELECT "metadata"->>'channel' AS k, count(*) AS c FROM "AnalyticsEvent"
-      WHERE "event" = 'share' AND "createdAt" >= ${since} GROUP BY 1`,
+      WHERE "event" = 'share' AND "createdAt" >= ${shareSince} GROUP BY 1`,
     db.$queryRaw<{ k: string; c: bigint }[]>`
       SELECT "metadata"->>'s' AS k, count(*) AS c FROM "AnalyticsEvent"
       WHERE "event" IN ('map_view', 't_open') AND "createdAt" >= ${since} AND "metadata"->>'s' IS NOT NULL GROUP BY 1`,

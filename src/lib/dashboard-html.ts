@@ -88,7 +88,7 @@ export function renderDashboard(d: Dashboard): string {
       `<h2>Top cities and countries</h2><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">${table(["Home city", "Maps"], d.topCities.map((c) => [c.city, c.maps]))}${table(["Country", "Maps"], d.topCountries.map((c) => [c.country, c.maps]))}</div>` +
       `<h2>Arrived via</h2>${table(["Arrived via", "Maps"], d.arrivedVia.map((v) => [v.via, v.maps]))}` +
       `<p class="def">cold = no invite; map = from a shared map; thanks = from a thank-you; seed = placed by us.</p>` +
-      `<h2>Recent activity</h2>${table(["Time (IST)", "Event", "Detail"], d.recent.map((r) => [ist(r.at), r.event, r.detail]))}` +
+      `<h2>Recent activity</h2><p class="sub">Latest events with their time. Page views and share taps are left out: share taps are kept only as daily counts (see the channel table and each map's page).</p>${table(["Time (IST)", "Event", "Detail"], d.recent.map((r) => [ist(r.at), r.event, r.detail]))}` +
       `<p class="def">The last 30 events (page views left out). Events carry no names or ids.</p>`
   );
 }

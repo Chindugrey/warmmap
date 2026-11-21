@@ -155,3 +155,25 @@ test("with no readable storage (no key on this phone) a share tap still counts, 
   assert.equal(await db.analyticsEvent.count({ where: { mapId: map.id } }), 0, "without the key nothing lands on the map");
   assert.ok((await db.analyticsEvent.count({ where: { event: "share", mapId: null } })) - globalBefore >= taps.length, "the taps still count, globally");
 });
+
+// The returning owner ("Kochi answered"): the ShareRow there is rendered only when there is new gold, and must name this map.
+test("the returning-owner screen's share buttons name the right map", { skip }, async () => {
+  const b = await launch({ width: 390, height: 844 });
+  open.push(b);
+  const slug = await makeMapInUi(b, "Ananyaqg");
+  const map = await db.map.findFirst({ where: { OR: [{ shortSlug: slug }, { publicId: slug }] } });
+  const link = await db.thankLink.create({ data: { tokenHash: `zz-qt-${Date.now()}`, mapId: map.id, entryIndex: 0, expiresAt: new Date(Date.now() + 86_400_000) } });
+  await db.vouch.create({ data: { mapId: map.id, entryIndex: 0, thankLinkId: link.id, tier: "tap" } });
+  await b.goto(BASE + `/m/${slug}`, 3500);
+  await stub(b);
+  await waitFor(b, `document.body.innerText.includes("Share your gratitude map")`);
+  const before = shareTaps(b).length;
+  const rowsBefore = await db.analyticsEvent.count({ where: { mapId: map.id } });
+  await clickText(b, "Copy link");
+  await clickText(b, "Share on LinkedIn");
+  await sleep(1000);
+  const taps = shareTaps(b).slice(before);
+  assert.deepEqual(taps.map((t) => t.metadata.channel).sort(), ["copy", "linkedin"]);
+  for (const t of taps) assert.equal(t.map, slug, "the returning-owner ShareRow names this map");
+  assert.equal((await db.analyticsEvent.count({ where: { mapId: map.id } })) - rowsBefore, 2, "both taps landed on this map");
+});

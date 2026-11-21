@@ -45,14 +45,26 @@ export function cleanMetadata(meta: unknown): Record<string, string | number> {
   return out;
 }
 
-export async function trackEvent(event: EventName, mapId?: string | null, metadata?: unknown) {
+/**
+ * `mapDailyCap` (share taps only): at most that many taps per map per IST day; one past it is kept against no map.
+ * The count and the insert run under a per-(map, day) advisory lock so taps that arrive together cannot all pass.
+ */
+export async function trackEvent(event: EventName, mapId?: string | null, metadata?: unknown, mapDailyCap?: number) {
   try {
     // A share tap is kept as a count, not as a moment: its time is the start of its IST day (00:00 IST) and its id is
     // random (a cuid embeds the time), so a row says "one tap that day" and nothing finer.
     const share = event === "share" ? { id: randomUUID(), createdAt: istDayStart(new Date()) } : {};
-    await prisma.analyticsEvent.create({
-      data: { event, mapId: mapId ?? null, metadata: cleanMetadata(metadata), ...share },
-    });
+    const data = { event, mapId: mapId ?? null, metadata: cleanMetadata(metadata), ...share };
+    if (event === "share" && mapId && mapDailyCap !== undefined) {
+      const day = istDayStart(new Date());
+      await prisma.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`share-cap:${mapId}:${day.toISOString()}`}, 0))`;
+        const today = await tx.analyticsEvent.count({ where: { mapId, event: "share", createdAt: { gte: day } } });
+        await tx.analyticsEvent.create({ data: today < mapDailyCap ? data : { ...data, mapId: null } });
+      });
+      return;
+    }
+    await prisma.analyticsEvent.create({ data });
   } catch (e) {
     console.error("Analytics error:", (e as Error).message);
   }
