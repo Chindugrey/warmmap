@@ -241,3 +241,35 @@ test("a JSON null body is a 400, not a 500", async () => {
     assert.equal(r.status, 400, raw);
   }
 });
+
+// Verifier additions, round 2: another real map's key, the cap's IST day, and the cap under parallel taps.
+test("another map's real key does not count a tap against this map", async () => {
+  const m = await makeMap();
+  const otherKey = `zzother${tag}`.padEnd(40, "o");
+  const other = await db.map.create({ data: { homeCity: "Pune", ownerName: OWNER, entries: [], shortSlug: `zo${tag}`, ownerKeyHash: sha256Hex(otherKey) } });
+  mapIds.push(other.id);
+  for (const map of [m.shortSlug, m.publicId]) {
+    const r = await post({ event: "share", map, metadata: { channel: "copy" } }, otherKey);
+    assert.deepEqual([r.status, await r.text()], [200, '{"ok":true}']);
+  }
+  assert.equal(await db.analyticsEvent.count({ where: { mapId: m.id } }), 0, "another map's key never counts here");
+  assert.equal((await post({ event: "share", map: other.shortSlug, metadata: { channel: "copy" } }, otherKey)).status, 200);
+  assert.equal(await db.analyticsEvent.count({ where: { mapId: other.id } }), 1, "the same key counts on its own map");
+});
+
+test("the daily cap is per IST day: 200 taps yesterday do not hold back today's", async () => {
+  const m = await makeMap();
+  const yesterday = new Date(istDayStart(new Date()).getTime() - 86_400_000);
+  await db.analyticsEvent.createMany({ data: Array.from({ length: 200 }, () => ({ event: "share", mapId: m.id, createdAt: yesterday, metadata: { channel: "copy" } })) });
+  assert.equal((await post({ event: "share", map: m.shortSlug, metadata: { channel: "copy" } })).status, 200);
+  assert.equal(await db.analyticsEvent.count({ where: { mapId: m.id } }), 201);
+  assert.equal(await db.analyticsEvent.count({ where: { mapId: m.id, createdAt: istDayStart(new Date()) } }), 1);
+});
+
+// The cap is a count followed by an insert, so taps that arrive together all see a count under 200 and all land.
+test("parallel taps never push a map past 200 in a day", { todo: "the cap is count-then-insert, not atomic (verifier finding)" }, async () => {
+  const m = await makeMap();
+  await db.analyticsEvent.createMany({ data: Array.from({ length: 190 }, () => ({ event: "share", mapId: m.id, createdAt: istDayStart(new Date()), metadata: { channel: "copy" } })) });
+  await Promise.all(Array.from({ length: 40 }, () => post({ event: "share", map: m.shortSlug, metadata: { channel: "copy" } })));
+  assert.ok((await db.analyticsEvent.count({ where: { mapId: m.id } })) <= 200);
+});

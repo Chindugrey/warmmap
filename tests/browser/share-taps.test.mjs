@@ -49,9 +49,8 @@ const stub = (b) => b.eval(`(()=>{window.__opened=[];window.open=(u)=>{window.__
 const shareTaps = (b) =>
   b.requests.filter((r) => r.url.endsWith("/api/analytics") && r.method === "POST").map((r) => JSON.parse(r.body)).filter((x) => x.event === "share");
 
-test("every share button's tap names the saved map and its channel, and lands on that map", { skip }, async () => {
-  const b = await launch({ width: 390, height: 844 });
-  open.push(b);
+// Makes a map through the real flow and returns its slug, on the reveal screen.
+async function makeMapInUi(b, owner) {
   await b.goto(BASE + "/");
   await clickText(b, "Light my first lantern");
   await clickText(b, "Bengaluru");
@@ -65,11 +64,20 @@ test("every share button's tap names the saved map and its channel, and lands on
   await waitFor(b, `!!document.querySelector('.wm-reveal.wm-play')`);
   await b.eval(`document.querySelector('.wm-reveal').click()`);
   await waitFor(b, `!!document.querySelector('.wm-reveal.wm-done')`, 2000);
-  await type(b, "#wm-owner", "Ananyaqt");
+  await type(b, "#wm-owner", owner);
   await clickText(b, "Show me");
   await waitFor(b, `document.body.innerText.includes("Your corner is glowing.")`);
   const slug = await b.eval(`JSON.parse(localStorage.getItem('wm:draft')).saved.slug`);
   made.push(slug);
+  return slug;
+}
+const headerOf = (r, name) => Object.entries(r.headers).find(([k]) => k.toLowerCase() === name)?.[1];
+const analyticsPosts = (b) => b.requests.filter((r) => r.url.endsWith("/api/analytics") && r.method === "POST");
+
+test("every share button's tap names the saved map and its channel, and lands on that map", { skip }, async () => {
+  const b = await launch({ width: 390, height: 844 });
+  open.push(b);
+  const slug = await makeMapInUi(b, "Ananyaqt");
   await stub(b);
   await sleep(2500); // the Story picture loads once, before its button can hand it to the share sheet
 
@@ -100,6 +108,13 @@ test("every share button's tap names the saved map and its channel, and lands on
     assert.deepEqual(Object.keys(t).sort(), ["event", "map", "metadata"]);
     assert.deepEqual(Object.keys(t.metadata), ["channel"]);
   }
+  // The map's key goes with a share tap (in the header), and with nothing else; never in a body.
+  for (const r of analyticsPosts(b)) {
+    const key = headerOf(r, "x-owner-key");
+    if (JSON.parse(r.body).event === "share") assert.ok(key && key.length >= 20, `a share tap went without the key: ${r.body}`);
+    else assert.equal(key, undefined, `the key went with ${r.body}`);
+    if (key) assert.ok(!r.body.includes(key), "the key is never in a body");
+  }
   const channels = all.map((t) => t.metadata.channel);
   for (const c of ["copy", "linkedin", "story", "whatsapp"]) assert.ok(channels.includes(c), `no ${c} tap in ${channels}`);
 
@@ -117,4 +132,26 @@ test("every share button's tap names the saved map and its channel, and lands on
   for (const label of ["Copy link", "Share on LinkedIn", "Save the picture for Status and Story", "Tell them on WhatsApp"]) {
     assert.equal(await has(v, label), false, `a visitor sees "${label}"`);
   }
+});
+
+test("with no readable storage (no key on this phone) a share tap still counts, against no map", { skip }, async () => {
+  const b = await launch({ width: 390, height: 844 });
+  open.push(b);
+  const slug = await makeMapInUi(b, "Ananyaqs");
+  await stub(b);
+  const globalBefore = await db.analyticsEvent.count({ where: { event: "share", mapId: null } });
+  await b.eval(`(()=>{Storage.prototype.getItem=function(){throw new Error("storage blocked")};return 1})()`);
+  const before = analyticsPosts(b).length;
+  await clickText(b, "Copy link");
+  if (await has(b, "Share on LinkedIn")) await clickText(b, "Share on LinkedIn");
+  await sleep(1000);
+  const taps = analyticsPosts(b).slice(before).filter((r) => JSON.parse(r.body).event === "share");
+  assert.ok(taps.length >= 1, "a tap was sent");
+  for (const r of taps) {
+    assert.equal(JSON.parse(r.body).map, slug);
+    assert.equal(headerOf(r, "x-owner-key"), undefined, "no key could be read, none is sent");
+  }
+  const map = await db.map.findFirst({ where: { OR: [{ shortSlug: slug }, { publicId: slug }] } });
+  assert.equal(await db.analyticsEvent.count({ where: { mapId: map.id } }), 0, "without the key nothing lands on the map");
+  assert.ok((await db.analyticsEvent.count({ where: { event: "share", mapId: null } })) - globalBefore >= taps.length, "the taps still count, globally");
 });
