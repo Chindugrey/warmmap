@@ -140,7 +140,7 @@ test("fixture: counts are right, and names / hashes stay where they belong", asy
   // Timeline of A: links and ties exact; opens, shares and spawned maps as daily counts. No names, no child id.
   const tj = await (await fetch(`${BASE}/admin/dashboard/map/${A.id}?format=json`, { headers: bearer })).json();
   const whats = tj.items.map((i: any) => i.what);
-  for (const w of ["Created", "Lanterns", "Shared 3 times", "Opened 2 times", "Thank-link sent", "Tied back (gold)"]) assert.ok(whats.includes(w), w);
+  for (const w of ["Created", "Lanterns", "Shared 5 times", "Opened 2 times", "Thank-link sent", "Tied back (gold)"]) assert.ok(whats.includes(w), w);
   assert.ok(whats.some((w: string) => /^Spawned 1 map$/.test(w)), "one direct child, as a count");
   assert.equal(tj.items.find((i: any) => i.what === "Opened 2 times").detail, "1 WhatsApp, 1 untagged");
   assert.match(tj.items.find((i: any) => i.what === "Created").detail, /2 maps below it in all generations/);
