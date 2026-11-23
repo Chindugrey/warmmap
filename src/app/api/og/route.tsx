@@ -302,7 +302,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { id, format, download, version } = parseCardParams(req.nextUrl.searchParams);
   try {
     const row = id ? await findMap(id) : null;
-    const current = row ? cardVersion(row.updatedAt) : null;
+    const current = row ? cardVersion(row) : null;
     const cache = cardCache({ id, found: !!row, asked: version, current });
     const size = CARD_SIZES[format];
     const { png, fresh } = drawOnce(row ? `${row.id}:${current}:${format}` : `home:${format}`, async () => {

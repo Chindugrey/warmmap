@@ -8,6 +8,7 @@ import { layoutGlobe, placeLabels, type GlobePoint, type PlacedLabel } from "./g
 import { SITE_URL } from "./site";
 import { UNLOCK_AT } from "./questions";
 import { V21A } from "./v21a";
+import { sha256Hex } from "./server-crypto";
 
 export type CardFormat = "link" | "story";
 export const CARD_SIZES: Record<CardFormat, { width: number; height: number }> = {
@@ -28,10 +29,11 @@ export function parseCardParams(sp: URLSearchParams): { id: string | null; forma
 }
 
 /**
- * The map's picture version: its last change (a new lantern, a new key), in base 36. It goes in the card URL, so a
- * changed map gets a new address and a fresh picture while an unchanged one is drawn once per CDN edge.
+ * The map's picture version: a short hash of its internal id and its last change (a new lantern, a new key). It goes
+ * in the card URL, so a changed map gets a new address and a fresh picture while an unchanged one is drawn once per
+ * CDN edge. Hashed, so the public page never shows when the map last changed (the internal id is never public).
  */
-export const cardVersion = (updatedAt: Date) => updatedAt.getTime().toString(36);
+export const cardVersion = (row: { id: string; updatedAt: Date }) => sha256Hex(`${row.id}:${row.updatedAt.getTime()}`).slice(0, 12);
 
 export function cardUrl(id: string | null, format: CardFormat = "link", download = false, version: string | null = null): string {
   if (!id) return `${SITE_URL}/api/og`;

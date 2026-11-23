@@ -303,7 +303,7 @@ test("share cards: PNG, 1200x627 link preview and 1080x1920 Status/Story; extra 
 test("share cards: cached per map version on the CDN; drawn once here; old versions short; never names", async () => {
   const get = (q: string) => fetch(`${BASE}/api/og${q}`, { headers: { "x-wm-device": DEV } });
   const row = await db.map.findFirst({ where: { shortSlug: S.slug } });
-  const v = cardVersion(row!.updatedAt);
+  const v = cardVersion(row!);
   // The map page's preview points at the versioned picture.
   const html = await (await fetch(`${BASE}/m/${S.slug}`)).text();
   assert.ok(html.replace(/&amp;/g, "&").includes(`/api/og?id=${S.slug}&v=${v}`), "the map page's og:image carries the version");

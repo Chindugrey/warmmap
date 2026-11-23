@@ -31,11 +31,16 @@ test("card URLs carry the map id only, on the fixed site address", () => {
   assert.equal(cardUrl(null, "link", false, "mi3k2x1a"), "https://warmmap.world/api/og", "the home card has no version");
 });
 
-test("card version: the map's last change in base 36; a later change is a new URL", () => {
-  const a = cardVersion(new Date("2026-11-25T13:00:00.000Z"));
-  const b = cardVersion(new Date("2026-11-25T13:00:00.001Z"));
-  assert.match(a, /^[a-z0-9]{1,16}$/);
+test("card version: 12 hex characters from the map's id and last change; a later change is a new URL; no readable time", () => {
+  const at = new Date("2026-11-25T13:00:00.000Z");
+  const a = cardVersion({ id: "cmap1", updatedAt: at });
+  const b = cardVersion({ id: "cmap1", updatedAt: new Date(at.getTime() + 1) });
+  const c = cardVersion({ id: "cmap2", updatedAt: at });
+  assert.match(a, /^[0-9a-f]{12}$/);
   assert.notEqual(a, b);
+  assert.notEqual(a, c, "two maps changed at the same moment still differ");
+  assert.equal(a, cardVersion({ id: "cmap1", updatedAt: new Date(at) }), "stable for the same change");
+  assert.notEqual(a, at.getTime().toString(36), "not the time itself");
   assert.equal(parseCardParams(new URLSearchParams(`id=k7q2x9ab&v=${a}`)).version, a, "a version we make is one we read back");
 });
 

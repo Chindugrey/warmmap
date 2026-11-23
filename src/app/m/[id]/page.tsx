@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!row) return { title: "Map not found", robots: { index: false, follow: false } };
   const map = toPublicMap(row);
   const owner = map.ownerName || "Someone";
-  const ogUrl = cardUrl(map.id, "link", false, cardVersion(row.updatedAt));
+  const ogUrl = cardUrl(map.id, "link", false, cardVersion(row));
   const description = `The people who've had ${owner}'s back, across ${map.stats.cities} ${map.stats.cities === 1 ? "city" : "cities"}. Names hidden.`;
   return {
     title: `${owner}'s Warm Map`,

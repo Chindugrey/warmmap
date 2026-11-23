@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `${owner} lit a lantern for you`,
       description,
-      images: [{ url: found.state === "missing" ? cardUrl(null) : cardUrl(found.view.mapSlug, "link", false, cardVersion(found.map.updatedAt)), ...CARD_SIZES.link }],
+      images: [{ url: found.state === "missing" ? cardUrl(null) : cardUrl(found.view.mapSlug, "link", false, cardVersion(found.map)), ...CARD_SIZES.link }],
     },
   };
 }

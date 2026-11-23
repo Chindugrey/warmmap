@@ -245,7 +245,7 @@ test("owner returns: Kochi answered. [Share your gratitude map]; visitors see no
   for (const n of FRIENDS) assert.ok(!(await v.eval("document.documentElement.outerHTML")).includes(n));
 });
 
-const OG_RE = /^https?:\/\/[^/]+\/api\/og(\?id=[a-z0-9]{6,32}(&v=[a-z0-9]{1,16})?)?$/;
+const OG_RE = /^https?:\/\/[^/]+\/api\/og(\?id=[a-z0-9]{6,32}(&v=[0-9a-f]{12})?)?$/;
 async function metaImages(url) {
   const html = await (await fetch(url)).text();
   const metas = [...html.matchAll(/<meta[^>]+(?:property|name)="(og:[^"]+|twitter:[^"]+)"[^>]+content="([^"]*)"/g)].map((m) => [m[1], m[2].replace(/&amp;/g, "&")]);
@@ -257,7 +257,7 @@ test("share cards in link previews: card URLs carry the map id only; no names an
     const { html, metas, images } = await metaImages(url);
     assert.ok(images.length >= 1, `${page}: no og:image`);
     for (const img of images) assert.match(img, OG_RE, `${page}: unexpected card URL ${img}`);
-    if (page !== "home") for (const img of images) assert.match(img, new RegExp(`\\?id=${S.slug}&v=[a-z0-9]+$`), `${page}: card is not the map's versioned picture`);
+    if (page !== "home") for (const img of images) assert.match(img, new RegExp(`\\?id=${S.slug}&v=[0-9a-f]{12}$`), `${page}: card is not the map's versioned picture`);
     const all = decodeURIComponent(metas.map(([, v]) => v).join(" ")) + " " + html;
     for (const n of FRIENDS) {
       assert.ok(!all.includes(n) && !all.includes(encodeURIComponent(n)), `${page}: friend name ${n} in the page or its previews`);
