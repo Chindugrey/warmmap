@@ -31,12 +31,18 @@ const FONT_FILES: [string, string, FontStyle][] = [
 ];
 let fontsPromise: Promise<{ name: string; data: ArrayBuffer; weight: 400; style: FontStyle }[]> | null = null;
 function fonts() {
-  fontsPromise ??= Promise.all(
-    FONT_FILES.map(async ([name, file, style]) => {
-      const buf = await readFile(path.join(process.cwd(), "assets/fonts", file));
-      return { name, data: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer, weight: 400 as const, style };
-    })
-  );
+  if (!fontsPromise) {
+    const p = Promise.all(
+      FONT_FILES.map(async ([name, file, style]) => {
+        const buf = await readFile(path.join(process.cwd(), "assets/fonts", file));
+        return { name, data: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer, weight: 400 as const, style };
+      })
+    );
+    fontsPromise = p;
+    p.catch(() => {
+      if (fontsPromise === p) fontsPromise = null; // a failed read is tried again next time, not kept
+    });
+  }
   return fontsPromise;
 }
 
@@ -277,6 +283,7 @@ function StoryCard({ m }: { m: CardModel }) {
 // picture is never served from here.
 const DRAWN = new Map<string, Promise<ArrayBuffer>>();
 const DRAWN_MAX = 24;
+const DRAW_TIMEOUT_MS = 10_000;
 function drawOnce(key: string, draw: () => Promise<ArrayBuffer>): { png: Promise<ArrayBuffer>; fresh: boolean } {
   const kept = DRAWN.get(key);
   if (kept) {
@@ -284,9 +291,16 @@ function drawOnce(key: string, draw: () => Promise<ArrayBuffer>): { png: Promise
     DRAWN.set(key, kept);
     return { png: kept, fresh: false };
   }
-  const png = draw();
+  // A drawing that never settles would hold its key (and every later request for it) for the life of the instance.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error("drawing timed out")), DRAW_TIMEOUT_MS);
+  });
+  const png = Promise.race([draw(), timeout]).finally(() => clearTimeout(timer));
   DRAWN.set(key, png);
-  png.catch(() => DRAWN.delete(key)); // a failed drawing is never kept
+  png.catch(() => {
+    if (DRAWN.get(key) === png) DRAWN.delete(key); // a failed drawing is never kept (and never removes a newer one)
+  });
   while (DRAWN.size > DRAWN_MAX) DRAWN.delete(DRAWN.keys().next().value!);
   return { png, fresh: true };
 }

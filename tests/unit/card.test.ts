@@ -62,6 +62,8 @@ test("card caching: drawn once per CDN edge when versioned; short for old or mis
   const src = readFileSync("src/app/api/og/route.tsx", "utf8");
   assert.ok(/limited\.headers\.set\("Cache-Control", CARD_CACHE\.error\)/.test(src), "a 429 is never cached");
   assert.ok(/status: 500, headers: noStore/.test(src), "a failed picture is never cached");
+  assert.ok(/Promise\.race\(\[draw\(\), timeout\]\)/.test(src) && /DRAW_TIMEOUT_MS = 10_000/.test(src), "a drawing that never settles gives up after 10 s");
+  assert.ok(/if \(fontsPromise === p\) fontsPromise = null/.test(src), "a failed font read is not kept");
 });
 
 test("PRIVACY: the card model is cities, numbers and the owner's first name only", () => {
