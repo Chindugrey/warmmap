@@ -210,7 +210,7 @@ function Hero({
         <LiveCounter />
         <p className="wm-lead">
           {carried
-            ? `${carried.ownerName} lit a lantern for you. Your map starts with one already lit, pointing back.`
+            ? `${carried.ownerName} is in your corner. Your first lantern is lit, pointing back.`
             : "Answer a few small questions with a name and a city."}
         </p>
         <div className="wm-cta">

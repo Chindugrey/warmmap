@@ -136,7 +136,7 @@ test("Tell them on WhatsApp: one lantern, one person; the link carries the name 
   assertNoNames(b, FRIENDS);
 });
 
-test("friend: The answer was you. → Tie it back → Tied at both ends.", { skip }, async () => {
+test("friend: The answer was you. [Tie it back] + a quiet Make yours → <Owner> is in your corner. [Start my map]", { skip }, async () => {
   const b = await browser({ width: 390, height: 844 });
   S.friend = b;
   await b.goto(S.thank);
@@ -145,24 +145,38 @@ test("friend: The answer was you. → Tie it back → Tied at both ends.", { ski
   assert.match(t, /Who would you call at 2am\?/);
   assert.match(t, /The answer was you\./);
   assert.match(t, new RegExp(`${FRIENDS[0]}, in Kochi`));
+  // Before the tie: Tie it back is the one button; "Make yours" is a text link that starts a map without tying.
+  const before = await b.eval(`(()=>{const a=[...document.querySelectorAll('a')].find(e=>e.textContent.trim()==='Make yours');
+    return {btns:[...document.querySelectorAll('.wm-btn')].map(e=>e.textContent.trim()),href:a&&a.getAttribute('href'),cls:a&&a.className,
+      above:a&&document.querySelector('.wm-rrow').getBoundingClientRect().top>=a.getBoundingClientRect().bottom}})()`);
+  assert.deepEqual(before.btns, ["Tie it back"], "the tie-back stays the only primary action");
+  assert.equal(before.href, `/?invitedBy=${S.slug}&via=thanks`);
+  assert.ok(!/wm-btn/.test(before.cls), "Make yours is a text link before the tie");
+  assert.ok(before.above, "Make yours sits above the report row");
+  // Nothing tells the owner that someone made a map from theirs, so the page does not say it would.
+  assert.ok(!/Not who/.test(t), "no 'will see that someone made a map' notice while the owner is not told");
   await b.shot(`${SHOTS}/walk-6-friend.png`);
   await clickText(b, "Tie it back");
-  await waitFor(b, `document.body.innerText.includes("Tied at both ends.")`);
+  await waitFor(b, `document.body.innerText.includes("Ananya is in your corner.")`);
   const t2 = await text(b);
+  assert.match(t2, /Ananya is in your corner\.\s+Your first lantern is lit\./);
   assert.match(t2, /Ananya will see a gold lantern in Kochi\./);
-  assert.match(t2, /Tell Ananya yourself/);
-  assert.match(t2, /Make yours/);
+  assert.ok(!t2.includes(FRIENDS[0] + " is in your corner"), "the greeting is the owner's name, not the friend's");
+  const after = await b.eval(`[...document.querySelectorAll('.wm-foot2 a')].map(a=>[a.textContent.trim(),a.className,a.getAttribute('href')])`);
+  assert.deepEqual(after[0], ["Start my map", "wm-btn", `/?invitedBy=${S.slug}&via=thanks`], "Start my map is the primary button, carrying the lantern");
+  assert.equal(after[1][0], "Tell Ananya yourself");
+  assert.match(after[1][2], /^https:\/\/wa\.me\//);
   await sleep(1600);
   await b.shot(`${SHOTS}/walk-7-tied.png`);
   assertNoNames(b, FRIENDS);
 });
 
-test("Make yours: starts with the carried lantern, still needs 5 questions", { skip }, async () => {
+test("Start my map: starts with the carried lantern, still needs 5 questions", { skip }, async () => {
   const b = S.friend;
-  await clickText(b, "Make yours");
+  await clickText(b, "Start my map");
   await waitFor(b, `location.search.includes("via=thanks")`);
   await sleep(800);
-  assert.match(await text(b), /Ananya lit a lantern for you/);
+  assert.match(await text(b), /Ananya is in your corner\. Your first lantern is lit/);
   await clickText(b, "Light my first lantern");
   await clickText(b, "Kochi");
   const t = await text(b);
@@ -311,9 +325,9 @@ test("360×640: every screen's primary button is above the fold", { skip }, asyn
   await fb.goto(`${BASE}/t/${f.token}#Meera`);
   rows.push(["friend: Tie it back", await bottomOf(fb, "Tie it back")]);
   await clickText(fb, "Tie it back");
-  await waitFor(fb, `document.body.innerText.includes("Tied at both ends.")`);
+  await waitFor(fb, `document.body.innerText.includes("Ananya is in your corner.")`);
+  rows.push(["tied: Start my map", await bottomOf(fb, "Start my map")]);
   rows.push(["tied: Tell Ananya yourself", await bottomOf(fb, "Tell Ananya yourself")]);
-  rows.push(["tied: Make yours", await bottomOf(fb, "Make yours")]);
   const ob = await browser({ width: 360, height: 640 });
   await ob.goto(`${BASE}/m/${f.slug}#k=${f.key}`, 2200);
   rows.push(["return: Share your gratitude map", await bottomOf(ob, "Share your gratitude map")]);

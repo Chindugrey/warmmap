@@ -96,7 +96,7 @@ for (const [label, typed, want] of [
     const b = await launch({ width: 390, height: 844, mobile: true, reducedMotion: true });
     open.push(b);
     await b.goto(`${BASE}/?invitedBy=${slug}&via=thanks`);
-    await waitFor(b, `document.body.innerText.includes("Inviterqx lit a lantern for you")`);
+    await waitFor(b, `document.body.innerText.includes("Inviterqx is in your corner")`);
     await clickText(b, "Light my first lantern");
     await clickText(b, "Kochi");
     for (let i = 0; i < 5; i++) {

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-// /t/[token]: "The answer was you." [Tie it back] → "Tied at both ends."
+// /t/[token]: "The answer was you." [Tie it back] → "<Owner> is in your corner." [Start my map]
+// "Make yours" is a quiet text link before the tie, so a friend can start a map without tying.
 // The friend's name (if the owner put one after #) is read here, in the
 // browser, and is never sent anywhere.
 
@@ -93,8 +94,9 @@ export function FriendPage({ token, state: initial, view }: { token: string; sta
         {tied ? (
           <div className="wm-pad" role="status">
             <p className="wm-kick">It&apos;s gold now</p>
-            <h1>Tied at both ends.</h1>
-            <p className="wm-asked">
+            <h1>{owner} is in your corner.</h1>
+            <p className="wm-asked">Your first lantern is lit.</p>
+            <p className="wm-note">
               {owner} will see a gold lantern in {city}.
             </p>
           </div>
@@ -144,6 +146,11 @@ export function FriendPage({ token, state: initial, view }: { token: string; sta
                   {error}
                 </p>
               )}
+              <p className="wm-or">
+                <a className="wm-lnk" href={makeYours}>
+                  Make yours
+                </a>
+              </p>
               <div className="wm-rrow">
                 {reported ? <span>Thank you. We&apos;ll look at it.</span> : <button type="button" onClick={report}>Not you? Report this link</button>}
                 <span>warmmap.world</span>
@@ -152,13 +159,13 @@ export function FriendPage({ token, state: initial, view }: { token: string; sta
           )}
           {tied && (
             <>
-              <a className="wm-btn" href={tellBack} target="_blank" rel="noopener noreferrer">
+              <a className="wm-btn" href={makeYours}>
+                Start my map
+              </a>
+              <a className="wm-btn two" href={tellBack} target="_blank" rel="noopener noreferrer">
                 Tell {owner} yourself
               </a>
-              <a className="wm-btn two" href={makeYours}>
-                Make yours
-              </a>
-              <p className="wm-note">Opens WhatsApp, so you can send it straight back to {owner}.</p>
+              <p className="wm-note">Your map starts with {owner}&apos;s lantern. No sign-up.</p>
             </>
           )}
           {state === "used" && (
