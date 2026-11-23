@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { apiFetch, ownerKeyFor, rememberSentLink, sentLinksFor } from "@/lib/device";
 import { trackShare } from "@/lib/track-share";
 import { prepareThank, withChannelTag, type PreparedThank } from "@/lib/lantern-token";
@@ -28,11 +28,19 @@ async function copyText(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
+    // Older phones: a hidden, read-only field (16 px, fixed) so iOS neither opens the keyboard, zooms nor scrolls.
     const ta = document.createElement("textarea");
     ta.value = text;
+    ta.readOnly = true;
+    ta.setAttribute("aria-hidden", "true");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;font-size:16px;";
     document.body.appendChild(ta);
     ta.select();
-    const ok = document.execCommand("copy");
+    ta.setSelectionRange(0, text.length);
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch {}
     ta.remove();
     return ok;
   }
@@ -58,7 +66,10 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
   const [links, setLinks] = useState<Record<number, PreparedThank>>(() =>
     Object.fromEntries(Object.entries(stored).map(([q, l]) => [q, { url: l.url, body: { mapId: slug, entryIndex: Number(q), tokenHash: l.tokenHash } }]))
   );
-  const [verified, setVerified] = useState<Record<number, boolean>>({}); // registered or confirmed this visit
+  // Registered or confirmed this visit, and registrations still on their way: refs, so taps that land together (or
+  // before the next render) share one registration instead of each posting the link.
+  const ready = useRef<Record<number, PreparedThank>>({});
+  const pending = useRef<Record<number, Promise<PreparedThank>>>({});
   useEffect(() => {
     const p = rows.find((r) => r.questionIndex === open);
     if (!p || links[p.questionIndex]) return;
@@ -74,24 +85,30 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
   const [retry, setRetry] = useState<number | null>(null); // the phone wanted a fresh tap for the share sheet or copy
 
   /** This lantern's one link: registered on its first send, reused (no second row) on every send after that. */
-  async function linkFor(p: Named): Promise<PreparedThank> {
+  function linkFor(p: Named): Promise<PreparedThank> {
+    const q = p.questionIndex;
+    if (ready.current[q]) return Promise.resolve(ready.current[q]);
+    pending.current[q] ??= register(p)
+      .then((t) => (ready.current[q] = t))
+      .finally(() => delete pending.current[q]);
+    return pending.current[q];
+  }
+
+  async function register(p: Named): Promise<PreparedThank> {
     const fresh = () => prepareThank({ base: window.location.origin, mapId: slug, entryIndex: p.questionIndex, friendName: p.name, channel: "wa" });
-    const register = (t: PreparedThank) => apiFetch("/api/thanks", { method: "POST", ownerKey: ownerKeyFor(slug), body: JSON.stringify(t.body) });
+    const post = (t: PreparedThank) => apiFetch("/api/thanks", { method: "POST", ownerKey: ownerKeyFor(slug), body: JSON.stringify(t.body) });
     let t = links[p.questionIndex] ?? (await fresh());
     // Registered this visit: "send again" reuses that same link with no second POST. A link kept from an earlier visit
     // is posted once to check it is still good (the server says reused); if it is not (expired, opened), make a fresh one.
-    if (!verified[p.questionIndex]) {
-      let res = await register(t);
-      if (res.status === 409 && stored[p.questionIndex] && t.url === stored[p.questionIndex].url) {
-        rememberSentLink(slug, p.questionIndex, null);
-        t = await fresh();
-        res = await register(t);
-      }
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "That didn't go through. Try once more.");
-      rememberSentLink(slug, p.questionIndex, { url: t.url, tokenHash: t.body.tokenHash });
-      setLinks((l) => ({ ...l, [p.questionIndex]: t }));
-      setVerified((v) => ({ ...v, [p.questionIndex]: true }));
+    let res = await post(t);
+    if (res.status === 409 && stored[p.questionIndex] && t.url === stored[p.questionIndex].url) {
+      rememberSentLink(slug, p.questionIndex, null);
+      t = await fresh();
+      res = await post(t);
     }
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "That didn't go through. Try once more.");
+    rememberSentLink(slug, p.questionIndex, { url: t.url, tokenHash: t.body.tokenHash });
+    setLinks((l) => ({ ...l, [p.questionIndex]: t }));
     return t;
   }
 
@@ -122,7 +139,7 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
         const name = (e as Error).name;
         if (name === "AbortError") return; // closed the share sheet: nothing sent
         if (name === "NotAllowedError") return setRetry(p.questionIndex); // the first send took too long for this phone
-        throw e;
+        throw new Error("That didn't go through. Try once more."); // not the browser's own wording (e.g. a double tap)
       }
       setSent((s) => ({ ...s, [p.questionIndex]: true }));
       trackShare("native", slug, "thanks");

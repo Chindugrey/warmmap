@@ -35,9 +35,12 @@ test("thank-you sheet: WhatsApp, Send another way and Copy link share one link-m
   for (const fn of ["send", "shareAnotherWay", "copyLink"]) {
     const body = src.slice(src.indexOf(`async function ${fn}(`), src.indexOf("\n  }\n", src.indexOf(`async function ${fn}(`)));
     assert.match(body, /await linkFor\(p\)/, `${fn} uses the one link per lantern`);
+    assert.ok(!/apiFetch\(/.test(body), `${fn} never posts a link itself`);
   }
   assert.match(src, /trackShare\("native", slug, "thanks"\)/);
   assert.match(src, /trackShare\("copy", slug, "thanks"\)/);
+  assert.match(src, /pending\.current\[q\] \?\?= register\(p\)/, "taps that land together share one registration");
+  assert.match(src, /ta\.readOnly = true/, "the copy fallback does not open the iOS keyboard");
   assert.match(src, /typeof navigator\.share === "function"/, "Send another way only where the phone has a share sheet");
   assert.match(src, /Send it however you talk to them\./);
 });

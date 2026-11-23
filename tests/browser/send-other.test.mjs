@@ -146,6 +146,25 @@ test("Copy link → Send another way → WhatsApp → reload → Copy link: one 
   assert.deepEqual(b.errors.filter((e) => !/favicon/.test(e)), []);
 });
 
+test("three taps in the same moment share one registration: one POST, one row, no error", { skip }, async () => {
+  const b = await launch({ width: 390, height: 844 });
+  open.push(b);
+  await stubs(b, true);
+  await makeMap(b);
+  await clickText(b, "Tell them on WhatsApp");
+  await waitFor(b, `!!document.querySelector('.wm-sends')`);
+  await b.eval(`(()=>{const bs=[...document.querySelectorAll('.wm-thank .wm-btn')];
+    for (const l of ["Copy link","Send another way","Send on WhatsApp"]) bs.find(e=>e.textContent.trim()===l).click();return true})()`);
+  await waitFor(b, `window.__copied.length===1 && window.__shared.length===1 && window.__opened.length===1`);
+  await sleep(300);
+  const posts = await b.eval("window.__posts");
+  assert.equal(posts.length, 1, `one registration, got ${posts.map((p) => p.status)}`);
+  assert.equal(posts[0].status, 201);
+  assert.ok(!(await b.eval(`!!document.querySelector('[role=alert]')`)), `error shown: ${await b.eval(`document.querySelector('[role=alert]')?.textContent`)}`);
+  const toks = [await b.eval("window.__copied[0]"), (await b.eval("window.__shared[0]")).text, decodeURIComponent(await b.eval("window.__opened[0]"))].map(token);
+  assert.deepEqual(new Set(toks).size, 1, "the same link on all three");
+});
+
 test("no share sheet on this phone: Send another way is hidden; Copy link still works", { skip }, async () => {
   const b = await launch({ width: 1440, height: 900, mobile: false });
   open.push(b);
