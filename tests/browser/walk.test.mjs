@@ -66,6 +66,12 @@ function captureOpens(b) {
 }
 
 const S = {};
+// The saved map's slug, from this phone's draft (the same on flag-off and flag-on builds).
+const savedSlug = async (b) => {
+  const slug = await b.eval(`JSON.parse(localStorage.getItem('wm:draft')||'null')?.saved?.slug ?? null`);
+  assert.match(slug ?? "", /^[a-z0-9]{8}$/, "the saved map's slug");
+  return slug;
+};
 
 test("make a map: hero → home → 5 questions → reveal (tap to skip) → name at Show me → CTAs", { skip }, async () => {
   const b = await browser({ width: 390, height: 844 });
@@ -107,9 +113,10 @@ test("make a map: hero → home → 5 questions → reveal (tap to skip) → nam
   const done = await text(b);
   for (const c of ["Tell them on WhatsApp", "Share on LinkedIn", "Copy link"]) assert.ok(done.includes(c), `missing CTA ${c}`);
   assert.match(done, /lanterns? lit so far/, "live counter after the reveal");
-  const li = await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Share on LinkedIn').href`);
-  assert.match(li, /^https:\/\/www\.linkedin\.com\/sharing\/share-offsite\/\?url=.*%2Fm%2F[a-z0-9]{8}%3Fs%3Dli$/);
-  S.slug = decodeURIComponent(li).match(/\/m\/([a-z0-9]{8})\?s=li$/)[1];
+  S.slug = await savedSlug(b);
+  // Flag off: Share on LinkedIn is a link to LinkedIn's share page. Flag on (v2.1a) it is a button that opens the kit.
+  const li = await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Share on LinkedIn')?.href ?? null`);
+  if (li) assert.equal(li, `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${BASE}/m/${S.slug}?s=li`)}`);
   const story = await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Save the picture for Status and Story')?.getAttribute('href')`);
   assert.equal(story, `/api/og?id=${S.slug}&f=story&dl=1`);
   await b.shot(`${SHOTS}/walk-4-glowing.png`);
@@ -192,7 +199,7 @@ test("Start my map: starts with the carried lantern, still needs 5 questions", {
   await type(b, "#wm-owner", "Meera");
   await clickText(b, "Show me");
   await waitFor(b, `document.body.innerText.includes("Your corner is glowing.")`);
-  const slug = decodeURIComponent(await b.eval(`[...document.querySelectorAll('a')].find(a=>a.textContent.trim()==='Share on LinkedIn').href`)).match(/\/m\/([a-z0-9]{8})\?s=li$/)[1];
+  const slug = await savedSlug(b);
   const pub = await (await fetch(`${BASE}/api/maps/${slug}`)).json();
   assert.equal(pub.stats.lanterns, 6);
   assert.ok(pub.lanterns.includes("Bengaluru"), "the carried lantern points at the inviter's home");
@@ -324,6 +331,7 @@ test("360×640: every screen's primary button is above the fold", { skip }, asyn
   const fb = await browser({ width: 360, height: 640 });
   await fb.goto(`${BASE}/t/${f.token}#Meera`);
   rows.push(["friend: Tie it back", await bottomOf(fb, "Tie it back")]);
+  rows.push(["friend: Make yours (text link)", await bottomOf(fb, "Make yours")]);
   await clickText(fb, "Tie it back");
   await waitFor(fb, `document.body.innerText.includes("Ananya is in your corner.")`);
   rows.push(["tied: Start my map", await bottomOf(fb, "Start my map")]);

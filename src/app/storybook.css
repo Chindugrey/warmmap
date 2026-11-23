@@ -248,6 +248,8 @@
   .wm-public .wm-mapw { max-height: 230px; }
   .wm-public .wm-body { gap: 6px; padding-top: 8px; }
   .wm-return .wm-mapw { max-height: 260px; }
+  .wm-friend .wm-art { flex-basis: 200px; min-height: 200px; } /* "Make yours" clears the fold before the tie */
+  .wm-ask:not(.wm-kbd):has(.wm-sub) .wm-mapw { max-height: 150px; } /* v2.1a sub-line: Light it stays above the fold */
 }
 
 @media (prefers-reduced-motion: reduce) {
