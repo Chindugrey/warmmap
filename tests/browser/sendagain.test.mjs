@@ -44,7 +44,7 @@ const instrument = (b) => b.eval(`(()=>{
     return r};
   return true})()`);
 const posts = (b) => b.eval("window.__posts");
-const sendLabel = (b) => b.eval(`[...document.querySelectorAll('.wm-thank .wm-btn')].map(e=>e.textContent.trim()).join('|')`);
+const sendLabel = (b) => b.eval(`[...document.querySelectorAll('.wm-thank .wm-btn:not(.two)')].map(e=>e.textContent.trim()).join('|')`);
 
 test("make → send → send again → reload → send again reuses the same link", { skip }, async () => {
   const b = await launch({ width: 390, height: 844 });
