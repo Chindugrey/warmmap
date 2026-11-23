@@ -90,7 +90,7 @@ export function renderRanking(rows: CreatorRow[]): string {
       def(
         "Top 100 by warmth; ties broken by newest map. Only maps with a warmth above 0 are listed. " +
           "Caution before using this for outreach: anyone can make a map that names any public map as its inviter (limited per device per hour), " +
-          "so maps spawned, the heaviest weight, can be inflated. Shares count only taps made with the map's own key (an owner can still inflate their own, up to 200 a day); the Shares column counts every channel, but warmth's shares term leaves out WhatsApp taps (thank-you sends), which are already scored as thank-links."
+          "so maps spawned, the heaviest weight, can be inflated. Shares count only taps made with the map's own key (an owner can still inflate their own, up to 200 a day); the Shares column counts every channel, but warmth's shares term leaves out WhatsApp taps and thank-you sends by copy or share sheet, which are already scored as thank-links."
       )
   );
 }

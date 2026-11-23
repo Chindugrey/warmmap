@@ -122,7 +122,9 @@ test("Copy link → Send another way → WhatsApp → reload → Copy link: one 
   assert.deepEqual(taps.map((x) => x.body.metadata.channel), ["copy", "native", "whatsapp"]);
   for (const x of taps) {
     assert.match(x.key ?? "", /^[A-Za-z0-9_-]{43}$/, "a share tap goes with the owner's key");
-    assert.deepEqual(Object.keys(x.body.metadata), ["channel"], "no names or anything else in the tap");
+    const want = x.body.metadata.channel === "whatsapp" ? ["channel"] : ["channel", "via"];
+    assert.deepEqual(Object.keys(x.body.metadata), want, "no names or anything else in the tap");
+    if (want.length === 2) assert.equal(x.body.metadata.via, "thanks", "a thank-you send, so warmth leaves it out");
   }
   const slug = JSON.parse(posts[0].body).mapId;
 

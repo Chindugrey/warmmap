@@ -229,7 +229,7 @@ export function channelFunnel(rows: ChannelCounts[], t: { makeYoursAll: number; 
 
 export const WARMTH_WEIGHTS = { thankLinks: 1, tiesBack: 2, shares: 1, spawnedDirect: 3, spawnedDeeper: 1 } as const;
 export const WARMTH_FORMULA =
-  "warmth = 1 x thank-links sent + 2 x ties-back received + 1 x shares (WhatsApp taps left out: a thank-you send is already a thank-link) + 3 x maps spawned directly + 1 x maps spawned in later generations";
+  "warmth = 1 x thank-links sent + 2 x ties-back received + 1 x shares (WhatsApp taps and thank-you sends by copy or share sheet left out: a thank-you send is already a thank-link) + 3 x maps spawned directly + 1 x maps spawned in later generations";
 
 export interface WarmthParts { thankLinks: number; tiesBack: number; shares: number; spawnedDirect: number; spawnedAll: number }
 

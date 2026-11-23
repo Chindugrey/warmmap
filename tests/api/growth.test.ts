@@ -110,6 +110,8 @@ test("fixture: counts are right, and names / hashes stay where they belong", asy
     { mapId: A.id, event: "share", metadata: { channel: "whatsapp" }, createdAt: ago(97) },
     { mapId: A.id, event: "share", metadata: { channel: "whatsapp" }, createdAt: ago(131) },
     { mapId: A.id, event: "share", metadata: { channel: "linkedin" }, createdAt: ago(173) },
+    { mapId: A.id, event: "share", metadata: { channel: "copy", via: "thanks" }, createdAt: ago(181) },
+    { mapId: A.id, event: "share", metadata: { channel: "native", via: "thanks" }, createdAt: ago(191) },
     { mapId: A.id, event: "map_view", metadata: { s: "wa" }, createdAt: ago(211) },
     { mapId: A.id, event: "map_view", metadata: {}, createdAt: ago(257) },
   ];
@@ -122,10 +124,10 @@ test("fixture: counts are right, and names / hashes stay where they belong", asy
   assert.equal(a.firstName, OWNER_A);
   assert.deepEqual(
     { homeCity: a.homeCity, kind: a.kind, km: a.km, lanterns: a.lanterns, cities: a.cities, gold: a.gold, thankLinks: a.thankLinks, sharesTotal: a.sharesTotal, opens: a.opens, spawnedDirect: a.spawnedDirect, spawnedAll: a.spawnedAll, arrivedVia: a.arrivedVia },
-    { homeCity: "Kochi", kind: "voyager", km: 1234, lanterns: 5, cities: 4, gold: 1, thankLinks: 2, sharesTotal: 3, opens: 2, spawnedDirect: 1, spawnedAll: 2, arrivedVia: "cold" }
+    { homeCity: "Kochi", kind: "voyager", km: 1234, lanterns: 5, cities: 4, gold: 1, thankLinks: 2, sharesTotal: 5, opens: 2, spawnedDirect: 1, spawnedAll: 2, arrivedVia: "cold" }
   );
-  assert.deepEqual(a.shares, { whatsapp: 2, linkedin: 1, copy: 0, story: 0, native: 0 });
-  // warmth = 1x2 thank-links + 2x1 tie-back + 1x1 shares (the 2 WhatsApp taps are left out: thank-you sends) + 3x1 spawned + 1x1 later generation
+  assert.deepEqual(a.shares, { whatsapp: 2, linkedin: 1, copy: 1, story: 0, native: 1 });
+  // warmth = 1x2 thank-links + 2x1 tie-back + 1x1 shares (the 2 WhatsApp taps and the copy / share-sheet thank-you sends are left out) + 3x1 spawned + 1x1 later generation
   assert.equal(a.warmth, 9);
   const bRow = (await (await fetch(`${BASE}/admin/dashboard/creators?format=json&q=${OWNER_B}`, { headers: bearer })).json()).rows[0];
   assert.equal(bRow.lanterns, 5, "the carried lantern is not counted");

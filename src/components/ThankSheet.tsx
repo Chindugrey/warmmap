@@ -125,7 +125,7 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
         throw e;
       }
       setSent((s) => ({ ...s, [p.questionIndex]: true }));
-      trackShare("native", slug);
+      trackShare("native", slug, "thanks");
     } catch (e) {
       setError((e as Error).message);
     }
@@ -140,7 +140,7 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
       setCopied(p.questionIndex);
       setTimeout(() => setCopied((c) => (c === p.questionIndex ? null : c)), 2000);
       setSent((s) => ({ ...s, [p.questionIndex]: true }));
-      trackShare("copy", slug);
+      trackShare("copy", slug, "thanks");
     } catch (e) {
       setError((e as Error).message);
     }

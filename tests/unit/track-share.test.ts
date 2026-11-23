@@ -20,6 +20,8 @@ test("a share tap posts event, map slug and channel only, with the owner's key i
     const h = new Headers(calls[0].init.headers);
     assert.equal(h.get("x-owner-key"), "the-key", "the key travels in the header, never in the body");
     assert.ok(!String(calls[0].init.body).includes("the-key"));
+    await trackShare("native", "abc123xy", "thanks");
+    assert.deepEqual(JSON.parse(String(calls[1].init.body)), { event: "share", map: "abc123xy", metadata: { channel: "native", via: "thanks" } });
     globalThis.fetch = (async () => {
       throw new Error("offline");
     }) as typeof fetch;

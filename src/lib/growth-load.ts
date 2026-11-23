@@ -63,7 +63,7 @@ export async function loadCreatorsPage(
              e.lanterns, e.cities,
              coalesce(t.c, 0) AS thank_links, coalesce(v.c, 0) AS gold,
              coalesce(s.whatsapp, 0) AS sh_whatsapp, coalesce(s.linkedin, 0) AS sh_linkedin, coalesce(s.copy, 0) AS sh_copy,
-             coalesce(s.story, 0) AS sh_story, coalesce(s.native, 0) AS sh_native, coalesce(s.total, 0) AS shares_total, coalesce(s.total, 0) - coalesce(s.whatsapp, 0) AS shares_warm, coalesce(s.d30, 0) AS shares_30d,
+             coalesce(s.story, 0) AS sh_story, coalesce(s.native, 0) AS sh_native, coalesce(s.total, 0) AS shares_total, coalesce(s.total, 0) - coalesce(s.whatsapp, 0) - coalesce(s.thanks_other, 0) AS shares_warm, coalesce(s.d30, 0) AS shares_30d,
              coalesce(o.c, 0) AS opens,
              coalesce(b.direct, 0) AS spawned_direct, coalesce(b.total, 0) AS spawned_all, coalesce(b.deepest, 0) >= ${TREE_DEPTH_CAP} AS spawned_capped
       FROM "Map" m
@@ -80,6 +80,8 @@ export async function loadCreatorsPage(
                count(*) FILTER (WHERE "metadata"->>'channel' = 'copy') AS copy,
                count(*) FILTER (WHERE "metadata"->>'channel' = 'story') AS story,
                count(*) FILTER (WHERE "metadata"->>'channel' = 'native') AS native,
+               -- thank-you sends by copy or share sheet (from the thank-you sheet): already scored as thank-links
+               count(*) FILTER (WHERE "metadata"->>'via' = 'thanks' AND "metadata"->>'channel' IS DISTINCT FROM 'whatsapp') AS thanks_other,
                count(*) AS total, -- every share tap on the map, an unknown channel included (as the 30-day column)
                ${shareTaps30dSql(now)} AS d30
         FROM "AnalyticsEvent" WHERE "event" = 'share' AND "mapId" IS NOT NULL GROUP BY 1
@@ -88,7 +90,7 @@ export async function loadCreatorsPage(
       LEFT JOIN below b ON b.id = m."id"
     ),
     scored AS (
-      -- Warmth's shares term leaves out WhatsApp taps: a thank-you send on WhatsApp is already scored as a thank-link.
+      -- Warmth's shares term leaves out WhatsApp taps and thank-you sends by copy / share sheet: already scored as thank-links.
       SELECT *, (${W.thankLinks} * thank_links + ${W.tiesBack} * gold + ${W.shares} * shares_warm
                  + ${W.spawnedDirect} * spawned_direct + ${W.spawnedDeeper} * greatest(spawned_all - spawned_direct, 0)) AS warmth
       FROM facts

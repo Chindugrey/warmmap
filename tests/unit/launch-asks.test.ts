@@ -36,8 +36,8 @@ test("thank-you sheet: WhatsApp, Send another way and Copy link share one link-m
     const body = src.slice(src.indexOf(`async function ${fn}(`), src.indexOf("\n  }\n", src.indexOf(`async function ${fn}(`)));
     assert.match(body, /await linkFor\(p\)/, `${fn} uses the one link per lantern`);
   }
-  assert.match(src, /trackShare\("native", slug\)/);
-  assert.match(src, /trackShare\("copy", slug\)/);
+  assert.match(src, /trackShare\("native", slug, "thanks"\)/);
+  assert.match(src, /trackShare\("copy", slug, "thanks"\)/);
   assert.match(src, /typeof navigator\.share === "function"/, "Send another way only where the phone has a share sheet");
   assert.match(src, /Send it however you talk to them\./);
 });
