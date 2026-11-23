@@ -22,6 +22,7 @@ import { chapterGaps, nextQuestion, whatsAppUrl } from "@/lib/flow";
 import { rewardLine } from "@/lib/reward";
 import { apiFetch, ownerKeyFor, rememberOwnerKey } from "@/lib/device";
 import { LinkedInKit } from "@/components/LinkedInKit";
+import { FollowZeyhi } from "@/components/FollowZeyhi";
 import { Wish2027, useWish } from "@/components/Wish2027";
 import { SUBLINES, V21A, revealPeople } from "@/lib/v21a";
 import { fetchCities, itemOf, rememberPlaces, restorePlaces, useCitySearch, type CityItem } from "@/lib/city-search";
@@ -785,6 +786,7 @@ function RevealScreen({ d, setD, onKeepGoing }: { d: Draft; setD: (f: (x: Draft)
               <ShareRow url={url} slug={saved.slug} onLinkedIn={V21A ? () => setKit(true) : undefined} />
               {V21A && <Wish2027 wish={wish} update={updateWish} onSeePost={() => setKit(true)} />}
               <StoryPictureLink slug={saved.slug} />
+              <FollowZeyhi />
               <LiveCounter />
               {keeper && (
                 <p className="wm-keeper">

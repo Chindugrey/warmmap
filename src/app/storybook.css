@@ -32,6 +32,8 @@
 .wm-btn.two { background: none; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); min-height: 48px; font-size: 18px; }
 .wm-lnk { display: inline-flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0 4px; font: 400 17px var(--fb);
   color: var(--ink); text-decoration: underline; text-underline-offset: 4px; min-height: 44px; cursor: pointer; }
+.wm-follow { margin: 0; text-align: center; font: 400 15px var(--fb); }
+.wm-follow a { display: inline-flex; align-items: center; min-height: 44px; color: var(--soft); text-underline-offset: 4px; }
 .wm-count { display: flex; align-items: center; justify-content: center; gap: 6px; font: 400 13px var(--fm); color: var(--soft); min-height: 20px; }
 .wm-count svg { width: 12px; height: 16px; overflow: visible; }
 

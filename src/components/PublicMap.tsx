@@ -12,6 +12,7 @@ import { Globe, type GlobeLantern } from "@/components/Globe";
 import { ThankSheet, type Named } from "@/components/ThankSheet";
 import { CURRENT_SET } from "@/lib/questions";
 import { ShareRow } from "@/components/ShareRow";
+import { FollowZeyhi } from "@/components/FollowZeyhi";
 import { LiveCounter } from "@/components/LiveCounter";
 import { StoryPictureLink, sharePicture, useStoryFile } from "@/components/StoryPicture";
 import type { PublicMap as PublicMapData } from "@/lib/public-map";
@@ -230,6 +231,7 @@ export function PublicMap({ map }: { map: PublicMapData }) {
               )}
               <ShareRow url={url} slug={map.id} />
               <StoryPictureLink slug={map.id} />
+              <FollowZeyhi />
               <LiveCounter />
               {newKeeper && (
                 <p className="wm-keeper">
