@@ -144,6 +144,7 @@
 .wm-ctas { margin-top: auto; padding: 14px 0 6px; display: flex; flex-direction: column; gap: 8px; }
 .wm-r2 { display: flex; gap: 12px; align-items: center; justify-content: center; }
 .wm-r2 .wm-btn.two { flex: 1; padding: 0 8px; }
+.wm-other .wm-btn.two { font-size: 16px; letter-spacing: .02em; white-space: nowrap; }
 .wm-err { font: 400 14px var(--fm); color: #8a2a1c; text-align: center; }
 
 .wm-play.wm-reveal::before { animation: wm-undim .9s .45s ease-in-out both; }

@@ -44,6 +44,16 @@ export async function prepareThank(opts: {
   return { url, body: { mapId: opts.mapId, entryIndex: opts.entryIndex, tokenHash } };
 }
 
+/**
+ * The same thank-you link with another ?s= tag (or none): the token, and so the server row, stay the same, so one
+ * lantern still has one link whichever way it is sent. The # part (the friend's name) is kept as it was.
+ */
+export function withChannelTag(url: string, channel: "wa" | "li" | "cp" | "st" | null): string {
+  const hash = url.indexOf("#");
+  const [head, frag] = hash < 0 ? [url, ""] : [url.slice(0, hash), url.slice(hash)];
+  return head.replace(/\?s=[a-z]{2}$/, "") + (channel ? `?s=${channel}` : "") + frag;
+}
+
 export function readFriendName(hash: string): string | null {
   const raw = hash.replace(/^#/, "").trim();
   if (!raw || raw.startsWith("k=")) return null;

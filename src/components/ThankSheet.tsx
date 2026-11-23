@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { apiFetch, ownerKeyFor, rememberSentLink, sentLinksFor } from "@/lib/device";
 import { trackShare } from "@/lib/track-share";
-import { prepareThank, type PreparedThank } from "@/lib/lantern-token";
+import { prepareThank, withChannelTag, type PreparedThank } from "@/lib/lantern-token";
 import { thankOrderFor, thankMessage, whatsAppUrl } from "@/lib/flow";
 import { questionFor } from "@/lib/questions";
 
@@ -21,10 +21,29 @@ interface Props {
   onClose: () => void;
 }
 
+const noSubscribe = () => () => {};
+
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    ta.remove();
+    return ok;
+  }
+}
+
 /**
  * "Tell them on WhatsApp": one lantern, one person. The phone makes the link,
  * tells the server only its hash and the lantern, and opens the owner's own
  * WhatsApp in the same tap. We never send anything.
+ * Not on WhatsApp (most of North America): "Send another way" (the phone's share sheet, where there is one) and
+ * "Copy link" use the very same link: one link per lantern, registered once, reused on every later send.
  */
 export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onClose }: Props) {
   const rows = thankOrderFor(questionSet).map((q) => people.find((p) => p.questionIndex === q)).filter((p): p is Named => !!p);
@@ -50,27 +69,37 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
   }, [open]);
   const [error, setError] = useState<string | null>(null);
 
+  const canShare = useSyncExternalStore(noSubscribe, () => typeof navigator.share === "function", () => false);
+  const [copied, setCopied] = useState<number | null>(null);
+  const [retry, setRetry] = useState<number | null>(null); // the phone wanted a fresh tap for the share sheet or copy
+
+  /** This lantern's one link: registered on its first send, reused (no second row) on every send after that. */
+  async function linkFor(p: Named): Promise<PreparedThank> {
+    const fresh = () => prepareThank({ base: window.location.origin, mapId: slug, entryIndex: p.questionIndex, friendName: p.name, channel: "wa" });
+    const register = (t: PreparedThank) => apiFetch("/api/thanks", { method: "POST", ownerKey: ownerKeyFor(slug), body: JSON.stringify(t.body) });
+    let t = links[p.questionIndex] ?? (await fresh());
+    // Registered this visit: "send again" reuses that same link with no second POST. A link kept from an earlier visit
+    // is posted once to check it is still good (the server says reused); if it is not (expired, opened), make a fresh one.
+    if (!verified[p.questionIndex]) {
+      let res = await register(t);
+      if (res.status === 409 && stored[p.questionIndex] && t.url === stored[p.questionIndex].url) {
+        rememberSentLink(slug, p.questionIndex, null);
+        t = await fresh();
+        res = await register(t);
+      }
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "That didn't go through. Try once more.");
+      rememberSentLink(slug, p.questionIndex, { url: t.url, tokenHash: t.body.tokenHash });
+      setLinks((l) => ({ ...l, [p.questionIndex]: t }));
+      setVerified((v) => ({ ...v, [p.questionIndex]: true }));
+    }
+    return t;
+  }
+
   async function send(p: Named) {
     setError(null);
     const win = window.open("", "_blank"); // in the same tap, so the browser allows it
     try {
-      const fresh = () => prepareThank({ base: window.location.origin, mapId: slug, entryIndex: p.questionIndex, friendName: p.name, channel: "wa" });
-      const register = (t: PreparedThank) => apiFetch("/api/thanks", { method: "POST", ownerKey: ownerKeyFor(slug), body: JSON.stringify(t.body) });
-      let t = links[p.questionIndex] ?? (await fresh());
-      // Registered this visit: "send again" reuses that same link with no second POST. A link kept from an earlier visit
-      // is posted once to check it is still good (the server says reused); if it is not (expired, opened), make a fresh one.
-      if (!verified[p.questionIndex]) {
-        let res = await register(t);
-        if (res.status === 409 && stored[p.questionIndex] && t.url === stored[p.questionIndex].url) {
-          rememberSentLink(slug, p.questionIndex, null);
-          t = await fresh();
-          res = await register(t);
-        }
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "That didn't go through. Try once more.");
-        rememberSentLink(slug, p.questionIndex, { url: t.url, tokenHash: t.body.tokenHash });
-        setLinks((l) => ({ ...l, [p.questionIndex]: t }));
-        setVerified((v) => ({ ...v, [p.questionIndex]: true }));
-      }
+      const t = await linkFor(p);
       const wa = whatsAppUrl(`${texts[p.questionIndex]} ${t.url}`);
       if (win) win.location.href = wa;
       else window.location.assign(wa);
@@ -78,6 +107,41 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
       trackShare("whatsapp", slug);
     } catch (e) {
       win?.close();
+      setError((e as Error).message);
+    }
+  }
+
+  async function shareAnotherWay(p: Named) {
+    setError(null);
+    setRetry(null);
+    try {
+      const t = await linkFor(p);
+      try {
+        await navigator.share({ text: `${texts[p.questionIndex]} ${withChannelTag(t.url, null)}` });
+      } catch (e) {
+        const name = (e as Error).name;
+        if (name === "AbortError") return; // closed the share sheet: nothing sent
+        if (name === "NotAllowedError") return setRetry(p.questionIndex); // the first send took too long for this phone
+        throw e;
+      }
+      setSent((s) => ({ ...s, [p.questionIndex]: true }));
+      trackShare("native", slug);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function copyLink(p: Named) {
+    setError(null);
+    setRetry(null);
+    try {
+      const t = await linkFor(p);
+      if (!(await copyText(`${texts[p.questionIndex]} ${withChannelTag(t.url, "cp")}`))) return setRetry(p.questionIndex);
+      setCopied(p.questionIndex);
+      setTimeout(() => setCopied((c) => (c === p.questionIndex ? null : c)), 2000);
+      setSent((s) => ({ ...s, [p.questionIndex]: true }));
+      trackShare("copy", slug);
+    } catch (e) {
       setError((e as Error).message);
     }
   }
@@ -118,6 +182,19 @@ export function ThankSheet({ slug, questionSet, people, goldQuestions = [], onCl
                     {sent[p.questionIndex] ? "Send again on WhatsApp" : "Send on WhatsApp"}
                   </button>
                   <p className="wm-note">Opens your WhatsApp with this ready. You pick the chat and press send. A private link goes with it; it knows the question, not the name.</p>
+                  <div className="wm-r2 wm-other">
+                    {canShare && (
+                      <button className="wm-btn two" type="button" onClick={() => shareAnotherWay(p)}>
+                        Send another way
+                      </button>
+                    )}
+                    <button className="wm-btn two" type="button" onClick={() => copyLink(p)} aria-live="polite">
+                      {copied === p.questionIndex ? "Copied" : "Copy link"}
+                    </button>
+                  </div>
+                  <p className="wm-note">
+                    {retry === p.questionIndex ? "Your link is ready. Tap once more." : "Send it however you talk to them."}
+                  </p>
                 </>
               )}
             </div>
