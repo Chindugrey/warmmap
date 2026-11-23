@@ -37,6 +37,9 @@ export async function fetchCities(q: string, home: string | undefined, limit: nu
 
 const place = (c: City & { label?: string }): City => ({ name: c.name, country: c.country, lat: c.lat, lon: c.lon, ...(c.region ? { region: c.region } : {}) });
 
+/** A suggestion for a city the API sent (it carries its place, so a pick can be remembered). */
+export const itemOf = (c: City & { label?: string }): CityItem => ({ name: c.name, label: c.label ?? c.name, place: place(c) });
+
 /** Suggestions for what is typed: the curated ones at once, replaced by the full-list ones when they arrive. */
 export function useCitySearch(text: string, home: string | undefined, limit: number) {
   const q = text.trim();

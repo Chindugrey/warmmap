@@ -24,7 +24,7 @@ import { apiFetch, ownerKeyFor, rememberOwnerKey } from "@/lib/device";
 import { LinkedInKit } from "@/components/LinkedInKit";
 import { Wish2027, useWish } from "@/components/Wish2027";
 import { SUBLINES, V21A, revealPeople } from "@/lib/v21a";
-import { fetchCities, rememberPlaces, restorePlaces, useCitySearch, type CityItem } from "@/lib/city-search";
+import { fetchCities, itemOf, rememberPlaces, restorePlaces, useCitySearch, type CityItem } from "@/lib/city-search";
 
 type Stage = "hero" | "home" | "ask" | "reveal";
 
@@ -377,6 +377,7 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
   const [cityText, setCityText] = useState("");
   const [cityPick, setCityPick] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
+  const [near, setNear] = useState<CityItem[]>([]); // "Did you mean": one tap picks it
   const [reward, setReward] = useState<{ line: string; key: number } | null>(null);
   const [animKey, setAnimKey] = useState(0);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -430,6 +431,7 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
 
   function lightIt() {
     setHint(null);
+    setNear([]);
     const n = name.trim().replace(/\s+/g, " ");
     if (!n) {
       nameRef.current?.focus();
@@ -442,17 +444,19 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
       fetchCities(cityText.trim(), home, 3).then((r) => {
         const hit = r?.match ? r.results.find((c) => c.name === r.match) : undefined;
         if (hit) commit(n, hit);
-        else refuse(r?.country ?? countryOf(cityText), r?.results.map((c) => c.label) ?? matchCities(cityText, 3, home));
+        else refuse(r?.country ?? countryOf(cityText), r?.results.map(itemOf) ?? matchCities(cityText, 3, home).map((n) => ({ name: n, label: n })));
       });
       return;
     }
-    refuse(countryOf(cityText), matchCities(cityText, 3, home));
+    // What the suggestion row shows (the full list's answer once it arrived, the curated one before): the near misses.
+    refuse(countryOf(cityText), suggestions.slice(0, 3));
   }
 
-  function refuse(country: string | null, near: string[]) {
+  function refuse(country: string | null, near: CityItem[]) {
+    setNear(near);
     setHint(
       country ? `Which city in ${withThe(country)}? Tap one.`
-      : near.length ? `Not sure of that one. Did you mean ${near.join(", ")}?`
+      : near.length ? `Not sure of that one. Did you mean ${near.map((c) => c.label).join(" or ")}?`
       : "We couldn't place that. Pick the nearest big city."
     );
     cityRef.current?.focus();
@@ -564,12 +568,15 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
                   setCityText(e.target.value);
                   setCityPick(null);
                   setHint(null);
+                  setNear([]);
                 }}
               />
             </label>
           </div>
           <div className="wm-chips small" aria-label="Cities">
-            {(suggestions.length ? suggestions : cityPick ? [] : [home, ...recent.filter((c) => c !== home)].slice(0, 4).map((c) => ({ name: c, label: c }))).map((c: CityItem, i) => (
+            {(suggestions.length ? suggestions : cityPick ? [] : [home, ...recent.filter((c) => c !== home)].slice(0, 4).map((c) => ({ name: c, label: c })))
+              .filter((c: CityItem) => !near.some((n) => n.name === c.name)) // the "Did you mean" chips below are not repeated here
+              .map((c: CityItem, i) => (
               <button
                 key={c.name}
                 type="button"
@@ -579,6 +586,7 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
                   setCityPick(c.name);
                   setCityText(c.name);
                   setHint(null);
+                  setNear([]);
                 }}
               >
                 {!suggestions.length && i === 0 && c.name === home ? "Same as me" : c.label}
@@ -589,6 +597,26 @@ function AskScreen({ d, setD, onReveal }: { d: Draft; setD: (f: (x: Draft) => Dr
             <p className="wm-hint" role="status">
               {hint}
             </p>
+          )}
+          {hint && near.length > 0 && (
+            <div className="wm-chips small" role="group" aria-label="Did you mean">
+              {near.map((c) => (
+                <button
+                  key={c.name}
+                  type="button"
+                  className="wm-chip"
+                  onClick={() => {
+                    if (c.place) rememberPlaces([c.place]);
+                    setCityPick(c.name);
+                    setCityText(c.name);
+                    setHint(null);
+                    setNear([]);
+                  }}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
           )}
           <button className="wm-btn" type="submit" ref={lightRef}>
             Light it
