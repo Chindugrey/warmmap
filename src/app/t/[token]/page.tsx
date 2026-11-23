@@ -3,7 +3,7 @@
 import type { Metadata } from "next";
 import { lookupThankLink } from "@/lib/thank-link";
 import { FriendPage } from "@/components/FriendPage";
-import { cardUrl, CARD_SIZES } from "@/lib/card";
+import { cardUrl, cardVersion, CARD_SIZES } from "@/lib/card";
 import { numberWord, QUESTION_COUNT } from "@/lib/questions";
 
 type Props = { params: Promise<{ token: string }> };
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `${owner} lit a lantern for you`,
       description,
-      images: [{ url: cardUrl(found.state === "missing" ? null : found.view.mapSlug), ...CARD_SIZES.link }],
+      images: [{ url: found.state === "missing" ? cardUrl(null) : cardUrl(found.view.mapSlug, "link", false, cardVersion(found.map.updatedAt)), ...CARD_SIZES.link }],
     },
   };
 }

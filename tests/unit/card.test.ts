@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { parseCardParams, cardModel, CARD_SIZES, cardUrl, CARD_THREAD } from "@/lib/card";
+import { parseCardParams, cardModel, CARD_SIZES, cardUrl, CARD_THREAD, cardVersion, cardCache, CARD_CACHE } from "@/lib/card";
 import { toPublicMap } from "@/lib/public-map";
 import { computeKind } from "@/lib/kinds";
 
@@ -10,10 +10,11 @@ const row = (cities: string[], ownerName = "Ananya", home = "Bengaluru") => ({
   entries: cities.map((city, questionIndex) => ({ city, questionIndex })),
 });
 
-test("card params: only id, f, dl are read; everything else (a name) is ignored", () => {
-  const p = parseCardParams(new URLSearchParams("id=k7q2x9ab&f=story&dl=1&name=Meera&n=Meera%20Nair&t=abc"));
-  assert.deepEqual(p, { id: "k7q2x9ab", format: "story", download: true });
-  assert.deepEqual(parseCardParams(new URLSearchParams("id=../../etc&f=huge")), { id: null, format: "link", download: false });
+test("card params: only id, v, f, dl are read; everything else (a name) is ignored", () => {
+  const p = parseCardParams(new URLSearchParams("id=k7q2x9ab&v=mi3k2x1a&f=story&dl=1&name=Meera&n=Meera%20Nair&t=abc"));
+  assert.deepEqual(p, { id: "k7q2x9ab", format: "story", download: true, version: "mi3k2x1a" });
+  assert.deepEqual(parseCardParams(new URLSearchParams("id=../../etc&f=huge&v=Meera")), { id: null, format: "link", download: false, version: null });
+  assert.equal(parseCardParams(new URLSearchParams("id=k7q2x9ab&v=" + "a".repeat(17))).version, null, "an over-long version is dropped");
 });
 
 test("card sizes: link preview / LinkedIn 1200x627, Status / Story 1080x1920", () => {
@@ -25,6 +26,37 @@ test("card URLs carry the map id only, on the fixed site address", () => {
   assert.equal(cardUrl("k7q2x9ab"), "https://warmmap.world/api/og?id=k7q2x9ab");
   assert.equal(cardUrl("k7q2x9ab", "story"), "https://warmmap.world/api/og?id=k7q2x9ab&f=story");
   assert.equal(cardUrl(null), "https://warmmap.world/api/og");
+  assert.equal(cardUrl("k7q2x9ab", "link", false, "mi3k2x1a"), "https://warmmap.world/api/og?id=k7q2x9ab&v=mi3k2x1a");
+  assert.equal(cardUrl("k7q2x9ab", "story", true, "mi3k2x1a"), "https://warmmap.world/api/og?id=k7q2x9ab&v=mi3k2x1a&f=story&dl=1");
+  assert.equal(cardUrl(null, "link", false, "mi3k2x1a"), "https://warmmap.world/api/og", "the home card has no version");
+});
+
+test("card version: the map's last change in base 36; a later change is a new URL", () => {
+  const a = cardVersion(new Date("2026-11-25T13:00:00.000Z"));
+  const b = cardVersion(new Date("2026-11-25T13:00:00.001Z"));
+  assert.match(a, /^[a-z0-9]{1,16}$/);
+  assert.notEqual(a, b);
+  assert.equal(parseCardParams(new URLSearchParams(`id=k7q2x9ab&v=${a}`)).version, a, "a version we make is one we read back");
+});
+
+test("card caching: drawn once per CDN edge when versioned; short for old or missing versions; errors never cached", () => {
+  assert.equal(cardCache({ id: null, found: false, asked: null, current: null }), "home");
+  assert.equal(cardCache({ id: "k7q2x9ab", found: true, asked: "abc", current: "abc" }), "versioned");
+  assert.equal(cardCache({ id: "k7q2x9ab", found: true, asked: null, current: "abc" }), "fallback", "no ?v=: an old link");
+  assert.equal(cardCache({ id: "k7q2x9ab", found: true, asked: "old", current: "abc" }), "fallback", "a stale ?v=");
+  assert.equal(cardCache({ id: "nosuchmap", found: false, asked: "abc", current: null }), "fallback", "a deleted or unknown map");
+  for (const k of ["versioned", "home", "fallback"] as const) {
+    assert.match(CARD_CACHE[k], /^public, /);
+    assert.match(CARD_CACHE[k], /s-maxage=\d+/);
+    assert.match(CARD_CACHE[k], /stale-while-revalidate=\d+/);
+  }
+  const sMax = (k: keyof typeof CARD_CACHE) => Number(CARD_CACHE[k].match(/s-maxage=(\d+)/)![1]);
+  assert.ok(sMax("versioned") <= 3600, "a deleted map's card leaves the CDN within the hour, as before");
+  assert.ok(sMax("fallback") <= 60);
+  assert.equal(CARD_CACHE.error, "no-store");
+  const src = readFileSync("src/app/api/og/route.tsx", "utf8");
+  assert.ok(/limited\.headers\.set\("Cache-Control", CARD_CACHE\.error\)/.test(src), "a 429 is never cached");
+  assert.ok(/status: 500, headers: noStore/.test(src), "a failed picture is never cached");
 });
 
 test("PRIVACY: the card model is cities, numbers and the owner's first name only", () => {

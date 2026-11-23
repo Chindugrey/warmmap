@@ -9,6 +9,7 @@ import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { createHash } from "node:crypto";
 import { prepareThank } from "@/lib/lantern-token";
+import { cardVersion, CARD_CACHE } from "@/lib/card";
 
 const BASE = process.env.BASE ?? "http://localhost:3100";
 const ADMIN = process.env.ADMIN_TOKEN ?? "local-admin-token";
@@ -297,6 +298,29 @@ test("share cards: PNG, 1200x627 link preview and 1080x1920 Status/Story; extra 
   assert.ok(withName.buf.equals(link.buf), "extra parameters must not change the picture");
   const bogus = await get(`?id=nosuchmap`);
   assert.deepEqual(pngSize(bogus.buf), { width: 1200, height: 627 });
+});
+
+test("share cards: cached per map version on the CDN; drawn once here; old versions short; never names", async () => {
+  const get = (q: string) => fetch(`${BASE}/api/og${q}`, { headers: { "x-wm-device": DEV } });
+  const row = await db.map.findFirst({ where: { shortSlug: S.slug } });
+  const v = cardVersion(row!.updatedAt);
+  // The map page's preview points at the versioned picture.
+  const html = await (await fetch(`${BASE}/m/${S.slug}`)).text();
+  assert.ok(html.replace(/&amp;/g, "&").includes(`/api/og?id=${S.slug}&v=${v}`), "the map page's og:image carries the version");
+  const first = await get(`?id=${S.slug}&v=${v}&f=story`);
+  const again = await get(`?id=${S.slug}&v=${v}&f=story`);
+  assert.equal(first.status, 200);
+  assert.equal(first.headers.get("cache-control"), CARD_CACHE.versioned);
+  assert.equal(again.headers.get("x-card"), "kept", "the same version is not drawn twice");
+  assert.ok(Buffer.from(await first.arrayBuffer()).equals(Buffer.from(await again.arrayBuffer())));
+  assert.equal((await get(`?id=${S.slug}`)).headers.get("cache-control"), CARD_CACHE.fallback, "no version: short");
+  assert.equal((await get(`?id=${S.slug}&v=0`)).headers.get("cache-control"), CARD_CACHE.fallback, "an old version: short");
+  assert.equal((await get(`?id=nosuchmap&v=${v}`)).headers.get("cache-control"), CARD_CACHE.fallback);
+  assert.equal((await get("")).headers.get("cache-control"), CARD_CACHE.home);
+  for (const q of [`?id=${S.slug}&v=${v}`, `?id=${S.slug}&v=${encodeURIComponent(FRIEND)}`]) {
+    const r = await get(q);
+    assert.ok(![...r.headers.values()].join(" ").includes(FRIEND), "no name in any header");
+  }
 });
 
 test("thank-link cap: one per question (8) per map per 30 days, the 9th is refused", async () => {

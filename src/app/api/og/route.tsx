@@ -1,7 +1,7 @@
-// GET /api/og?id=<map>[&f=story][&dl=1]: the share cards, Storybook dusk.
+// GET /api/og?id=<map>[&v=<version>][&f=story][&dl=1]: the share cards, Storybook dusk.
 //   link  (default) 1200x627: link preview for /m/ and /t/, LinkedIn, WhatsApp
 //   story 1080x1920: WhatsApp Status and Instagram Story
-// Without an id: the home page card. Only id, f and dl are read; the picture
+// Without an id: the home page card. Only id, v, f and dl are read; the picture
 // is drawn from the cities-only public payload, so it can never hold a
 // friend's name.
 import { ImageResponse } from "@vercel/og";
@@ -10,7 +10,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { findMap } from "@/lib/owner";
 import { toPublicMap } from "@/lib/public-map";
-import { cardModel, parseCardParams, CARD_SIZES, CARD_THREAD, type CardModel } from "@/lib/card";
+import { cardCache, cardModel, cardVersion, parseCardParams, CARD_CACHE, CARD_SIZES, CARD_THREAD, type CardModel } from "@/lib/card";
 import { threadPath, CENTER, SPHERE_R } from "@/lib/globe-layout";
 import { limitRequest, HOUR } from "@/lib/limits";
 
@@ -271,23 +271,56 @@ function StoryCard({ m }: { m: CardModel }) {
   );
 }
 
+// Drawn pictures kept in this server instance, by map, version and size. Requests that arrive together for the same
+// picture share one drawing (a launch burst on a cold CDN edge draws it once, not once per request). A map's version
+// is its last change, so a changed map is drawn afresh; the map is still looked up every time, so a deleted map's
+// picture is never served from here.
+const DRAWN = new Map<string, Promise<ArrayBuffer>>();
+const DRAWN_MAX = 24;
+function drawOnce(key: string, draw: () => Promise<ArrayBuffer>): { png: Promise<ArrayBuffer>; fresh: boolean } {
+  const kept = DRAWN.get(key);
+  if (kept) {
+    DRAWN.delete(key);
+    DRAWN.set(key, kept);
+    return { png: kept, fresh: false };
+  }
+  const png = draw();
+  DRAWN.set(key, png);
+  png.catch(() => DRAWN.delete(key)); // a failed drawing is never kept
+  while (DRAWN.size > DRAWN_MAX) DRAWN.delete(DRAWN.keys().next().value!);
+  return { png, fresh: true };
+}
+
+const noStore = { "Cache-Control": CARD_CACHE.error };
+
 export async function GET(req: NextRequest): Promise<Response> {
   const limited = await limitRequest(req, "og", { device: [600, HOUR], ip: [2400, HOUR] });
-  if (limited) return limited;
-  const { id, format, download } = parseCardParams(req.nextUrl.searchParams);
-  const row = id ? await findMap(id) : null;
-  const m = cardModel(row ? toPublicMap(row) : null, format);
-  const size = CARD_SIZES[format];
-  const headers: Record<string, string> = {
-    "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
-    "X-Robots-Tag": "noindex",
-  };
-  if (download) headers["Content-Disposition"] = `attachment; filename="warm-map-${format === "story" ? "story" : "card"}.png"`;
-  const image = new ImageResponse(format === "story" ? <StoryCard m={m} /> : <LinkCard m={m} />, {
-    ...size,
-    fonts: await fonts(),
-    headers,
-  });
-  // @vercel/og's ImageResponse is a Response at runtime; its types predate Next 16's route check.
-  return image as unknown as Response;
+  if (limited) {
+    limited.headers.set("Cache-Control", CARD_CACHE.error);
+    return limited;
+  }
+  const { id, format, download, version } = parseCardParams(req.nextUrl.searchParams);
+  try {
+    const row = id ? await findMap(id) : null;
+    const current = row ? cardVersion(row.updatedAt) : null;
+    const cache = cardCache({ id, found: !!row, asked: version, current });
+    const size = CARD_SIZES[format];
+    const { png, fresh } = drawOnce(row ? `${row.id}:${current}:${format}` : `home:${format}`, async () => {
+      const m = cardModel(row ? toPublicMap(row) : null, format);
+      const image = new ImageResponse(format === "story" ? <StoryCard m={m} /> : <LinkCard m={m} />, { ...size, fonts: await fonts() });
+      // Drawn to the end before any header goes out, so a picture that fails half way is a 500 that is never cached.
+      return (image as unknown as Response).arrayBuffer();
+    });
+    const headers: Record<string, string> = {
+      "Content-Type": "image/png",
+      "Cache-Control": CARD_CACHE[cache],
+      "X-Robots-Tag": "noindex",
+      "X-Card": fresh ? "drawn" : "kept",
+    };
+    if (download) headers["Content-Disposition"] = `attachment; filename="warm-map-${format === "story" ? "story" : "card"}.png"`;
+    return new Response(await png, { headers });
+  } catch (e) {
+    console.error("og error:", (e as Error).message);
+    return new Response("The picture isn't ready. Try again in a moment.", { status: 500, headers: noStore });
+  }
 }

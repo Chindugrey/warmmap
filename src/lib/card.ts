@@ -16,18 +16,49 @@ export const CARD_SIZES: Record<CardFormat, { width: number; height: number }> =
 };
 
 /** Only these query parameters are ever read; anything else (a name) is ignored. */
-export function parseCardParams(sp: URLSearchParams): { id: string | null; format: CardFormat; download: boolean } {
+export function parseCardParams(sp: URLSearchParams): { id: string | null; format: CardFormat; download: boolean; version: string | null } {
   const id = sp.get("id");
+  const v = sp.get("v");
   return {
     id: id && /^[A-Za-z0-9_-]{4,40}$/.test(id) ? id : null,
     format: sp.get("f") === "story" ? "story" : "link",
     download: sp.get("dl") === "1",
+    version: v && /^[a-z0-9]{1,16}$/.test(v) ? v : null,
   };
 }
 
-export function cardUrl(id: string | null, format: CardFormat = "link", download = false): string {
+/**
+ * The map's picture version: its last change (a new lantern, a new key), in base 36. It goes in the card URL, so a
+ * changed map gets a new address and a fresh picture while an unchanged one is drawn once per CDN edge.
+ */
+export const cardVersion = (updatedAt: Date) => updatedAt.getTime().toString(36);
+
+export function cardUrl(id: string | null, format: CardFormat = "link", download = false, version: string | null = null): string {
   if (!id) return `${SITE_URL}/api/og`;
-  return `${SITE_URL}/api/og?id=${encodeURIComponent(id)}${format === "story" ? "&f=story" : ""}${download ? "&dl=1" : ""}`;
+  return `${SITE_URL}/api/og?id=${encodeURIComponent(id)}${version ? `&v=${version}` : ""}${format === "story" ? "&f=story" : ""}${download ? "&dl=1" : ""}`;
+}
+
+/**
+ * Cache-Control for a card. The CDN keeps each URL; the URL carries the map's version, so:
+ *   versioned: the ?v= matches the map, the picture cannot change under that URL. Kept an hour on the CDN (a deleted
+ *              map's card is gone within about that, as before), then served stale while one request redraws it.
+ *   home:      the home card (no id). Only changes with a deploy, which starts a fresh CDN cache anyway.
+ *   fallback:  no ?v=, an old ?v=, or no such map: short, so an update or a delete shows within a minute, yet a burst
+ *              on an old link is still drawn about once a minute per edge.
+ *   error:     never cached.
+ */
+export type CardCache = "versioned" | "home" | "fallback" | "error";
+export const CARD_CACHE: Record<CardCache, string> = {
+  versioned: "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+  home: "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  fallback: "public, max-age=60, s-maxage=60, stale-while-revalidate=600",
+  error: "no-store",
+};
+
+export function cardCache(opts: { id: string | null; found: boolean; asked: string | null; current: string | null }): CardCache {
+  if (!opts.id) return "home";
+  if (!opts.found || !opts.asked || opts.asked !== opts.current) return "fallback";
+  return "versioned";
 }
 
 /** Thread colour on the card: the same amber for every lantern. Gold is the owner's alone, so it never appears here. */

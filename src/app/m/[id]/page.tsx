@@ -4,7 +4,7 @@ import { PublicMap } from "@/components/PublicMap";
 import { findMap } from "@/lib/owner";
 import { toPublicMap } from "@/lib/public-map";
 import { mapUrl } from "@/lib/site";
-import { cardUrl, CARD_SIZES } from "@/lib/card";
+import { cardUrl, cardVersion, CARD_SIZES } from "@/lib/card";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!row) return { title: "Map not found", robots: { index: false, follow: false } };
   const map = toPublicMap(row);
   const owner = map.ownerName || "Someone";
-  const ogUrl = cardUrl(map.id);
+  const ogUrl = cardUrl(map.id, "link", false, cardVersion(row.updatedAt));
   const description = `The people who've had ${owner}'s back, across ${map.stats.cities} ${map.stats.cities === 1 ? "city" : "cities"}. Names hidden.`;
   return {
     title: `${owner}'s Warm Map`,
