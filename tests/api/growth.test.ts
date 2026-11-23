@@ -125,15 +125,15 @@ test("fixture: counts are right, and names / hashes stay where they belong", asy
     { homeCity: "Kochi", kind: "voyager", km: 1234, lanterns: 5, cities: 4, gold: 1, thankLinks: 2, sharesTotal: 3, opens: 2, spawnedDirect: 1, spawnedAll: 2, arrivedVia: "cold" }
   );
   assert.deepEqual(a.shares, { whatsapp: 2, linkedin: 1, copy: 0, story: 0, native: 0 });
-  // warmth = 1x2 thank-links + 2x1 tie-back + 1x3 shares + 3x1 spawned + 1x1 later generation
-  assert.equal(a.warmth, 11);
+  // warmth = 1x2 thank-links + 2x1 tie-back + 1x1 shares (the 2 WhatsApp taps are left out: thank-you sends) + 3x1 spawned + 1x1 later generation
+  assert.equal(a.warmth, 9);
   const bRow = (await (await fetch(`${BASE}/admin/dashboard/creators?format=json&q=${OWNER_B}`, { headers: bearer })).json()).rows[0];
   assert.equal(bRow.lanterns, 5, "the carried lantern is not counted");
 
   // Ranking: A is listed with its components.
   const rj = await (await fetch(`${BASE}/admin/dashboard/ranking?format=json`, { headers: bearer })).json();
   assert.match(rj.formula, /warmth = /);
-  assert.equal(rj.rows.find((r: any) => r.id === A.id)?.warmth, 11);
+  assert.equal(rj.rows.find((r: any) => r.id === A.id)?.warmth, 9);
 
   // Timeline of A: links and ties exact; opens, shares and spawned maps as daily counts. No names, no child id.
   const tj = await (await fetch(`${BASE}/admin/dashboard/map/${A.id}?format=json`, { headers: bearer })).json();

@@ -97,7 +97,8 @@ export async function loadDashboard(db: PrismaClient, now = new Date()): Promise
       db.map.groupBy({ by: ["homeCity"], _count: { _all: true }, orderBy: { _count: { homeCity: "desc" } } }),
       db.map.groupBy({ by: ["arrivedVia"], _count: { _all: true }, orderBy: { _count: { arrivedVia: "desc" } } }),
       db.analyticsEvent.findMany({
-        where: { event: { not: "page_view" } },
+        // Share taps are kept as per-day counts (stamped 00:00 IST), so they have no place in a "latest events" list.
+        where: { event: { notIn: ["page_view", "share"] } },
         orderBy: { createdAt: "desc" },
         take: 30,
         select: { createdAt: true, event: true, metadata: true },

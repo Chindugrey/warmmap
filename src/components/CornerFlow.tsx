@@ -782,7 +782,7 @@ function RevealScreen({ d, setD, onKeepGoing }: { d: Draft; setD: (f: (x: Draft)
               <button className="wm-btn" type="button" onClick={() => setSheet(true)}>
                 Tell them on WhatsApp
               </button>
-              <ShareRow url={url} onLinkedIn={V21A ? () => setKit(true) : undefined} />
+              <ShareRow url={url} slug={saved.slug} onLinkedIn={V21A ? () => setKit(true) : undefined} />
               {V21A && <Wish2027 wish={wish} update={updateWish} onSeePost={() => setKit(true)} />}
               <StoryPictureLink slug={saved.slug} />
               <LiveCounter />

@@ -229,7 +229,7 @@ export function channelFunnel(rows: ChannelCounts[], t: { makeYoursAll: number; 
 
 export const WARMTH_WEIGHTS = { thankLinks: 1, tiesBack: 2, shares: 1, spawnedDirect: 3, spawnedDeeper: 1 } as const;
 export const WARMTH_FORMULA =
-  "warmth = 1 x thank-links sent + 2 x ties-back received + 1 x shares + 3 x maps spawned directly + 1 x maps spawned in later generations";
+  "warmth = 1 x thank-links sent + 2 x ties-back received + 1 x shares (WhatsApp taps left out: a thank-you send is already a thank-link) + 3 x maps spawned directly + 1 x maps spawned in later generations";
 
 export interface WarmthParts { thankLinks: number; tiesBack: number; shares: number; spawnedDirect: number; spawnedAll: number }
 
@@ -269,6 +269,7 @@ export interface CreatorRow {
   thankLinks: number;
   shares: Record<ShareChannel, number>;
   sharesTotal: number;
+  shares30d: number; // share taps, every channel, in the last 30 IST calendar days
   opens: number;
   spawnedDirect: number;
   spawnedAll: number;
@@ -331,6 +332,7 @@ export const CREATOR_CSV_COLUMNS: [string, (r: CreatorRow) => string | number][]
   ["maps_spawned_direct", (r) => r.spawnedDirect],
   ["maps_spawned_all", (r) => capped(r.spawnedAll, r.spawnedAllCapped)],
   ["warmth", (r) => r.warmth],
+  ["share_taps_last_30_days_ist", (r) => r.shares30d],
 ];
 
 // ---------------------------------------------------------------------------

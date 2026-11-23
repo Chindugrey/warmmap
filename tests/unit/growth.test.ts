@@ -129,7 +129,7 @@ test("CSV columns: no id, no hash; thank-you maps date-only; capped counts marke
   }
   const row: CreatorRow = {
     id: "x", firstName: "Meera", homeCity: "Kochi", createdAt: "2026-11-12T00:00:00.000Z", kind: "hearth", lanterns: 5, cities: 3, km: 0,
-    gold: 0, thankLinks: 0, shares: { whatsapp: 0, linkedin: 0, copy: 0, story: 0, native: 0 }, sharesTotal: 0, opens: 0,
+    gold: 0, thankLinks: 0, shares: { whatsapp: 0, linkedin: 0, copy: 0, story: 0, native: 0 }, sharesTotal: 0, shares30d: 0, opens: 0,
     spawnedDirect: 1, spawnedAll: 60, spawnedAllCapped: true, arrivedVia: "thanks", warmth: 0,
   };
   const cell = (name: string) => CREATOR_CSV_COLUMNS.find(([h]) => h === name)![1](row);

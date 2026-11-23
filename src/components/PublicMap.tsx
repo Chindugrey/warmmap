@@ -176,7 +176,7 @@ export function PublicMap({ map }: { map: PublicMapData }) {
             <button className="wm-btn" type="button" onClick={shareGratitude}>
               Share your gratitude map
             </button>
-            <ShareRow url={url} />
+            <ShareRow url={url} slug={map.id} />
             <StoryPictureLink slug={map.id} />
             <p className="wm-note" style={{ textAlign: "center" }}>
               Only you can see which lanterns are gold. On the map you share, every lantern looks the same.
@@ -228,7 +228,7 @@ export function PublicMap({ map }: { map: PublicMapData }) {
                   Tell them on WhatsApp
                 </button>
               )}
-              <ShareRow url={url} />
+              <ShareRow url={url} slug={map.id} />
               <StoryPictureLink slug={map.id} />
               <LiveCounter />
               {newKeeper && (
