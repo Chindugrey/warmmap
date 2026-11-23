@@ -92,23 +92,31 @@ export function CornerFlow({ below }: { below?: ReactNode }) {
     const via = q.get("via") === "thanks" ? "thanks" : q.get("via") === "map" ? "map" : "cold";
     restorePlaces();
     const saved = readDraft();
+    // The lantern pointing back to whoever thanked them: fetched from their public map (cities only).
+    const fetchCarried = (slug: string) =>
+      fetch(`/api/maps/${slug}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((m) => {
+          if (m?.places) rememberPlaces(m.places);
+          return m;
+        })
+        .then((m) => m && setD((x) => (x.invitedBy === slug ? { ...x, carried: { slug, ownerName: m.ownerName || "Someone", city: m.homeCity, kept: true } } : x)))
+        .catch(() => {});
     queueMicrotask(() => {
-      if (invitedBy && /^[a-z0-9]{6,32}$/i.test(invitedBy) && (!saved || saved.invitedBy !== invitedBy)) {
+      const valid = !!invitedBy && /^[a-z0-9]{6,32}$/i.test(invitedBy);
+      if (valid && invitedBy && (!saved || saved.invitedBy !== invitedBy)) {
         const fresh = { ...emptyDraft(), invitedBy, via: via as Draft["via"] };
         // Arrived by tapping "Make yours" on a map or a thank-you page (the ?s= tag rides along when the link has one).
         if (via !== "cold") track("make_yours", { via, s: q.get("s") });
         setD(fresh);
-        if (via === "thanks") {
-          fetch(`/api/maps/${invitedBy}`)
-            .then((r) => (r.ok ? r.json() : null))
-            .then((m) => {
-              if (m?.places) rememberPlaces(m.places);
-              return m;
-            })
-            .then((m) => m && setD((x) => ({ ...x, carried: { slug: invitedBy, ownerName: m.ownerName || "Someone", city: m.homeCity, kept: true } })))
-            .catch(() => {});
-        }
+        if (via === "thanks") fetchCarried(invitedBy);
         if (saved && saved.answers.length > 0 && !saved.saved) setResume(saved);
+      } else if (valid && saved && !saved.saved && saved.invitedBy === invitedBy) {
+        // Same inviter again (back from the thank-you page, or a reload): keep who brought them and the carried
+        // lantern. Not a new arrival, so no second make_yours.
+        setD({ ...emptyDraft(), invitedBy: saved.invitedBy, via: saved.via, carried: saved.carried });
+        if (!saved.carried && (saved.via === "thanks" || via === "thanks")) fetchCarried(saved.invitedBy!);
+        if (saved.answers.length > 0) setResume(saved);
       } else if (saved && (saved.answers.length > 0 || saved.saved)) {
         setResume(saved);
       }
@@ -140,7 +148,8 @@ export function CornerFlow({ below }: { below?: ReactNode }) {
 
   const keepGoing = () => {
     if (!resume) return;
-    setD(resume);
+    // A carried lantern fetched on this visit fills in one the saved draft is missing (same inviter only).
+    setD((x) => ({ ...resume, carried: resume.carried ?? (resume.invitedBy && x.invitedBy === resume.invitedBy ? x.carried : null) }));
     setResume(null);
     setStage(resume.saved || resume.answers.length >= QUESTION_COUNT ? "reveal" : resume.home ? "ask" : "home");
   };
