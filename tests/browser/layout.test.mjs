@@ -24,6 +24,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const FAKE_VV = `(()=>{const t=new EventTarget();const vv={width:innerWidth,height:innerHeight,offsetTop:0,offsetLeft:0,scale:1,pageTop:0,pageLeft:0,
   addEventListener:(...a)=>t.addEventListener(...a),removeEventListener:(...a)=>t.removeEventListener(...a)};
   Object.defineProperty(window,'visualViewport',{value:vv,configurable:true});
+  addEventListener('DOMContentLoaded',()=>{vv.width=innerWidth;vv.height=innerHeight});
   window.__kb=(h,top=0)=>{vv.height=h;vv.offsetTop=top;t.dispatchEvent(new Event('resize'));t.dispatchEvent(new Event('scroll'))};})()`;
 
 async function phone(w, h, fakeVv = false) {
