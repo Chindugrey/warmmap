@@ -34,7 +34,7 @@ export const page = (title: string, body: string) =>
   `<meta name="robots" content="noindex,nofollow"><title>${esc(title)}</title><style>${CSS}</style></head><body><main>${body}</main></body></html>`;
 
 export const ADMIN_NAV =
-  `<nav class="adm"><a href="/admin/dashboard">Overview</a><a href="/admin/dashboard/creators">Creators</a><a href="/admin/dashboard/virality">Virality and channels</a><a href="/admin/dashboard/ranking">Warmth ranking</a></nav>`;
+  `<nav class="adm"><a href="/admin/dashboard">Overview</a><a href="/admin/dashboard/creators">Creators</a><a href="/admin/dashboard/virality">Virality and channels</a><a href="/admin/dashboard/ranking">Warmth ranking</a><a href="/admin/dashboard/launch">Launch scoreboard</a></nav>`;
 export const signOut = `<form class="out" method="post" action="/admin/dashboard"><input type="hidden" name="logout" value="1"><button type="submit">Sign out</button></form>`;
 
 export function renderLogin(failed: boolean): string {
