@@ -4,11 +4,14 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
+import { mkdirSync } from "node:fs";
 import { launch, findChrome } from "./cdp.mjs";
 
 const BASE = process.env.BASE ?? "http://localhost:3100";
 if (!/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(BASE)) throw new Error(`refusing non-local BASE ${BASE}`);
 const SHOTS = process.env.SHOTS ?? "/tmp/wm-shots";
+// node --test runs the files in name order, so this one runs first and cannot count on another test making the folder.
+mkdirSync(SHOTS, { recursive: true });
 const skip = !findChrome() && "no Chromium installed";
 const open = [];
 after(async () => { for (const b of open) await b.close(); });

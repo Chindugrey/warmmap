@@ -40,8 +40,9 @@ const MEASURE = `(()=>{
   const g = svg.getBoundingClientRect();
   const vb = svg.viewBox.baseVal;
   const cs = getComputedStyle(svg.parentElement);
+  const box = svg.parentElement.getBoundingClientRect();
   return { vvh: vv.height, top: vv.offsetTop, btnTop: r.top, btnBottom: r.bottom, scrollY,
-    gw: g.width, gh: g.height, natural: vb.width / vb.height,
+    gw: g.width, gh: g.height, natural: vb.width / vb.height, room: box.height,
     hidden: cs.display === 'none' || g.width === 0 || g.height === 0 };
 })()`;
 
@@ -57,6 +58,9 @@ for (const [w, h, kb] of SIZES) {
       await b.send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: true });
       await sleep(150);
       const closed = await b.eval(MEASURE);
+      // keyboard closed, the launch layout is unchanged: Light it above the fold, the globe box the full width less its margins
+      assert.ok(closed.btnBottom + closed.scrollY <= h, `${tag(q)}: keyboard closed, Light it ends at ${Math.round(closed.btnBottom + closed.scrollY)}, below the ${h}px fold`);
+      assert.ok(Math.abs(closed.gw - (w - 68)) <= 1, `${tag(q)}: keyboard closed, the globe box is ${Math.round(closed.gw)}px wide, not ${w - 68}`);
       await b.send("Emulation.setDeviceMetricsOverride", { width: w, height: kb, deviceScaleFactor: 1, mobile: true });
       await b.eval(`document.querySelector('.wm-flds label:nth-child(1) input').focus()`);
       await sleep(400);
@@ -68,6 +72,9 @@ for (const [w, h, kb] of SIZES) {
       assert.ok(m.btnTop >= m.top && m.btnBottom <= m.top + m.vvh + 0.5, `${tag(q)}: Light it ${Math.round(m.btnTop)}..${Math.round(m.btnBottom)} is outside the visible ${Math.round(m.top)}..${Math.round(m.top + m.vvh)}`);
       assert.equal(m.scrollY, 0, `${tag(q)}: the page had to scroll`);
       assert.ok(m.hidden || Math.abs(ratio / m.natural - 1) <= 0.02, `${tag(q)}: globe is squashed to ${Math.round(m.gw)}x${Math.round(m.gh)}`);
+      // hidden only when there is no room for a 64 px globe; when it shows, it is at least 64 px
+      if (m.hidden) assert.ok(m.room < 64, `${tag(q)}: globe hidden with ${Math.round(m.room)}px of room`);
+      else assert.ok(m.gh >= 64, `${tag(q)}: globe shown at ${Math.round(m.gw)}x${Math.round(m.gh)}, under 64 px`);
       await type(b, ".wm-flds label:nth-child(1) input", `Kb${q}qx`);
       await type(b, ".wm-flds label:nth-child(2) input", CITIES[q]);
       await clickText(b, "Light it");
