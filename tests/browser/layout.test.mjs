@@ -121,10 +121,13 @@ test("keyboard open (visual viewport shrinks, layout viewport does not): card ab
       const light = await b.eval(`(${R})([...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='Light it'))`);
       assert.ok(light.b <= top + vvh, `${tag}: Light it is under the keyboard`);
       const g = await rect(b, ".wm-ask .wm-mapw svg");
-      assert.ok(g.b <= card.t + 1, `${tag}: globe overlaps the card`);
-      assert.ok(g.b - g.t >= 40, `${tag}: globe squashed to ${g.b - g.t}px`);
-      assert.ok(g.t >= top, `${tag}: globe above the window`);
-      assert.ok(card.t - g.b < 40, `${tag}: empty band of ${card.t - g.b}px above the card`);
+      // little room left: the globe is hidden; otherwise it is a square, clear of the card and inside the window
+      if (g.b - g.t > 0) {
+        assert.ok(g.b <= card.t + 1, `${tag}: globe overlaps the card`);
+        assert.ok(g.b - g.t >= 64 && Math.abs(g.b - g.t - (g.r - g.l)) <= 2, `${tag}: globe squashed to ${g.r - g.l}x${g.b - g.t}px`);
+        assert.ok(g.t >= top, `${tag}: globe above the window`);
+        assert.ok(card.t - g.b < 40, `${tag}: empty band of ${card.t - g.b}px above the card`);
+      }
       // moving between the fields does not move anything
       const f1 = await rect(b, ".wm-flds label:nth-child(1) input");
       await b.eval(`document.querySelector('.wm-flds label:nth-child(2) input').focus()`);
