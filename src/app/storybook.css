@@ -225,8 +225,10 @@
 /* keyboard open: the screen is pinned to the visible window (--vvh / --vvt come from visualViewport),
    the card sits at the bottom, just above the keys, and the globe takes what is left above it */
 .wm-ask.wm-kbd { position: fixed; top: var(--vvt, 0px); left: 0; right: 0; height: var(--vvh, 100dvh); min-height: 0; overflow: clip; padding-bottom: 6px; }
-.wm-ask.wm-kbd .wm-mapw { flex: 1 1 0; min-height: 0; max-height: none; margin-top: 6px; margin-bottom: 6px; }
-.wm-kbd .wm-prog, .wm-kbd .wm-carried, .wm-kbd .wm-reward { display: none; }
+/* the globe stays a square (never a strip): it shrinks with the room left, and hides below 64 px */
+.wm-ask.wm-kbd .wm-mapw { flex: 1 1 0; min-height: 0; max-height: none; aspect-ratio: 1; align-self: center; max-width: calc(100% - 68px); margin-top: 6px; margin-bottom: 6px; container-type: size; }
+@container (max-height: 63px) { .wm-kbd .wm-mapw svg { display: none; } }
+.wm-kbd .wm-prog, .wm-kbd .wm-carried, .wm-kbd .wm-reward, .wm-kbd .wm-sub { display: none; }
 .wm-kbd .wm-card { margin-top: 0; flex: 0 0 auto; gap: 6px; padding-top: 10px; padding-bottom: 8px; }
 .wm-kbd .wm-card h2 { font-size: 24px; }
 .wm-kbd .wm-card .wm-btn { min-height: 46px; font-size: 19px; }
